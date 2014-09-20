@@ -6,9 +6,12 @@ var ZIL_BUILD = {
 	M: 1.3,
 	DIR: 0.005,
 	cubes: [],
-	WIDTH: 20,
-	HEIGHT: 20,
+	WIDTH: 50,
+	HEIGHT: 50,
 	DEPTH: 20,
+	VIEW_WIDTH: 20,
+	VIEW_HEIGHT: 20,
+	VIEW_DEPTH: 20,
 	PI: 3.14159,
 	rotate_dir: 0,
 	last_time: 0,
@@ -30,18 +33,16 @@ var ZIL_BUILD = {
 	],
 	include_shape: null,
 	include_shape_obj: null,
+	dragging: false,
+	last_mouse_x: null,
+	last_mouse_y: null,
 
 	key_down: function(event) {
-		 // console.log(event.which);
-		// if(event.which == 83) {
-		// 	ZIL_BUILD.rotate_dir = 1;
-		// 	ZIL_BUILD.rotate_angle = Math.round(ZIL_BUILD.obj.rotation.y / (ZIL_BUILD.PI / 2) + 1) * (ZIL_BUILD.PI / 2);
-		// } else if(event.which == 65) {
-		// 	ZIL_BUILD.rotate_dir = -1;
-		// 	ZIL_BUILD.rotate_angle = Math.round(ZIL_BUILD.obj.rotation.y / (ZIL_BUILD.PI / 2) - 1) * (ZIL_BUILD.PI / 2);
-		// }
+		// console.log(event.which);
 		if(ZIL_BUILD.move_timer == 0) {
-			if(event.which == 37) { // W
+
+			// move the cursor
+			if(event.which == 37 && ZIL_BUILD.cursor[0] < ZIL_BUILD.VIEW_WIDTH - 1) { // W
 				ZIL_BUILD.move_timer = Date.now();
 				ZIL_BUILD.move = [1, 0, 0];
 			} else if(event.which == 39 && ZIL_BUILD.cursor[0] > 0) { // E
@@ -50,13 +51,13 @@ var ZIL_BUILD = {
 			} else if(event.which == 38 && ZIL_BUILD.cursor[1] > 0) { // N
 				ZIL_BUILD.move_timer = Date.now();
 				ZIL_BUILD.move = [0, -1, 0];
-			} else if(event.which == 40) { // S
+			} else if(event.which == 40 && ZIL_BUILD.cursor[1] < ZIL_BUILD.VIEW_HEIGHT - 1) { // S
 				ZIL_BUILD.move_timer = Date.now();
 				ZIL_BUILD.move = [0, 1, 0];
 			} else if(event.which == 88 && ZIL_BUILD.cursor[2] > 0) { // <,
 				ZIL_BUILD.move_timer = Date.now();
 				ZIL_BUILD.move = [0, 0, -1];
-			} else if(event.which == 90) { // >.
+			} else if(event.which == 90 && ZIL_BUILD.cursor[2] < ZIL_BUILD.VIEW_DEPTH - 1) { // >.
 				ZIL_BUILD.move_timer = Date.now();
 				ZIL_BUILD.move = [0, 0, 1];
 			}
@@ -72,8 +73,40 @@ var ZIL_BUILD = {
 				ZIL_BUILD.include_shape = null;
 				$("#include_message").fadeOut();
 			}
+		} else if(event.which == 65 && ZIL_BUILD.global_pos[0] > -ZIL_BUILD.WIDTH + 1) {
+			ZIL_BUILD.global_pos[0]--;
+			ZIL_BUILD.redraw_shape();
+		} else if(event.which == 68 && ZIL_BUILD.global_pos[0] < ZIL_BUILD.WIDTH - ZIL_BUILD.VIEW_WIDTH) {
+			ZIL_BUILD.global_pos[0]++;
+			ZIL_BUILD.redraw_shape();
+		} else if(event.which == 87 && ZIL_BUILD.global_pos[1] > -ZIL_BUILD.HEIGHT + 1) {
+			ZIL_BUILD.global_pos[1]--;
+			ZIL_BUILD.redraw_shape();
+		} else if(event.which == 83 && ZIL_BUILD.global_pos[1] < ZIL_BUILD.HEIGHT - ZIL_BUILD.VIEW_HEIGHT) {
+			ZIL_BUILD.global_pos[1]++;
+			ZIL_BUILD.redraw_shape();
+		} else if(event.which == 36) {
+			ZIL_BUILD.global_pos[0] = ZIL_BUILD.global_pos[1] = 0;
+			ZIL_BUILD.redraw_shape();
+		} else if(event.which == 35) {
+			ZIL_BUILD.global_pos[0] = ZIL_BUILD.WIDTH - ZIL_BUILD.VIEW_WIDTH;
+			ZIL_BUILD.global_pos[1] = ZIL_BUILD.HEIGHT - ZIL_BUILD.VIEW_HEIGHT;
+			ZIL_BUILD.redraw_shape();
 		}
+
+		$("#global_pos").empty().html(ZIL_BUILD.global_pos.join(",") + "-" + [
+			ZIL_BUILD.global_pos[0] + ZIL_BUILD.VIEW_WIDTH, 
+			ZIL_BUILD.global_pos[1] + ZIL_BUILD.VIEW_HEIGHT, 
+			ZIL_BUILD.global_pos[2] + ZIL_BUILD.VIEW_DEPTH].join(","));
+		ZIL_BUILD.show_cursor_pos();
 		return true;
+	},
+
+	show_cursor_pos: function() {
+		$("#cursor_pos").empty().html([
+			ZIL_BUILD.cursor[0] + ZIL_BUILD.global_pos[0], 
+			ZIL_BUILD.cursor[1] + ZIL_BUILD.global_pos[1], 
+			ZIL_BUILD.cursor[2] + ZIL_BUILD.global_pos[2]].join(","));
 	},
 
 	move_cursor: function(now) {
@@ -86,7 +119,7 @@ var ZIL_BUILD = {
 				ZIL_BUILD.cursor[2] += ZIL_BUILD.move[2];	
 				ZIL_BUILD.move = [0, 0, 0];
 				ZIL_BUILD.obj.position.set(ZIL_BUILD.cursor[0], ZIL_BUILD.cursor[1], ZIL_BUILD.cursor[2]);
-				// console.log(ZIL_BUILD.cursor);
+				ZIL_BUILD.show_cursor_pos();
 			} else {
 				ZIL_BUILD.obj.position.set(
 					ZIL_BUILD.cursor[0] + ZIL_BUILD.move[0] * (md / ZIL_BUILD.MOVE_SPEED), 
@@ -108,11 +141,17 @@ var ZIL_BUILD = {
 				var x = parseInt(s[0], 10);
 				var y = parseInt(s[1], 10);
 				var z = parseInt(s[2], 10);
-				var key = [ZIL_BUILD.cursor[0] + x, ZIL_BUILD.cursor[1] + y, ZIL_BUILD.cursor[2] + z].join(",");
+				var key = [
+					ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0] + x, 
+					ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1] + y, 
+					ZIL_BUILD.global_pos[2] + ZIL_BUILD.cursor[2] + z].join(",");
 				ZIL_BUILD.shape[key] = ZIL_BUILD.include_shape.shape[pos];
 			}
 		} else {
-			var key = ZIL_BUILD.cursor.join(",");
+			var key = [
+					ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0], 
+					ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1], 
+					ZIL_BUILD.global_pos[2] + ZIL_BUILD.cursor[2]].join(",");
 			if(ZIL_BUILD.shape[key] != null) {
 				delete ZIL_BUILD.shape[key];
 			} else {
@@ -132,8 +171,8 @@ var ZIL_BUILD = {
 	redraw_shape: function() {
 		ZIL_BUILD.render_shape(
 			ZIL_BUILD.shape,
-			ZIL_BUILD.WIDTH, ZIL_BUILD.HEIGHT, ZIL_BUILD.DEPTH,
-			ZIL_BUILD.rendered_shape, 			
+			ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_HEIGHT, ZIL_BUILD.VIEW_DEPTH,
+			ZIL_BUILD.rendered_shape,
 			ZIL_BUILD.global_pos
 		);
 	},
@@ -176,17 +215,73 @@ var ZIL_BUILD = {
 		document.body.appendChild( ZIL_BUILD.renderer.domElement );
 
 		document.body.onkeydown = ZIL_BUILD.key_down;
+		document.body.onmousemove = function(event) {
+			if(ZIL_BUILD.dragging && event.currentTarget == document.body) {
+				if(ZIL_BUILD.last_mouse_x == null) {
+					ZIL_BUILD.last_mouse_x = event.x;
+					ZIL_BUILD.last_mouse_y = event.y;
+				}
+				var dx = event.x - ZIL_BUILD.last_mouse_x;
+				var dy = event.y - ZIL_BUILD.last_mouse_y;
+				
+				ZIL_BUILD.world.rotation.z += dx / 100.0;
+
+				ZIL_BUILD.last_mouse_x = event.x;
+				ZIL_BUILD.last_mouse_y = event.y;
+				
+
+			}
+		};
+		document.body.onmousedown = function(event) {
+			if(event.currentTarget == document.body) {
+				ZIL_BUILD.dragging = true;
+			}
+		};
+		document.body.onmouseup = function(event) {
+			if(event.currentTarget == document.body) {
+				ZIL_BUILD.dragging = false;
+				// ZIL_BUILD.world.rotation.x = ZIL_BUILD.world.rotation.y = ZIL_BUILD.world.rotation.z = 0;
+				ZIL_BUILD.last_mouse_x = ZIL_BUILD.last_mouse_y = null;
+			}
+		};
+
+		ZIL_BUILD.world = new THREE.Object3D();
+		ZIL_BUILD.world.position.x = ZIL_BUILD.VIEW_WIDTH / 2;
+		ZIL_BUILD.world.position.y = ZIL_BUILD.VIEW_HEIGHT / 2;
+		ZIL_BUILD.scene.add( ZIL_BUILD.world );
+
+		ZIL_BUILD.inner = new THREE.Object3D();
+		ZIL_BUILD.inner.position.x = -ZIL_BUILD.VIEW_WIDTH / 2;
+		ZIL_BUILD.inner.position.y = -ZIL_BUILD.VIEW_HEIGHT / 2;
+		ZIL_BUILD.world.add( ZIL_BUILD.inner );
 
 		ZIL_BUILD.coord = new THREE.Object3D();
-		ZIL_BUILD.scene.add( ZIL_BUILD.coord );
+		ZIL_BUILD.inner.add( ZIL_BUILD.coord );
 		ZIL_BUILD.init_coords();		
 
 		ZIL_BUILD.rendered_shape = new THREE.Object3D();
-		ZIL_BUILD.scene.add( ZIL_BUILD.rendered_shape );
+		ZIL_BUILD.inner.add( ZIL_BUILD.rendered_shape );
 
 		ZIL_BUILD.obj = new THREE.Object3D();
-		ZIL_BUILD.scene.add( ZIL_BUILD.obj );
+		ZIL_BUILD.inner.add( ZIL_BUILD.obj );
+		ZIL_BUILD.init_cursor();
+
+		ZIL_BUILD.init_light();
 		
+		ZIL_BUILD.redraw_shape();
+		
+		ZIL_BUILD.render();
+	},
+
+	init_light: function() {
+		var light = new THREE.HemisphereLight( 0xffffff, 0x000000, 0.5 );
+		ZIL_BUILD.scene.add( light );
+		var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+		directionalLight.position.set( -1, 1, 1 );
+		ZIL_BUILD.scene.add( directionalLight );
+	},
+
+	init_cursor: function() {
 		// the cursor box
 		var geometry = new THREE.BoxGeometry(1.2, 1.2, 1.2);
 		var material = new THREE.MeshLambertMaterial( {color: 0x2233ff, side: THREE.DoubleSide } );
@@ -205,58 +300,51 @@ var ZIL_BUILD = {
 		var xz_geom = new THREE.BoxGeometry(1, 0, 1);
 		ZIL_BUILD.xz = new THREE.Mesh( xz_geom, material );
 		ZIL_BUILD.obj.add(ZIL_BUILD.xz);
-		
-		var light = new THREE.HemisphereLight( 0xffffff, 0x000000, 0.5 );
-		ZIL_BUILD.scene.add( light );
-		var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
-		directionalLight.position.set( -1, 1, 1 );
-		ZIL_BUILD.scene.add( directionalLight );
-
-		ZIL_BUILD.redraw_shape();
-		
-		ZIL_BUILD.render();
 	},
 
 	init_camera: function() {
 		ZIL_BUILD.camera = new THREE.OrthographicCamera( 
-			-ZIL_BUILD.WIDTH*0.75, ZIL_BUILD.WIDTH*0.75, 
-			ZIL_BUILD.HEIGHT*0.5, -ZIL_BUILD.HEIGHT*0.5, 
+			-ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_WIDTH, 
+			ZIL_BUILD.VIEW_HEIGHT, -ZIL_BUILD.VIEW_HEIGHT, 
 			-1000, 1000 );
-		ZIL_BUILD.camera.position.set(ZIL_BUILD.WIDTH, ZIL_BUILD.HEIGHT * 1.4, ZIL_BUILD.DEPTH * 1.2);
+		ZIL_BUILD.camera.position.set(
+			ZIL_BUILD.VIEW_WIDTH, 
+			ZIL_BUILD.VIEW_HEIGHT, 
+			Math.max(ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_HEIGHT) * 2);
 		ZIL_BUILD.camera.up = new THREE.Vector3(0,0,1);
-		ZIL_BUILD.camera.lookAt(new THREE.Vector3(0,0,0));
+		ZIL_BUILD.camera.lookAt(new THREE.Vector3(ZIL_BUILD.VIEW_WIDTH/4,ZIL_BUILD.VIEW_HEIGHT/4,0));
 	},
 
 	init_coords: function() {
 		ZIL_BUILD.clear_node(ZIL_BUILD.coord);
 
 		// add the x plane
-		var geometry = new THREE.PlaneGeometry( ZIL_BUILD.WIDTH, ZIL_BUILD.DEPTH, ZIL_BUILD.WIDTH, ZIL_BUILD.DEPTH );
+		var geometry = new THREE.PlaneGeometry( ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_DEPTH, ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_DEPTH );
 		var material = new THREE.MeshLambertMaterial( {color: 0x808080, side: THREE.DoubleSide, wireframe: true } );
 		var plane = new THREE.Mesh( geometry, material );
 		plane.rotation.x = ZIL_BUILD.PI / -2;
 		plane.position.y = -0.5;
-		plane.position.z = -ZIL_BUILD.DEPTH / -2 - 0.5;
-		plane.position.x = -ZIL_BUILD.WIDTH / -2 - 0.5;
+		plane.position.z = -ZIL_BUILD.VIEW_DEPTH / -2 - 0.5;
+		plane.position.x = -ZIL_BUILD.VIEW_WIDTH / -2 - 0.5;
 		ZIL_BUILD.coord.add( plane );
 
 		// add the y plane
-		var geometry = new THREE.PlaneGeometry( ZIL_BUILD.WIDTH, ZIL_BUILD.HEIGHT, ZIL_BUILD.WIDTH, ZIL_BUILD.HEIGHT );
+		var geometry = new THREE.PlaneGeometry( ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_HEIGHT, ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_HEIGHT );
 		var material = new THREE.MeshLambertMaterial( {color: 0x80cc80, side: THREE.DoubleSide, wireframe: true } );
 		var plane = new THREE.Mesh( geometry, material );
 		plane.position.z = -0.5
-		plane.position.x = -ZIL_BUILD.WIDTH / -2 - 0.5;
-		plane.position.y = -ZIL_BUILD.HEIGHT / -2 - 0.5;
+		plane.position.x = -ZIL_BUILD.VIEW_WIDTH / -2 - 0.5;
+		plane.position.y = -ZIL_BUILD.VIEW_HEIGHT / -2 - 0.5;
 		ZIL_BUILD.coord.add( plane );
 
 		// add the z plane
-		var geometry = new THREE.PlaneGeometry( ZIL_BUILD.DEPTH, ZIL_BUILD.HEIGHT, ZIL_BUILD.DEPTH, ZIL_BUILD.HEIGHT );
+		var geometry = new THREE.PlaneGeometry( ZIL_BUILD.VIEW_DEPTH, ZIL_BUILD.VIEW_HEIGHT, ZIL_BUILD.VIEW_DEPTH, ZIL_BUILD.VIEW_HEIGHT );
 		var material = new THREE.MeshLambertMaterial( {color: 0x8080cc, side: THREE.DoubleSide, wireframe: true } );
 		var plane = new THREE.Mesh( geometry, material );
 		plane.rotation.y = ZIL_BUILD.PI / -2;
 		plane.position.x = -0.5;
-		plane.position.z = ZIL_BUILD.DEPTH/2 -0.5;
-		plane.position.y = ZIL_BUILD.HEIGHT/2 -0.5;
+		plane.position.z = ZIL_BUILD.VIEW_DEPTH/2 -0.5;
+		plane.position.y = ZIL_BUILD.VIEW_HEIGHT/2 -0.5;
 		ZIL_BUILD.coord.add( plane );
 	},
 
@@ -493,21 +581,13 @@ var ZIL_BUILD = {
 	render: function() {
 		var now = Date.now();
 		var dx = now - ZIL_BUILD.last_time;
-		ZIL_BUILD.last_time = now;
+		if(dx > 50) { // reduce fan noise
+			ZIL_BUILD.last_time = now;
 
-		// if(ZIL_BUILD.rotate_dir != 0) {
-		// 	if((ZIL_BUILD.rotate_dir == 1 && ZIL_BUILD.obj.rotation.y < ZIL_BUILD.rotate_angle) || 
-		// 		(ZIL_BUILD.rotate_dir == -1 && ZIL_BUILD.obj.rotation.y > ZIL_BUILD.rotate_angle)) {
-		// 		ZIL_BUILD.obj.rotation.y += ZIL_BUILD.rotate_dir * (dx / 200);
-		// 	} else {
-		// 		ZIL_BUILD.obj.rotation.y = ZIL_BUILD.rotate_angle;
-		// 		ZIL_BUILD.rotate_dir = 0;
-		// 	}
-		// }
-		ZIL_BUILD.move_cursor(now);
+			ZIL_BUILD.move_cursor(now);
 
-		// requestAnimationFrame(ZIL_BUILD.render); // smooth, more fan noise
-		setTimeout(ZIL_BUILD.render, 50); // less fan noise
-		ZIL_BUILD.renderer.render(ZIL_BUILD.scene, ZIL_BUILD.camera);
+			ZIL_BUILD.renderer.render(ZIL_BUILD.scene, ZIL_BUILD.camera);
+		}
+		requestAnimationFrame(ZIL_BUILD.render); 
 	}	
 }
