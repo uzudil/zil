@@ -312,7 +312,7 @@ var ZIL_BUILD = {
 			ZIL_BUILD.VIEW_HEIGHT, 
 			Math.max(ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_HEIGHT) * 2);
 		ZIL_BUILD.camera.up = new THREE.Vector3(0,0,1);
-		ZIL_BUILD.camera.lookAt(new THREE.Vector3(ZIL_BUILD.VIEW_WIDTH/4,ZIL_BUILD.VIEW_HEIGHT/4,0));
+		ZIL_BUILD.camera.lookAt(new THREE.Vector3(ZIL_BUILD.VIEW_WIDTH / 4,ZIL_BUILD.VIEW_HEIGHT / 4, 0));
 	},
 
 	init_coords: function() {
