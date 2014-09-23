@@ -41,7 +41,7 @@ ZilShape.prototype.expand_all = function() {
 ZilShape.load_shape = function(category_name, shape_name, skip_bounds, default_w, default_h, default_d) {
 	var name = category_name + "." + shape_name;
 	var shape_obj = ZilShape.SHAPE_CACHE[name];
-	if(!shape_obj) {
+	if(!shape_obj || skip_bounds) { // load from scratch when skip_bounds is true (so we update changed child shapes)
 		console.log("* Loading shape: " + name);
 		var js = window.localStorage[name];
 		var shape = js ? JSON.parse(js) : { width: default_w, height: default_h, depth: default_d, shape: {} };
@@ -55,14 +55,15 @@ ZilShape.load_shape = function(category_name, shape_name, skip_bounds, default_w
 };
 
 ZilShape.prototype.save_shape = function() {
-	// save the shape
 	var obj = {
 		width: this.width,
 		height: this.height,
 		depth: this.depth,
 		shape: this.shape
 	}
-	window.localStorage[this.category + "." + this.name] = JSON.stringify(obj);
+	var name = this.category + "." + this.name;
+	window.localStorage[name] = JSON.stringify(obj);
+	ZilShape.SHAPE_CACHE[name] = this;
 };
 
 ZilShape.prototype.calculate_bounds = function() {

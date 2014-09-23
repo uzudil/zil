@@ -6,9 +6,9 @@ var ZIL_BUILD = {
 	WIDTH: 50,
 	HEIGHT: 50,
 	DEPTH: 20,
-	VIEW_WIDTH: 20,
-	VIEW_HEIGHT: 20,
-	VIEW_DEPTH: 10,
+	VIEW_WIDTH: 40,
+	VIEW_HEIGHT: 40,
+	VIEW_DEPTH: 20,
 	PI: 3.14159,
 	last_time: 0,
 	move: [0, 0, 0],
@@ -147,42 +147,14 @@ var ZIL_BUILD = {
 		ZIL_BUILD.renderer = new THREE.WebGLRenderer();
 		ZIL_BUILD.init_camera();
 
-		ZIL_BUILD.renderer.setSize( window.innerWidth, window.innerHeight );
+		var size = Math.min(window.innerWidth, window.innerHeight);
+		ZIL_BUILD.renderer.setSize( size, size );
 		document.body.appendChild( ZIL_BUILD.renderer.domElement );
-
-		document.body.onkeydown = ZIL_BUILD.key_down;
-		document.body.onmousemove = function(event) {
-			if(ZIL_BUILD.dragging && event.currentTarget == document.body) {
-				if(ZIL_BUILD.last_mouse_x == null) {
-					ZIL_BUILD.last_mouse_x = event.x;
-					ZIL_BUILD.last_mouse_y = event.y;
-				}
-				var dx = event.x - ZIL_BUILD.last_mouse_x;
-				var dy = event.y - ZIL_BUILD.last_mouse_y;
-				
-				ZIL_BUILD.world.rotation.z += dx / 100.0;
-
-				ZIL_BUILD.last_mouse_x = event.x;
-				ZIL_BUILD.last_mouse_y = event.y;
-			}
-		};
-		document.body.onmousedown = function(event) {
-			if(event.currentTarget == document.body) {
-				ZIL_BUILD.dragging = true;
-			}
-		};
-		document.body.onmouseup = function(event) {
-			if(event.currentTarget == document.body) {
-				ZIL_BUILD.dragging = false;
-				// ZIL_BUILD.world.rotation.x = ZIL_BUILD.world.rotation.y = ZIL_BUILD.world.rotation.z = 0;
-				ZIL_BUILD.last_mouse_x = ZIL_BUILD.last_mouse_y = null;
-			}
-		};
 
 		ZIL_BUILD.world = new THREE.Object3D();
 		ZIL_BUILD.world.position.x = ZIL_BUILD.VIEW_WIDTH / 2;
 		ZIL_BUILD.world.position.y = ZIL_BUILD.VIEW_HEIGHT / 2;
-		ZIL_BUILD.world.scale.z = 3;	
+		ZIL_BUILD.world.scale.z = 2;	
 		ZIL_BUILD.scene.add( ZIL_BUILD.world );
 
 		ZIL_BUILD.inner = new THREE.Object3D();
@@ -386,6 +358,34 @@ var ZIL_BUILD = {
 			}
 			return true;
 		});
+		document.body.onkeydown = ZIL_BUILD.key_down;
+		document.body.onmousemove = function(event) {
+			if(ZIL_BUILD.dragging && event.currentTarget == document.body) {
+				if(ZIL_BUILD.last_mouse_x == null) {
+					ZIL_BUILD.last_mouse_x = event.x;
+					ZIL_BUILD.last_mouse_y = event.y;
+				}
+				var dx = event.x - ZIL_BUILD.last_mouse_x;
+				var dy = event.y - ZIL_BUILD.last_mouse_y;
+				
+				ZIL_BUILD.world.rotation.z += dx / 100.0;
+
+				ZIL_BUILD.last_mouse_x = event.x;
+				ZIL_BUILD.last_mouse_y = event.y;
+			}
+		};
+		document.body.onmousedown = function(event) {
+			if(event.currentTarget == document.body) {
+				ZIL_BUILD.dragging = true;
+			}
+		};
+		document.body.onmouseup = function(event) {
+			if(event.currentTarget == document.body) {
+				ZIL_BUILD.dragging = false;
+				// ZIL_BUILD.world.rotation.x = ZIL_BUILD.world.rotation.y = ZIL_BUILD.world.rotation.z = 0;
+				ZIL_BUILD.last_mouse_x = ZIL_BUILD.last_mouse_y = null;
+			}
+		};		
 	},
 
 	load_last_shape: function() {
