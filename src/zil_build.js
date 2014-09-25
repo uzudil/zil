@@ -3,13 +3,6 @@ var ZIL_BUILD = {
 	scene: null,
 	camera: null,
 	renderer: null,
-	WIDTH: 50,
-	HEIGHT: 50,
-	DEPTH: 20,
-	VIEW_WIDTH: 40,
-	VIEW_HEIGHT: 40,
-	VIEW_DEPTH: 20,
-	PI: 3.14159,
 	last_time: 0,
 	move: [0, 0, 0],
 	cursor: [0, 0, 0],
@@ -22,27 +15,134 @@ var ZIL_BUILD = {
 	last_mouse_x: null,
 	last_mouse_y: null,
 
+	mouse_move: function(event) {
+		var mousex = ( (event.clientX - ZIL_BUILD.offset_x) / ZIL_BUILD.canvas_size ) * 2 - 1;
+		var mousey = - ( (event.clientY - ZIL_BUILD.offset_y) / ZIL_BUILD.canvas_size ) * 2 + 1;
+		var mouse_message = "mouse=" + mousex.toFixed(2) + "," + mousey.toFixed(2);
+
+		var vector = new THREE.Vector3( mousex, mousey, 1 );
+		var ray_caster = ZIL_BUILD.projector.pickingRay(vector, ZIL_BUILD.camera);
+		var intersects = ray_caster.intersectObject(ZIL_BUILD.floor_plane, true);
+
+		if ( intersects.length > 0 ) {
+			ZIL_BUILD.cursor[0] = Math.round(intersects[ 0 ].point.x);
+			ZIL_BUILD.cursor[1] = Math.round(intersects[ 0 ].point.y);
+			// ZIL_BUILD.cursor[2] = Math.round(intersects[ 0 ].point.z);
+			ZIL_BUILD.obj.position.set(ZIL_BUILD.cursor[0], ZIL_BUILD.cursor[1], ZIL_BUILD.cursor[2]);
+			ZIL_BUILD.xy.position.z = -ZIL_BUILD.obj.position.z - 0.5;
+			ZIL_BUILD.yz.position.x = -ZIL_BUILD.obj.position.x - 0.5;
+			ZIL_BUILD.xz.position.y = -ZIL_BUILD.obj.position.y - 0.5;
+			ZIL_BUILD.show_cursor_pos();
+
+			ZIL_BUILD.check_mouse(event);
+
+		} else {
+			$('#mouse_pos').html(mouse_message);
+		}
+	},
+
+	mouse_drag: function(event) {
+		if(event.currentTarget == document.body && ZIL_BUILD.dragging) {
+			if(ZIL_BUILD.last_mouse_x == null) {
+				ZIL_BUILD.last_mouse_x = event.x;
+				ZIL_BUILD.last_mouse_y = event.y;
+			}
+			var dx = event.x - ZIL_BUILD.last_mouse_x;
+			var dy = event.y - ZIL_BUILD.last_mouse_y;
+			
+			ZIL_BUILD.world.rotation.z += dx / 100.0;
+
+			ZIL_BUILD.last_mouse_x = event.x;
+			ZIL_BUILD.last_mouse_y = event.y;
+		}
+		return true;
+	},
+
+	cursor_moved: function() {
+		if(ZIL_BUILD.last_cursor == null) {
+			ZIL_BUILD.last_cursor = [0, 0, 0];
+		}
+		if(ZIL_BUILD.last_cursor[0] != ZIL_BUILD.cursor[0] || ZIL_BUILD.last_cursor[1] != ZIL_BUILD.cursor[1] || ZIL_BUILD.last_cursor[2] != ZIL_BUILD.cursor[2]) {
+			ZIL_BUILD.last_cursor[0] = ZIL_BUILD.cursor[0];
+			ZIL_BUILD.last_cursor[1] = ZIL_BUILD.cursor[1];
+			ZIL_BUILD.last_cursor[2] = ZIL_BUILD.cursor[2];
+			return true;
+		} else {
+			return false;
+		}
+	},
+
+	check_mouse: function(event) {
+		if(event.which == 1) {
+			if(ZIL_BUILD.cursor_moved()) ZIL_BUILD.set_position(1);
+		} else if(event.which == 3) {
+			if(ZIL_BUILD.cursor_moved()) ZIL_BUILD.set_position(0);
+		}
+	},
+
+	mouse_down: function(event) {
+		if(event.which == 2 && event.currentTarget == document.body) {
+			ZIL_BUILD.dragging = true;
+		} else {
+			ZIL_BUILD.check_mouse(event);
+		}
+	},
+
+	mouse_up: function(event) {
+		if(event.currentTarget == document.body) {
+			ZIL_BUILD.dragging = false;
+			ZIL_BUILD.world.rotation.x = ZIL_BUILD.world.rotation.y = ZIL_BUILD.world.rotation.z = 0;
+			ZIL_BUILD.last_mouse_x = ZIL_BUILD.last_mouse_y = null;
+		}
+	},
+
 	key_down: function(event) {
 		// console.log(event.which);
 		if(ZIL_BUILD.move_timer == 0) {
 
 			// move the cursor
-			if(event.which == 37 && ZIL_BUILD.cursor[0] < ZIL_BUILD.VIEW_WIDTH - 1) { // W
-				ZIL_BUILD.move_timer = Date.now();
-				ZIL_BUILD.move = [1, 0, 0];
-			} else if(event.which == 39 && ZIL_BUILD.cursor[0] > 0) { // E
-				ZIL_BUILD.move_timer = Date.now();
-				ZIL_BUILD.move = [-1, 0, 0];
-			} else if(event.which == 38 && ZIL_BUILD.cursor[1] > 0) { // N
-				ZIL_BUILD.move_timer = Date.now();
-				ZIL_BUILD.move = [0, -1, 0];
-			} else if(event.which == 40 && ZIL_BUILD.cursor[1] < ZIL_BUILD.VIEW_HEIGHT - 1) { // S
-				ZIL_BUILD.move_timer = Date.now();
-				ZIL_BUILD.move = [0, 1, 0];
+			if(event.which == 37) { // W
+				// if(ZIL_BUILD.cursor[0] < ZIL_UTIL.VIEW_WIDTH - 1) {
+				// 	ZIL_BUILD.move_timer = Date.now();
+				// 	ZIL_BUILD.move = [1, 0, 0];
+				// }
+				if(ZIL_BUILD.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH) {
+					ZIL_BUILD.global_pos[0]++;
+					ZIL_BUILD.redraw_shape();
+				}
+			} else if(event.which == 39) { // E
+				// if(ZIL_BUILD.cursor[0] > 0) {
+				// 	ZIL_BUILD.move_timer = Date.now();
+				// 	ZIL_BUILD.move = [-1, 0, 0];
+				// }
+				if(ZIL_BUILD.global_pos[0] > 0) { 
+					ZIL_BUILD.global_pos[0]--;
+					ZIL_BUILD.redraw_shape();
+				}
+				
+			} else if(event.which == 38) { // N
+				// if(ZIL_BUILD.cursor[1] > 0) {
+				// 	ZIL_BUILD.move_timer = Date.now();
+				// 	ZIL_BUILD.move = [0, -1, 0];
+				// }
+				if(ZIL_BUILD.global_pos[1] > 0) { 
+					ZIL_BUILD.global_pos[1]--;
+					ZIL_BUILD.redraw_shape();
+				}
+			} else if(event.which == 40) { // S
+				// if(ZIL_BUILD.cursor[1] < ZIL_UTIL.VIEW_HEIGHT - 1) {
+				// 	ZIL_BUILD.move_timer = Date.now();
+				// 	ZIL_BUILD.move = [0, 1, 0];
+				// }
+
+				if(ZIL_BUILD.global_pos[1] < ZIL_UTIL.HEIGHT - ZIL_UTIL.VIEW_HEIGHT) {
+					ZIL_BUILD.global_pos[1]++;
+					ZIL_BUILD.redraw_shape();
+				}
 			} else if(event.which == 88 && ZIL_BUILD.cursor[2] > 0) { // <,
 				ZIL_BUILD.move_timer = Date.now();
 				ZIL_BUILD.move = [0, 0, -1];
-			} else if(event.which == 90 && ZIL_BUILD.cursor[2] < ZIL_BUILD.VIEW_DEPTH - 1) { // >.
+			} else if(event.which == 90 && ZIL_BUILD.cursor[2] < ZIL_UTIL.VIEW_DEPTH - 1) { // >.
 				ZIL_BUILD.move_timer = Date.now();
 				ZIL_BUILD.move = [0, 0, 1];
 			}
@@ -58,31 +158,31 @@ var ZIL_BUILD = {
 				ZIL_BUILD.include_shape = null;
 				$("#include_message").fadeOut();
 			}
-		} else if(event.which == 65 && ZIL_BUILD.global_pos[0] > -ZIL_BUILD.WIDTH + 1) {
+		} else if(event.which == 65 && ZIL_BUILD.global_pos[0] > -ZIL_UTIL.WIDTH + 1) {
 			ZIL_BUILD.global_pos[0]--;
 			ZIL_BUILD.redraw_shape();
-		} else if(event.which == 68 && ZIL_BUILD.global_pos[0] < ZIL_BUILD.WIDTH - ZIL_BUILD.VIEW_WIDTH) {
+		} else if(event.which == 68 && ZIL_BUILD.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH) {
 			ZIL_BUILD.global_pos[0]++;
 			ZIL_BUILD.redraw_shape();
-		} else if(event.which == 87 && ZIL_BUILD.global_pos[1] > -ZIL_BUILD.HEIGHT + 1) {
+		} else if(event.which == 87 && ZIL_BUILD.global_pos[1] > -ZIL_UTIL.HEIGHT + 1) {
 			ZIL_BUILD.global_pos[1]--;
 			ZIL_BUILD.redraw_shape();
-		} else if(event.which == 83 && ZIL_BUILD.global_pos[1] < ZIL_BUILD.HEIGHT - ZIL_BUILD.VIEW_HEIGHT) {
+		} else if(event.which == 83 && ZIL_BUILD.global_pos[1] < ZIL_UTIL.HEIGHT - ZIL_UTIL.VIEW_HEIGHT) {
 			ZIL_BUILD.global_pos[1]++;
 			ZIL_BUILD.redraw_shape();
 		} else if(event.which == 36) {
 			ZIL_BUILD.global_pos[0] = ZIL_BUILD.global_pos[1] = 0;
 			ZIL_BUILD.redraw_shape();
 		} else if(event.which == 35) {
-			ZIL_BUILD.global_pos[0] = ZIL_BUILD.WIDTH - ZIL_BUILD.VIEW_WIDTH;
-			ZIL_BUILD.global_pos[1] = ZIL_BUILD.HEIGHT - ZIL_BUILD.VIEW_HEIGHT;
+			ZIL_BUILD.global_pos[0] = ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH;
+			ZIL_BUILD.global_pos[1] = ZIL_UTIL.HEIGHT - ZIL_UTIL.VIEW_HEIGHT;
 			ZIL_BUILD.redraw_shape();
 		}
 
 		$("#global_pos").empty().html(ZIL_BUILD.global_pos.join(",") + "-" + [
-			ZIL_BUILD.global_pos[0] + ZIL_BUILD.VIEW_WIDTH, 
-			ZIL_BUILD.global_pos[1] + ZIL_BUILD.VIEW_HEIGHT, 
-			ZIL_BUILD.global_pos[2] + ZIL_BUILD.VIEW_DEPTH].join(","));
+			ZIL_BUILD.global_pos[0] + ZIL_UTIL.VIEW_WIDTH, 
+			ZIL_BUILD.global_pos[1] + ZIL_UTIL.VIEW_HEIGHT, 
+			ZIL_BUILD.global_pos[2] + ZIL_UTIL.VIEW_DEPTH].join(","));
 		ZIL_BUILD.show_cursor_pos();
 		return true;
 	},
@@ -117,17 +217,24 @@ var ZIL_BUILD = {
 		}
 	},
 
-	set_position: function() {
+	set_position: function(force) {
+		console.log("force=" + force + " include=" + ZIL_BUILD.include_shape);
 		var x = ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0];
 		var y = ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1];
 		var z = ZIL_BUILD.global_pos[2] + ZIL_BUILD.cursor[2];
 		if(ZIL_BUILD.include_shape) {
 			ZIL_BUILD.shape.set_shape(x, y, z, ZIL_BUILD.include_shape);
 		} else {
-			if(ZIL_BUILD.shape.get_position(x, y, z) != null) {
-				ZIL_BUILD.shape.del_position(x, y, z);
-			} else {
+			if(force == null) {
+				if(ZIL_BUILD.shape.get_position(x, y, z) != null) {
+					ZIL_BUILD.shape.del_position(x, y, z);
+				} else {
+					ZIL_BUILD.shape.set_position(x, y, z, $("#color option:selected").index());
+				}
+			} else if(force == 1) {
 				ZIL_BUILD.shape.set_position(x, y, z, $("#color option:selected").index());
+			} else if(force == 0) {
+				ZIL_BUILD.shape.del_position(x, y, z);
 			}
 		}
 		ZIL_BUILD.save_shape();
@@ -139,27 +246,29 @@ var ZIL_BUILD = {
 	},
 
 	start_builder: function() {
-		ZIL_BUILD.init_dom();
-
-		ZIL_BUILD.load_last_shape();
-
 		ZIL_BUILD.scene = new THREE.Scene();
 		ZIL_BUILD.renderer = new THREE.WebGLRenderer();
 		ZIL_BUILD.init_camera();
 
 		var size = Math.min(window.innerWidth, window.innerHeight);
 		ZIL_BUILD.renderer.setSize( size, size );
+		ZIL_BUILD.canvas_size = size;
 		document.body.appendChild( ZIL_BUILD.renderer.domElement );
+		ZIL_BUILD.offset_x = ($("body").width() - size) / 2;
+		ZIL_BUILD.offset_y = ($("body").height() - size) / 2;
+
+		ZIL_BUILD.init_dom();
+		ZIL_BUILD.load_last_shape();		
 
 		ZIL_BUILD.world = new THREE.Object3D();
-		ZIL_BUILD.world.position.x = ZIL_BUILD.VIEW_WIDTH / 2;
-		ZIL_BUILD.world.position.y = ZIL_BUILD.VIEW_HEIGHT / 2;
+		ZIL_BUILD.world.position.x = ZIL_UTIL.VIEW_WIDTH / 2;
+		ZIL_BUILD.world.position.y = ZIL_UTIL.VIEW_HEIGHT / 2;
 		ZIL_BUILD.world.scale.z = 2;	
 		ZIL_BUILD.scene.add( ZIL_BUILD.world );
 
 		ZIL_BUILD.inner = new THREE.Object3D();
-		ZIL_BUILD.inner.position.x = -ZIL_BUILD.VIEW_WIDTH / 2;
-		ZIL_BUILD.inner.position.y = -ZIL_BUILD.VIEW_HEIGHT / 2;
+		ZIL_BUILD.inner.position.x = -ZIL_UTIL.VIEW_WIDTH / 2;
+		ZIL_BUILD.inner.position.y = -ZIL_UTIL.VIEW_HEIGHT / 2;
 		ZIL_BUILD.world.add( ZIL_BUILD.inner );
 
 		ZIL_BUILD.coord = new THREE.Object3D();
@@ -211,47 +320,49 @@ var ZIL_BUILD = {
 
 	init_camera: function() {
 		ZIL_BUILD.camera = new THREE.OrthographicCamera( 
-			-ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_WIDTH, 
-			ZIL_BUILD.VIEW_HEIGHT, -ZIL_BUILD.VIEW_HEIGHT, 
+			-ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_WIDTH, 
+			ZIL_UTIL.VIEW_HEIGHT, -ZIL_UTIL.VIEW_HEIGHT, 
 			-1000, 1000 );
 		ZIL_BUILD.camera.position.set(
-			ZIL_BUILD.VIEW_WIDTH, 
-			ZIL_BUILD.VIEW_HEIGHT, 
-			Math.max(ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_HEIGHT) * 2);
+			ZIL_UTIL.VIEW_WIDTH, 
+			ZIL_UTIL.VIEW_HEIGHT, 
+			Math.max(ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT) * 2);
 		ZIL_BUILD.camera.up = new THREE.Vector3(0,0,1);
-		ZIL_BUILD.camera.lookAt(new THREE.Vector3(ZIL_BUILD.VIEW_WIDTH / 4,ZIL_BUILD.VIEW_HEIGHT / 4, 0));
+		ZIL_BUILD.camera.lookAt(new THREE.Vector3(ZIL_UTIL.VIEW_WIDTH / 4,ZIL_UTIL.VIEW_HEIGHT / 4, 0));
+		ZIL_BUILD.projector = new THREE.Projector();
 	},
 
 	init_coords: function() {
 		ZIL_UTIL.clear_node(ZIL_BUILD.coord);
 
 		// add the x plane
-		var geometry = new THREE.PlaneGeometry( ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_DEPTH, ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_DEPTH );
+		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_DEPTH );
 		var material = new THREE.MeshLambertMaterial( {color: 0x808080, side: THREE.DoubleSide, wireframe: true } );
 		var plane = new THREE.Mesh( geometry, material );
-		plane.rotation.x = ZIL_BUILD.PI / -2;
+		plane.rotation.x = PI / -2;
 		plane.position.y = -0.5;
-		plane.position.z = -ZIL_BUILD.VIEW_DEPTH / -2 - 0.5;
-		plane.position.x = -ZIL_BUILD.VIEW_WIDTH / -2 - 0.5;
+		plane.position.z = -ZIL_UTIL.VIEW_DEPTH / -2 - 0.5;
+		plane.position.x = -ZIL_UTIL.VIEW_WIDTH / -2 - 0.5;
 		ZIL_BUILD.coord.add( plane );
 
 		// add the y plane
-		var geometry = new THREE.PlaneGeometry( ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_HEIGHT, ZIL_BUILD.VIEW_WIDTH, ZIL_BUILD.VIEW_HEIGHT );
+		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT, ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT );
 		var material = new THREE.MeshLambertMaterial( {color: 0x80cc80, side: THREE.DoubleSide, wireframe: true } );
 		var plane = new THREE.Mesh( geometry, material );
 		plane.position.z = -0.5
-		plane.position.x = -ZIL_BUILD.VIEW_WIDTH / -2 - 0.5;
-		plane.position.y = -ZIL_BUILD.VIEW_HEIGHT / -2 - 0.5;
+		plane.position.x = -ZIL_UTIL.VIEW_WIDTH / -2 - 0.5;
+		plane.position.y = -ZIL_UTIL.VIEW_HEIGHT / -2 - 0.5;
 		ZIL_BUILD.coord.add( plane );
+		ZIL_BUILD.floor_plane = plane;
 
 		// add the z plane
-		var geometry = new THREE.PlaneGeometry( ZIL_BUILD.VIEW_DEPTH, ZIL_BUILD.VIEW_HEIGHT, ZIL_BUILD.VIEW_DEPTH, ZIL_BUILD.VIEW_HEIGHT );
+		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_HEIGHT, ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_HEIGHT );
 		var material = new THREE.MeshLambertMaterial( {color: 0x8080cc, side: THREE.DoubleSide, wireframe: true } );
 		var plane = new THREE.Mesh( geometry, material );
-		plane.rotation.y = ZIL_BUILD.PI / -2;
+		plane.rotation.y = PI / -2;
 		plane.position.x = -0.5;
-		plane.position.z = ZIL_BUILD.VIEW_DEPTH/2 -0.5;
-		plane.position.y = ZIL_BUILD.VIEW_HEIGHT/2 -0.5;
+		plane.position.z = ZIL_UTIL.VIEW_DEPTH/2 -0.5;
+		plane.position.y = ZIL_UTIL.VIEW_HEIGHT/2 -0.5;
 		ZIL_BUILD.coord.add( plane );
 	},
 
@@ -346,9 +457,9 @@ var ZIL_BUILD = {
 
 		$("#width,#height,#depth").keyup(function (e) {
 			if (e.keyCode == 13) {
-				ZIL_BUILD.WIDTH = parseInt($("#width").val(), 10);
-				ZIL_BUILD.HEIGHT = parseInt($("#height").val(), 10);
-				ZIL_BUILD.DEPTH = parseInt($("#depth").val(), 10);
+				ZIL_UTIL.WIDTH = parseInt($("#width").val(), 10);
+				ZIL_UTIL.HEIGHT = parseInt($("#height").val(), 10);
+				ZIL_UTIL.DEPTH = parseInt($("#depth").val(), 10);
 				ZIL_BUILD.save_shape();
 				
 				ZIL_BUILD.init_coords();
@@ -359,33 +470,11 @@ var ZIL_BUILD = {
 			return true;
 		});
 		document.body.onkeydown = ZIL_BUILD.key_down;
-		document.body.onmousemove = function(event) {
-			if(ZIL_BUILD.dragging && event.currentTarget == document.body) {
-				if(ZIL_BUILD.last_mouse_x == null) {
-					ZIL_BUILD.last_mouse_x = event.x;
-					ZIL_BUILD.last_mouse_y = event.y;
-				}
-				var dx = event.x - ZIL_BUILD.last_mouse_x;
-				var dy = event.y - ZIL_BUILD.last_mouse_y;
-				
-				ZIL_BUILD.world.rotation.z += dx / 100.0;
-
-				ZIL_BUILD.last_mouse_x = event.x;
-				ZIL_BUILD.last_mouse_y = event.y;
-			}
-		};
-		document.body.onmousedown = function(event) {
-			if(event.currentTarget == document.body) {
-				ZIL_BUILD.dragging = true;
-			}
-		};
-		document.body.onmouseup = function(event) {
-			if(event.currentTarget == document.body) {
-				ZIL_BUILD.dragging = false;
-				// ZIL_BUILD.world.rotation.x = ZIL_BUILD.world.rotation.y = ZIL_BUILD.world.rotation.z = 0;
-				ZIL_BUILD.last_mouse_x = ZIL_BUILD.last_mouse_y = null;
-			}
-		};		
+		$("canvas").mousemove(ZIL_BUILD.mouse_move);
+		document.body.onmousemove = ZIL_BUILD.mouse_drag;
+		document.body.onmousedown = ZIL_BUILD.mouse_down;
+		document.body.onmouseup = ZIL_BUILD.mouse_up;
+		document.body.oncontextmenu = function() { return false; };
 	},
 
 	load_last_shape: function() {
@@ -443,14 +532,14 @@ var ZIL_BUILD = {
 	load_shape: function(category_name, shape_name) {
 		$("#category").val(category_name);
 		$("#name").val(shape_name);
-		ZIL_BUILD.shape = ZilShape.load_shape(category_name, shape_name, true, ZIL_BUILD.WIDTH, ZIL_BUILD.HEIGHT, ZIL_BUILD.DEPTH);
+		ZIL_BUILD.shape = ZilShape.load_shape(category_name, shape_name, true);
 
-		ZIL_BUILD.WIDTH = ZIL_BUILD.shape.width;
-		ZIL_BUILD.HEIGHT = ZIL_BUILD.shape.height;
-		ZIL_BUILD.DEPTH = ZIL_BUILD.shape.depth;
-		$("#width").val(ZIL_BUILD.WIDTH);
-		$("#height").val(ZIL_BUILD.HEIGHT);
-		$("#depth").val(ZIL_BUILD.DEPTH);
+		ZIL_UTIL.WIDTH = ZIL_BUILD.shape.width;
+		ZIL_UTIL.HEIGHT = ZIL_BUILD.shape.height;
+		ZIL_UTIL.DEPTH = ZIL_BUILD.shape.depth;
+		$("#width").val(ZIL_UTIL.WIDTH);
+		$("#height").val(ZIL_UTIL.HEIGHT);
+		$("#depth").val(ZIL_UTIL.DEPTH);
 
 		$("#category_names option:contains('" + category_name + "')").attr("selected", "selected");
 		ZIL_BUILD.load_shape_names(category_name);

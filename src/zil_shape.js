@@ -38,13 +38,13 @@ ZilShape.prototype.expand_all = function() {
 	}
 };
 	
-ZilShape.load_shape = function(category_name, shape_name, skip_bounds, default_w, default_h, default_d) {
+ZilShape.load_shape = function(category_name, shape_name, skip_bounds) {
 	var name = category_name + "." + shape_name;
 	var shape_obj = ZilShape.SHAPE_CACHE[name];
 	if(!shape_obj || skip_bounds) { // load from scratch when skip_bounds is true (so we update changed child shapes)
 		console.log("* Loading shape: " + name);
 		var js = window.localStorage[name];
-		var shape = js ? JSON.parse(js) : { width: default_w, height: default_h, depth: default_d, shape: {} };
+		var shape = js ? JSON.parse(js) : { width: ZIL_UTIL.WIDTH, height: ZIL_UTIL.HEIGHT, depth: ZIL_UTIL.DEPTH, shape: {} };
 		var shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth);
 		if(!skip_bounds) {
 			shape_obj.calculate_bounds();
@@ -152,8 +152,26 @@ ZilShape.prototype.clear_shape = function() {
 	this.shape = {};
 };
 
+ZilShape.get_face_geometry = function() {
+	var geometry = new THREE.Geometry();
+
+	geometry.vertices.push( new THREE.Vector3( -0.5, -0.5, 0 ) );
+	geometry.vertices.push( new THREE.Vector3( -0.5,  0.5, 0 ) );
+	geometry.vertices.push( new THREE.Vector3(  0.5,  0.5, 0 ) );
+	geometry.vertices.push( new THREE.Vector3(  0.5, -0.5, 0 ) );
+
+	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) ); // counter-clockwise winding order
+	geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
+
+	// geometry.computeCentroids();
+	geometry.computeFaceNormals();
+	geometry.computeVertexNormals();
+
+	return geometry;
+};
+
 ZilShape.ORIGIN = [0, 0, 0];
-ZilShape.BOX = new THREE.BoxGeometry(1, 1, 1);
+ZilShape.FACE = ZilShape.get_face_geometry();
 
 ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 	if(position_offset == null) position_offset = ZilShape.ORIGIN;
@@ -161,22 +179,52 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 
 	ZIL_UTIL.clear_node(parent_shape);
 
-	for(var x = -this.width; x < this.width; x++) {
-		for(var y = -this.height; y < this.height; y++) {
-			for(var z = -this.depth; z < this.depth; z++) {
-				var value = this.get_position(position_offset[0] + x, position_offset[1] + y, position_offset[2] + z);
+	for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH; x++) {
+		var gx = position_offset[0] + x;
+		for(var y = 0; y < ZIL_UTIL.VIEW_HEIGHT; y++) {
+			var gy = position_offset[1] + y;
+			for(var z = 0; z < ZIL_UTIL.VIEW_DEPTH; z++) {
+				var gz = position_offset[2] + z;
+
+				var value = this.get_position(gx, gy, gz);
 				if(value != null) {
 					var material = new THREE.MeshLambertMaterial( {color: ZIL_UTIL.palette[value], side: THREE.DoubleSide } );
-					var child_shape = new THREE.Mesh( ZilShape.BOX, material );
 
-					// append to parent
-					child_shape.position.x = x;
-					child_shape.position.y = y;
-					child_shape.position.z = z;
-					parent_shape.add(child_shape);
+					// todo: only draw visible faces
+
+					// south
+					if(y == ZIL_UTIL.VIEW_HEIGHT - 1 || this.get_position(gx, gy + 1, gz) == null) {
+						var child_shape = new THREE.Mesh( ZilShape.FACE, material );
+						child_shape.position.x = x;
+						child_shape.position.y = y + 0.5;
+						child_shape.position.z = z;
+						child_shape.rotation.x = PI / 2;
+						parent_shape.add(child_shape);
+					}
+
+					// east
+					if(x == ZIL_UTIL.VIEW_WIDTH - 1 || this.get_position(gx + 1, gy, gz) == null) {
+						var child_shape = new THREE.Mesh( ZilShape.FACE, material );
+						child_shape.position.x = x + 0.5;
+						child_shape.position.y = y;
+						child_shape.position.z = z;
+						child_shape.rotation.y = PI / 2;
+						parent_shape.add(child_shape);
+					}
+
+					// top
+					if(this.get_position(gx, gy, gz + 1) == null) {
+						var child_shape = new THREE.Mesh( ZilShape.FACE, material );
+						child_shape.position.x = x;
+						child_shape.position.y = y;
+						child_shape.position.z = z + 0.5;
+						parent_shape.add(child_shape);
+					}
 				}
 			}
 		}
 	}
+	console.log("added " + parent_shape.children.length + " shapes");
 	return parent_shape;
 };
+
