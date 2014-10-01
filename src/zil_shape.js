@@ -150,6 +150,7 @@ ZilShape.prototype.set_shape = function(x, y, z, child_shape) {
 
 ZilShape.prototype.clear_shape = function() {
 	this.shape = {};
+	this.expanded_shape = {};
 };
 
 ZilShape.get_face_geometry = function() {

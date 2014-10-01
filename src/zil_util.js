@@ -2,12 +2,12 @@ var PI = 3.14159;
 
 var ZIL_UTIL = {
 
-	WIDTH: 50,
-	HEIGHT: 50,
+	WIDTH: 100,
+	HEIGHT: 100,
 	DEPTH: 20,
-	VIEW_WIDTH: 30,
-	VIEW_HEIGHT: 30,
-	VIEW_DEPTH: 10,
+	VIEW_WIDTH: 60,
+	VIEW_HEIGHT: 60,
+	VIEW_DEPTH: 20,
 
 	// colors from: http://timtrott.co.uk/web-20-color-palette/
 	palette: [

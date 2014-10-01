@@ -14,20 +14,47 @@ var ZIL_BUILD = {
 	dragging: false,
 	last_mouse_x: null,
 	last_mouse_y: null,
+	zoom: 1,
+
+	mouse_zoom: function(event) {
+		if(event.originalEvent.wheelDelta /120 > 0) {
+			ZIL_BUILD.zoom /= 1.1;
+		} else {
+			if(ZIL_BUILD.zoom < 1) {
+				ZIL_BUILD.zoom *= 1.1;
+			} else {
+				ZIL_BUILD.zoom = 1;
+			}
+		}
+
+		ZIL_BUILD.camera.left = -ZIL_UTIL.VIEW_WIDTH * ZIL_BUILD.zoom;
+		ZIL_BUILD.camera.right = ZIL_UTIL.VIEW_WIDTH * ZIL_BUILD.zoom;
+		ZIL_BUILD.camera.top = ZIL_UTIL.VIEW_HEIGHT * ZIL_BUILD.zoom;
+		ZIL_BUILD.camera.bottom = -ZIL_UTIL.VIEW_HEIGHT * ZIL_BUILD.zoom;
+		ZIL_BUILD.camera.updateProjectionMatrix();
+
+		if(ZIL_BUILD.zoom < 1) {
+			ZIL_BUILD.camera.position.set(
+				ZIL_UTIL.VIEW_WIDTH + ZIL_BUILD.cursor[0], 
+				ZIL_UTIL.VIEW_HEIGHT + ZIL_BUILD.cursor[1], 
+				Math.max(ZIL_UTIL.VIEW_WIDTH + ZIL_BUILD.cursor[0] * ZIL_BUILD.zoom, 
+					ZIL_UTIL.VIEW_HEIGHT + ZIL_BUILD.cursor[1] * ZIL_BUILD.zoom));
+		} else {
+			ZIL_BUILD.camera.position.set(
+				ZIL_UTIL.VIEW_WIDTH, 
+				ZIL_UTIL.VIEW_HEIGHT, 
+				Math.max(ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT));
+		}
+
+	},
+
+	XY_PLANE: new THREE.Plane(new THREE.Vector3(0, 0, 1), 1),
 
 	mouse_move: function(event) {
-		var mousex = ( (event.clientX - ZIL_BUILD.offset_x) / ZIL_BUILD.canvas_size ) * 2 - 1;
-		var mousey = - ( (event.clientY - ZIL_BUILD.offset_y) / ZIL_BUILD.canvas_size ) * 2 + 1;
-		var mouse_message = "mouse=" + mousex.toFixed(2) + "," + mousey.toFixed(2);
-
-		var vector = new THREE.Vector3( mousex, mousey, 1 );
-		var ray_caster = ZIL_BUILD.projector.pickingRay(vector, ZIL_BUILD.camera);
-		var intersects = ray_caster.intersectObject(ZIL_BUILD.floor_plane, true);
-
-		if ( intersects.length > 0 ) {
-			ZIL_BUILD.cursor[0] = Math.round(intersects[ 0 ].point.x);
-			ZIL_BUILD.cursor[1] = Math.round(intersects[ 0 ].point.y);
-			// ZIL_BUILD.cursor[2] = Math.round(intersects[ 0 ].point.z);
+		var point = ZIL_BUILD.mouse_to_world(event);
+		if(point) { 
+			ZIL_BUILD.cursor[0] = Math.round(point.x);
+			ZIL_BUILD.cursor[1] = Math.round(point.y);
 			ZIL_BUILD.obj.position.set(ZIL_BUILD.cursor[0], ZIL_BUILD.cursor[1], ZIL_BUILD.cursor[2]);
 			ZIL_BUILD.xy.position.z = -ZIL_BUILD.obj.position.z - 0.5;
 			ZIL_BUILD.yz.position.x = -ZIL_BUILD.obj.position.x - 0.5;
@@ -35,10 +62,23 @@ var ZIL_BUILD = {
 			ZIL_BUILD.show_cursor_pos();
 
 			ZIL_BUILD.check_mouse(event);
-
-		} else {
-			$('#mouse_pos').html(mouse_message);
 		}
+	},
+
+	mouse_to_world: function(event) {
+		var mousex = (( (event.clientX - ZIL_BUILD.offset_x) / ZIL_BUILD.canvas_size ) * 2 - 1);
+		var mousey = (-( (event.clientY - ZIL_BUILD.offset_y) / ZIL_BUILD.canvas_size ) * 2 + 1);
+		// console.log("" + mousex + "," + mousey);
+		var vector = new THREE.Vector3( mousex, mousey, 1 );
+		var ray_caster = ZIL_BUILD.projector.pickingRay(vector, ZIL_BUILD.camera);
+		var intersection = ray_caster.ray.intersectPlane(ZIL_BUILD.XY_PLANE);
+		if(intersection) { 
+			if(intersection.x < 0) intersection.x = 0;
+			if(intersection.x >= ZIL_UTIL.VIEW_WIDTH) intersection.x = ZIL_UTIL.VIEW_WIDTH - 1;
+			if(intersection.y < 0) intersection.y = 0;
+			if(intersection.y >= ZIL_UTIL.VIEW_HEIGHT) intersection.y = ZIL_UTIL.VIEW_HEIGHT - 1;
+		}
+		return intersection;
 	},
 
 	mouse_drag: function(event) {
@@ -102,39 +142,22 @@ var ZIL_BUILD = {
 
 			// move the cursor
 			if(event.which == 37) { // W
-				// if(ZIL_BUILD.cursor[0] < ZIL_UTIL.VIEW_WIDTH - 1) {
-				// 	ZIL_BUILD.move_timer = Date.now();
-				// 	ZIL_BUILD.move = [1, 0, 0];
-				// }
 				if(ZIL_BUILD.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH) {
 					ZIL_BUILD.global_pos[0]++;
 					ZIL_BUILD.redraw_shape();
 				}
 			} else if(event.which == 39) { // E
-				// if(ZIL_BUILD.cursor[0] > 0) {
-				// 	ZIL_BUILD.move_timer = Date.now();
-				// 	ZIL_BUILD.move = [-1, 0, 0];
-				// }
 				if(ZIL_BUILD.global_pos[0] > 0) { 
 					ZIL_BUILD.global_pos[0]--;
 					ZIL_BUILD.redraw_shape();
 				}
 				
 			} else if(event.which == 38) { // N
-				// if(ZIL_BUILD.cursor[1] > 0) {
-				// 	ZIL_BUILD.move_timer = Date.now();
-				// 	ZIL_BUILD.move = [0, -1, 0];
-				// }
 				if(ZIL_BUILD.global_pos[1] > 0) { 
 					ZIL_BUILD.global_pos[1]--;
 					ZIL_BUILD.redraw_shape();
 				}
 			} else if(event.which == 40) { // S
-				// if(ZIL_BUILD.cursor[1] < ZIL_UTIL.VIEW_HEIGHT - 1) {
-				// 	ZIL_BUILD.move_timer = Date.now();
-				// 	ZIL_BUILD.move = [0, 1, 0];
-				// }
-
 				if(ZIL_BUILD.global_pos[1] < ZIL_UTIL.HEIGHT - ZIL_UTIL.VIEW_HEIGHT) {
 					ZIL_BUILD.global_pos[1]++;
 					ZIL_BUILD.redraw_shape();
@@ -158,18 +181,6 @@ var ZIL_BUILD = {
 				ZIL_BUILD.include_shape = null;
 				$("#include_message").fadeOut();
 			}
-		} else if(event.which == 65 && ZIL_BUILD.global_pos[0] > -ZIL_UTIL.WIDTH + 1) {
-			ZIL_BUILD.global_pos[0]--;
-			ZIL_BUILD.redraw_shape();
-		} else if(event.which == 68 && ZIL_BUILD.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH) {
-			ZIL_BUILD.global_pos[0]++;
-			ZIL_BUILD.redraw_shape();
-		} else if(event.which == 87 && ZIL_BUILD.global_pos[1] > -ZIL_UTIL.HEIGHT + 1) {
-			ZIL_BUILD.global_pos[1]--;
-			ZIL_BUILD.redraw_shape();
-		} else if(event.which == 83 && ZIL_BUILD.global_pos[1] < ZIL_UTIL.HEIGHT - ZIL_UTIL.VIEW_HEIGHT) {
-			ZIL_BUILD.global_pos[1]++;
-			ZIL_BUILD.redraw_shape();
 		} else if(event.which == 36) {
 			ZIL_BUILD.global_pos[0] = ZIL_BUILD.global_pos[1] = 0;
 			ZIL_BUILD.redraw_shape();
@@ -261,8 +272,7 @@ var ZIL_BUILD = {
 		ZIL_BUILD.load_last_shape();		
 
 		ZIL_BUILD.world = new THREE.Object3D();
-		ZIL_BUILD.world.position.x = ZIL_UTIL.VIEW_WIDTH / 2;
-		ZIL_BUILD.world.position.y = ZIL_UTIL.VIEW_HEIGHT / 2;
+		ZIL_BUILD.world.position.set(ZIL_UTIL.VIEW_WIDTH / 2, ZIL_UTIL.VIEW_HEIGHT / 2, 0);
 		ZIL_BUILD.world.scale.z = 2;	
 		ZIL_BUILD.scene.add( ZIL_BUILD.world );
 
@@ -326,9 +336,9 @@ var ZIL_BUILD = {
 		ZIL_BUILD.camera.position.set(
 			ZIL_UTIL.VIEW_WIDTH, 
 			ZIL_UTIL.VIEW_HEIGHT, 
-			Math.max(ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT) * 2);
+			Math.max(ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT));
 		ZIL_BUILD.camera.up = new THREE.Vector3(0,0,1);
-		ZIL_BUILD.camera.lookAt(new THREE.Vector3(ZIL_UTIL.VIEW_WIDTH / 4,ZIL_UTIL.VIEW_HEIGHT / 4, 0));
+		ZIL_BUILD.camera.lookAt(new THREE.Vector3(ZIL_UTIL.VIEW_WIDTH / 4, ZIL_UTIL.VIEW_HEIGHT / 4, 0));
 		ZIL_BUILD.projector = new THREE.Projector();
 	},
 
@@ -337,7 +347,7 @@ var ZIL_BUILD = {
 
 		// add the x plane
 		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_DEPTH );
-		var material = new THREE.MeshLambertMaterial( {color: 0x808080, side: THREE.DoubleSide, wireframe: true } );
+		var material = new THREE.MeshLambertMaterial( {color: 0x808080, side: THREE.DoubleSide, wireframe: true, transparent: true, opacity: 0.25 } );
 		var plane = new THREE.Mesh( geometry, material );
 		plane.rotation.x = PI / -2;
 		plane.position.y = -0.5;
@@ -347,17 +357,16 @@ var ZIL_BUILD = {
 
 		// add the y plane
 		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT, ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT );
-		var material = new THREE.MeshLambertMaterial( {color: 0x80cc80, side: THREE.DoubleSide, wireframe: true } );
+		var material = new THREE.MeshLambertMaterial( {color: 0x80cc80, side: THREE.DoubleSide, wireframe: true, transparent: true, opacity: 0.25 } );
 		var plane = new THREE.Mesh( geometry, material );
 		plane.position.z = -0.5
 		plane.position.x = -ZIL_UTIL.VIEW_WIDTH / -2 - 0.5;
 		plane.position.y = -ZIL_UTIL.VIEW_HEIGHT / -2 - 0.5;
 		ZIL_BUILD.coord.add( plane );
-		ZIL_BUILD.floor_plane = plane;
 
 		// add the z plane
 		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_HEIGHT, ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_HEIGHT );
-		var material = new THREE.MeshLambertMaterial( {color: 0x8080cc, side: THREE.DoubleSide, wireframe: true } );
+		var material = new THREE.MeshLambertMaterial( {color: 0x8080cc, side: THREE.DoubleSide, wireframe: true, transparent: true, opacity: 0.25 } );
 		var plane = new THREE.Mesh( geometry, material );
 		plane.rotation.y = PI / -2;
 		plane.position.x = -0.5;
@@ -415,6 +424,7 @@ var ZIL_BUILD = {
 			if(confirm("Are you sure?")) {
 				ZIL_BUILD.shape.clear_shape();
 				ZIL_BUILD.redraw_shape();
+				ZIL_BUILD.save_shape();
 				$("#clear").blur();
 			}
 			return false;
@@ -475,6 +485,7 @@ var ZIL_BUILD = {
 		document.body.onmousedown = ZIL_BUILD.mouse_down;
 		document.body.onmouseup = ZIL_BUILD.mouse_up;
 		document.body.oncontextmenu = function() { return false; };
+		$('canvas').bind('mousewheel', ZIL_BUILD.mouse_zoom);
 	},
 
 	load_last_shape: function() {
