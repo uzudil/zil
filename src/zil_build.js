@@ -15,6 +15,8 @@ var ZIL_BUILD = {
 	last_mouse_x: null,
 	last_mouse_y: null,
 	zoom: 1,
+	mouse_dir_lock: false,
+	last_point: { x: 0, y: 0 },
 
 	mouse_zoom: function(event) {
 		if(event.originalEvent.wheelDelta /120 > 0) {
@@ -53,8 +55,23 @@ var ZIL_BUILD = {
 	mouse_move: function(event) {
 		var point = ZIL_BUILD.mouse_to_world(event);
 		if(point) { 
-			ZIL_BUILD.cursor[0] = Math.round(point.x);
-			ZIL_BUILD.cursor[1] = Math.round(point.y);
+			if(event.ctrlKey) {
+				if(!ZIL_BUILD.mouse_dir_lock && ZIL_BUILD.last_point.x != 0 && ZIL_BUILD.last_point.y != 0) {
+					var dx = Math.abs(ZIL_BUILD.last_point.x - point.x);
+					var dy = Math.abs(ZIL_BUILD.last_point.y - point.y);
+					if(dx > 0.25)  ZIL_BUILD.mouse_dir_lock = "x";
+					else if(dy > 0.25)  ZIL_BUILD.mouse_dir_lock = "y";
+				}
+			} else {
+				if(ZIL_BUILD.mouse_dir_lock) {
+					ZIL_BUILD.mouse_dir_lock = false;
+				}
+			}
+			if(ZIL_BUILD.mouse_dir_lock != "y") ZIL_BUILD.cursor[0] = Math.round(point.x);
+			if(ZIL_BUILD.mouse_dir_lock != "x") ZIL_BUILD.cursor[1] = Math.round(point.y);
+			ZIL_BUILD.last_point.x = event.ctrlKey ? point.x : 0;
+			ZIL_BUILD.last_point.y = event.ctrlKey ? point.y : 0;
+
 			ZIL_BUILD.obj.position.set(ZIL_BUILD.cursor[0], ZIL_BUILD.cursor[1], ZIL_BUILD.cursor[2]);
 			ZIL_BUILD.xy.position.z = -ZIL_BUILD.obj.position.z - 0.5;
 			ZIL_BUILD.yz.position.x = -ZIL_BUILD.obj.position.x - 0.5;
@@ -138,6 +155,7 @@ var ZIL_BUILD = {
 
 	key_down: function(event) {
 		// console.log(event.which);
+
 		if(ZIL_BUILD.move_timer == 0) {
 
 			// move the cursor
