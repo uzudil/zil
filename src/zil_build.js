@@ -17,6 +17,7 @@ var ZIL_BUILD = {
 	zoom: 1,
 	mouse_dir_lock: false,
 	last_point: { x: 0, y: 0 },
+	editing: false,
 
 	mouse_zoom: function(event) {
 		if(event.originalEvent.wheelDelta /120 > 0) {
@@ -138,6 +139,10 @@ var ZIL_BUILD = {
 	},
 
 	mouse_down: function(event) {
+		if(!ZIL_BUILD.editing) {
+			ZIL_BUILD.editing = true;
+			ZIL_BUILD.shape.set_undo_shape();
+		}
 		if(event.which == 2 && event.currentTarget == document.body) {
 			ZIL_BUILD.dragging = true;
 		} else {
@@ -150,13 +155,13 @@ var ZIL_BUILD = {
 			ZIL_BUILD.dragging = false;
 			ZIL_BUILD.world.rotation.x = ZIL_BUILD.world.rotation.y = ZIL_BUILD.world.rotation.z = 0;
 			ZIL_BUILD.last_mouse_x = ZIL_BUILD.last_mouse_y = null;
+			ZIL_BUILD.editing = false;
 		}
 	},
 
 	key_down: function(event) {
 		// console.log(event.which);
-
-		if(ZIL_BUILD.move_timer == 0) {
+		if(ZIL_BUILD.move_timer == 0 && !event.ctrlKey) {
 
 			// move the cursor
 			if(event.which == 37) { // W
@@ -191,6 +196,10 @@ var ZIL_BUILD = {
 
 		if(event.which == 32) {
 			ZIL_BUILD.set_position();
+		} else if(event.which == 90 && event.ctrlKey) {
+			ZIL_BUILD.undo();
+		} else if(event.which == 70) {
+			ZIL_BUILD.flood_fill();
 		} else if(event.which == 27) {
 			if(ZIL_BUILD.include_shape) {
 				// detach from cursor
@@ -246,8 +255,40 @@ var ZIL_BUILD = {
 		}
 	},
 
+	undo: function() {
+		ZIL_BUILD.shape.undo();
+		ZIL_BUILD.save_shape();
+		ZIL_BUILD.redraw_shape();
+	},
+
+	flood_fill: function() {
+		ZIL_BUILD.shape.set_undo_shape();
+		var x = ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0];
+		var y = ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1];
+		var z = ZIL_BUILD.global_pos[2] + ZIL_BUILD.cursor[2];
+		ZIL_BUILD._flood_fill(x, y, z);
+		ZIL_BUILD.save_shape();
+		ZIL_BUILD.redraw_shape();
+	},
+
+	_flood_fill: function(x, y, z) {
+		ZIL_BUILD.shape.set_position(x, y, z, $("#color option:selected").index());
+		if(x < ZIL_UTIL.WIDTH && ZIL_BUILD.shape.get_position(x + 1, y, z) == null) {
+			ZIL_BUILD._flood_fill(x + 1, y, z);
+		}
+		if(y < ZIL_UTIL.HEIGHT && ZIL_BUILD.shape.get_position(x, y + 1, z) == null) {
+			ZIL_BUILD._flood_fill(x, y + 1, z);
+		}
+		if(x > 0 && ZIL_BUILD.shape.get_position(x - 1, y, z) == null) {
+			ZIL_BUILD._flood_fill(x - 1, y, z);
+		}
+		if(y > 0 && ZIL_BUILD.shape.get_position(x, y - 1, z) == null) {
+			ZIL_BUILD._flood_fill(x, y - 1, z);
+		}
+	},
+
 	set_position: function(force) {
-		console.log("force=" + force + " include=" + ZIL_BUILD.include_shape);
+		// console.log("force=" + force + " include=" + ZIL_BUILD.include_shape);
 		var x = ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0];
 		var y = ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1];
 		var z = ZIL_BUILD.global_pos[2] + ZIL_BUILD.cursor[2];

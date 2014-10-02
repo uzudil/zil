@@ -7,9 +7,27 @@ var ZilShape = function(category, name, shape, width, height, depth) {
 	this.height = height;
 	this.depth = depth;
 	this.bounds = { w: 0, h: 0, d: 0 };
+	this.undo_shape = null;
 }
 
 ZilShape.SHAPE_CACHE = {};
+
+ZilShape.prototype.set_undo_shape = function() {
+	this.undo_shape = {};
+	for(k in this.shape) {
+		this.undo_shape[k] = this.shape[k];
+	}
+};
+
+ZilShape.prototype.undo = function() {
+	if(this.undo_shape != null) {
+		this.shape = {};
+		for(var k in this.undo_shape) {
+			this.shape[k] = this.undo_shape[k];
+		}
+		this.expand_all();
+	}
+};
 
 ZilShape.prototype.expand_shape = function(key) {
 	var value = this.shape[key];
@@ -225,7 +243,7 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 			}
 		}
 	}
-	console.log("added " + parent_shape.children.length + " shapes");
+	// console.log("added " + parent_shape.children.length + " shapes");
 	return parent_shape;
 };
 
