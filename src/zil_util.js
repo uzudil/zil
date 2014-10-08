@@ -7,7 +7,7 @@ var ZIL_UTIL = {
 	DEPTH: 20,
 	VIEW_WIDTH: 60,
 	VIEW_HEIGHT: 60,
-	VIEW_DEPTH: 20,
+	VIEW_DEPTH: 24,
 
 	// colors from: http://timtrott.co.uk/web-20-color-palette/
 	palette: [

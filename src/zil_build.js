@@ -54,32 +54,46 @@ var ZIL_BUILD = {
 	XY_PLANE: new THREE.Plane(new THREE.Vector3(0, 0, 1), 1),
 
 	mouse_move: function(event) {
-		var point = ZIL_BUILD.mouse_to_world(event);
-		if(point) { 
-			if(event.ctrlKey) {
-				if(!ZIL_BUILD.mouse_dir_lock && ZIL_BUILD.last_point.x != 0 && ZIL_BUILD.last_point.y != 0) {
-					var dx = Math.abs(ZIL_BUILD.last_point.x - point.x);
-					var dy = Math.abs(ZIL_BUILD.last_point.y - point.y);
-					if(dx > 0.25)  ZIL_BUILD.mouse_dir_lock = "x";
-					else if(dy > 0.25)  ZIL_BUILD.mouse_dir_lock = "y";
-				}
-			} else {
-				if(ZIL_BUILD.mouse_dir_lock) {
-					ZIL_BUILD.mouse_dir_lock = false;
-				}
+		if(ZIL_BUILD.dragging) {
+			if(ZIL_BUILD.last_mouse_x == null) {
+				ZIL_BUILD.last_mouse_x = event.clientX;
+				ZIL_BUILD.last_mouse_y = event.clientY;
 			}
-			if(ZIL_BUILD.mouse_dir_lock != "y") ZIL_BUILD.cursor[0] = Math.round(point.x);
-			if(ZIL_BUILD.mouse_dir_lock != "x") ZIL_BUILD.cursor[1] = Math.round(point.y);
-			ZIL_BUILD.last_point.x = event.ctrlKey ? point.x : 0;
-			ZIL_BUILD.last_point.y = event.ctrlKey ? point.y : 0;
+			var dx = event.clientX - ZIL_BUILD.last_mouse_x;
+			var dy = event.clientY - ZIL_BUILD.last_mouse_y;
+			
+			ZIL_BUILD.world.rotation.z += dx / 100.0;
 
-			ZIL_BUILD.obj.position.set(ZIL_BUILD.cursor[0], ZIL_BUILD.cursor[1], ZIL_BUILD.cursor[2]);
-			ZIL_BUILD.xy.position.z = -ZIL_BUILD.obj.position.z - 0.5;
-			ZIL_BUILD.yz.position.x = -ZIL_BUILD.obj.position.x - 0.5;
-			ZIL_BUILD.xz.position.y = -ZIL_BUILD.obj.position.y - 0.5;
-			ZIL_BUILD.show_cursor_pos();
+			ZIL_BUILD.last_mouse_x = event.clientX;
+			ZIL_BUILD.last_mouse_y = event.clientY;
+		} else {
+			var point = ZIL_BUILD.mouse_to_world(event);
+			if(point) { 
+				if(event.ctrlKey) {
+					if(!ZIL_BUILD.mouse_dir_lock && ZIL_BUILD.last_point.x != 0 && ZIL_BUILD.last_point.y != 0) {
+						var dx = Math.abs(ZIL_BUILD.last_point.x - point.x);
+						var dy = Math.abs(ZIL_BUILD.last_point.y - point.y);
+						if(dx > 0.25)  ZIL_BUILD.mouse_dir_lock = "x";
+						else if(dy > 0.25)  ZIL_BUILD.mouse_dir_lock = "y";
+					}
+				} else {
+					if(ZIL_BUILD.mouse_dir_lock) {
+						ZIL_BUILD.mouse_dir_lock = false;
+					}
+				}
+				if(ZIL_BUILD.mouse_dir_lock != "y") ZIL_BUILD.cursor[0] = Math.round(point.x);
+				if(ZIL_BUILD.mouse_dir_lock != "x") ZIL_BUILD.cursor[1] = Math.round(point.y);
+				ZIL_BUILD.last_point.x = event.ctrlKey ? point.x : 0;
+				ZIL_BUILD.last_point.y = event.ctrlKey ? point.y : 0;
 
-			ZIL_BUILD.check_mouse(event);
+				ZIL_BUILD.obj.position.set(ZIL_BUILD.cursor[0], ZIL_BUILD.cursor[1], ZIL_BUILD.cursor[2]);
+				ZIL_BUILD.xy.position.z = -ZIL_BUILD.obj.position.z - 0.5;
+				ZIL_BUILD.yz.position.x = -ZIL_BUILD.obj.position.x - 0.5;
+				ZIL_BUILD.xz.position.y = -ZIL_BUILD.obj.position.y - 0.5;
+				ZIL_BUILD.show_cursor_pos();
+
+				ZIL_BUILD.check_mouse(event);
+			}
 		}
 	},
 
@@ -97,23 +111,6 @@ var ZIL_BUILD = {
 			if(intersection.y >= ZIL_UTIL.VIEW_HEIGHT) intersection.y = ZIL_UTIL.VIEW_HEIGHT - 1;
 		}
 		return intersection;
-	},
-
-	mouse_drag: function(event) {
-		if(event.currentTarget == document.body && ZIL_BUILD.dragging) {
-			if(ZIL_BUILD.last_mouse_x == null) {
-				ZIL_BUILD.last_mouse_x = event.x;
-				ZIL_BUILD.last_mouse_y = event.y;
-			}
-			var dx = event.x - ZIL_BUILD.last_mouse_x;
-			var dy = event.y - ZIL_BUILD.last_mouse_y;
-			
-			ZIL_BUILD.world.rotation.z += dx / 100.0;
-
-			ZIL_BUILD.last_mouse_x = event.x;
-			ZIL_BUILD.last_mouse_y = event.y;
-		}
-		return true;
 	},
 
 	cursor_moved: function() {
@@ -143,7 +140,7 @@ var ZIL_BUILD = {
 			ZIL_BUILD.editing = true;
 			ZIL_BUILD.shape.set_undo_shape();
 		}
-		if(event.which == 2 && event.currentTarget == document.body) {
+		if(event.which == 2) {
 			ZIL_BUILD.dragging = true;
 		} else {
 			ZIL_BUILD.check_mouse(event);
@@ -151,16 +148,15 @@ var ZIL_BUILD = {
 	},
 
 	mouse_up: function(event) {
-		if(event.currentTarget == document.body) {
-			ZIL_BUILD.dragging = false;
-			ZIL_BUILD.world.rotation.x = ZIL_BUILD.world.rotation.y = ZIL_BUILD.world.rotation.z = 0;
-			ZIL_BUILD.last_mouse_x = ZIL_BUILD.last_mouse_y = null;
-			ZIL_BUILD.editing = false;
-		}
+		ZIL_BUILD.dragging = false;
+		ZIL_BUILD.world.rotation.x = ZIL_BUILD.world.rotation.y = ZIL_BUILD.world.rotation.z = 0;
+		ZIL_BUILD.last_mouse_x = ZIL_BUILD.last_mouse_y = null;
+		ZIL_BUILD.editing = false;
 	},
 
 	key_down: function(event) {
 		// console.log(event.which);
+		if(event.target != document.body) return true;
 		if(ZIL_BUILD.move_timer == 0 && !event.ctrlKey) {
 
 			// move the cursor
@@ -538,13 +534,14 @@ var ZIL_BUILD = {
 			}
 			return true;
 		});
-		document.body.onkeydown = ZIL_BUILD.key_down;
-		$("canvas").mousemove(ZIL_BUILD.mouse_move);
-		document.body.onmousemove = ZIL_BUILD.mouse_drag;
-		document.body.onmousedown = ZIL_BUILD.mouse_down;
-		document.body.onmouseup = ZIL_BUILD.mouse_up;
+		console.log("canvas=" + $("canvas"));
+		$("canvas").
+			bind("mousemove", ZIL_BUILD.mouse_move).
+			bind("mousedown", ZIL_BUILD.mouse_down).
+			bind("mouseup", ZIL_BUILD.mouse_up).
+			bind('mousewheel', ZIL_BUILD.mouse_zoom);
 		document.body.oncontextmenu = function() { return false; };
-		$('canvas').bind('mousewheel', ZIL_BUILD.mouse_zoom);
+		document.body.onkeydown = ZIL_BUILD.key_down;
 	},
 
 	load_last_shape: function() {

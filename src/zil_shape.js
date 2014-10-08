@@ -209,8 +209,6 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 				if(value != null) {
 					var material = new THREE.MeshLambertMaterial( {color: ZIL_UTIL.palette[value], side: THREE.DoubleSide } );
 
-					// todo: only draw visible faces
-
 					// south
 					if(y == ZIL_UTIL.VIEW_HEIGHT - 1 || this.get_position(gx, gy + 1, gz) == null) {
 						var child_shape = new THREE.Mesh( ZilShape.FACE, material );
