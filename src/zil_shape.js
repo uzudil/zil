@@ -8,6 +8,8 @@ var ZilShape = function(category, name, shape, width, height, depth) {
 	this.depth = depth;
 	this.bounds = { w: 0, h: 0, d: 0 };
 	this.undo_shape = null;
+	this.chunks_in_memory = {};
+	this.chunks_on_screen = {};
 }
 
 ZilShape.SHAPE_CACHE = {};
@@ -121,8 +123,6 @@ ZilShape._pos = function(key) {
 };
 
 ZilShape.prototype.del_position = function(x, y, z) {
-	// todo: remove it from the expanded shape
-	// todo: any point inside a child shape should remove it	
 	var key = ZilShape._key(x, y, z);
 	if(key in this.shape_pos) {
 		// where the child shape was placed
@@ -171,77 +171,76 @@ ZilShape.prototype.clear_shape = function() {
 	this.expanded_shape = {};
 };
 
-ZilShape.get_face_geometry = function() {
-	var geometry = new THREE.Geometry();
-
-	geometry.vertices.push( new THREE.Vector3( -0.5, -0.5, 0 ) );
-	geometry.vertices.push( new THREE.Vector3( -0.5,  0.5, 0 ) );
-	geometry.vertices.push( new THREE.Vector3(  0.5,  0.5, 0 ) );
-	geometry.vertices.push( new THREE.Vector3(  0.5, -0.5, 0 ) );
-
-	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) ); // counter-clockwise winding order
-	geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
-
-	// geometry.computeCentroids();
-	geometry.computeFaceNormals();
-	geometry.computeVertexNormals();
-
-	return geometry;
-};
-
-ZilShape.ORIGIN = [0, 0, 0];
-ZilShape.FACE = ZilShape.get_face_geometry();
 
 ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 	if(position_offset == null) position_offset = ZilShape.ORIGIN;
 	if(parent_shape == null) parent_shape = new THREE.Object3D();
 
-	ZIL_UTIL.clear_node(parent_shape);
+	var drawn_chunks = {};
+	var cx, cy, cz, gx, gy, gz, chunk_key, chunk;
+	for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH; x+=ZIL_UTIL.CHUNK_SIZE) {
+		gx = position_offset[0] + x;
+		for(var y = 0; y < ZIL_UTIL.VIEW_HEIGHT; y+=ZIL_UTIL.CHUNK_SIZE) {
+			gy = position_offset[1] + y;
+			for(var z = 0; z < ZIL_UTIL.VIEW_DEPTH; z+=ZIL_UTIL.CHUNK_SIZE) {
+				gz = position_offset[2] + z;
 
-	for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH; x++) {
-		var gx = position_offset[0] + x;
-		for(var y = 0; y < ZIL_UTIL.VIEW_HEIGHT; y++) {
-			var gy = position_offset[1] + y;
-			for(var z = 0; z < ZIL_UTIL.VIEW_DEPTH; z++) {
-				var gz = position_offset[2] + z;
-
-				var value = this.get_position(gx, gy, gz);
-				if(value != null) {
-					var material = new THREE.MeshLambertMaterial( {color: ZIL_UTIL.palette[value], side: THREE.DoubleSide } );
-
-					// south
-					if(y == ZIL_UTIL.VIEW_HEIGHT - 1 || this.get_position(gx, gy + 1, gz) == null) {
-						var child_shape = new THREE.Mesh( ZilShape.FACE, material );
-						child_shape.position.x = x;
-						child_shape.position.y = y + 0.5;
-						child_shape.position.z = z;
-						child_shape.rotation.x = PI / 2;
-						parent_shape.add(child_shape);
-					}
-
-					// east
-					if(x == ZIL_UTIL.VIEW_WIDTH - 1 || this.get_position(gx + 1, gy, gz) == null) {
-						var child_shape = new THREE.Mesh( ZilShape.FACE, material );
-						child_shape.position.x = x + 0.5;
-						child_shape.position.y = y;
-						child_shape.position.z = z;
-						child_shape.rotation.y = PI / 2;
-						parent_shape.add(child_shape);
-					}
-
-					// top
-					if(this.get_position(gx, gy, gz + 1) == null) {
-						var child_shape = new THREE.Mesh( ZilShape.FACE, material );
-						child_shape.position.x = x;
-						child_shape.position.y = y;
-						child_shape.position.z = z + 0.5;
-						parent_shape.add(child_shape);
-					}
+				cx = (gx / ZIL_UTIL.CHUNK_SIZE)|0;
+				cy = (gy / ZIL_UTIL.CHUNK_SIZE)|0;
+				cz = (gz / ZIL_UTIL.CHUNK_SIZE)|0;
+				chunk_key = [cx, cy, cz].join(",");				
+				
+				if(this.chunks_in_memory[chunk_key] == null) {
+					var chunk = this.render_chunk(cx, cy, cz, chunk_key);
+					this.chunks_in_memory[chunk_key] = chunk;
 				}
+
+				// if not visible, add it
+				chunk = this.chunks_in_memory[chunk_key];
+				if(this.chunks_on_screen[chunk_key] == null) {
+					parent_shape.add(chunk.shape);
+					this.chunks_on_screen[chunk_key] = true;
+				}
+
+				// position the chunk
+				chunk.shape.position.set(cx * ZIL_UTIL.CHUNK_SIZE - position_offset[0], cy * ZIL_UTIL.CHUNK_SIZE - position_offset[1], cz * ZIL_UTIL.CHUNK_SIZE - position_offset[2]);
+
+				// remember we drew it
+				drawn_chunks[chunk_key] = true;
 			}
+		}
+	}
+	for(var chunk_key in this.chunks_on_screen) {
+		if(chunk_key && drawn_chunks[chunk_key] == null) {
+			var chunk = this.chunks_in_memory[chunk_key];
+			// remove from screen
+			parent_shape.remove(chunk.shape);
+			delete this.chunks_on_screen[chunk_key];
+			// todo: optionally remove from memory (if far from player)
+
 		}
 	}
 	// console.log("added " + parent_shape.children.length + " shapes");
 	return parent_shape;
+};
+
+ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk_key) {
+	var chunk = new Chunk(chunk_key);
+	for(var xx = 0; xx < ZIL_UTIL.CHUNK_SIZE; xx++) {
+		for(var yy = 0; yy < ZIL_UTIL.CHUNK_SIZE; yy++) {
+			for(var zz = 0; zz < ZIL_UTIL.CHUNK_SIZE; zz++) {
+				var block = chunk.blocks[xx][yy][zz];
+				var color = this.get_position(cx * ZIL_UTIL.CHUNK_SIZE + xx, cy * ZIL_UTIL.CHUNK_SIZE + yy, cz * ZIL_UTIL.CHUNK_SIZE + zz);
+				if(color) {
+					block.active = true;
+					block.color = color;
+				} else {
+					block.active = false;
+				}
+			}
+		}
+	}
+	chunk.render();
+	return chunk;
 };
 

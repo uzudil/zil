@@ -18,6 +18,9 @@ var ZIL_BUILD = {
 	mouse_dir_lock: false,
 	last_point: { x: 0, y: 0 },
 	editing: false,
+	fps_counter: 0,
+	fps_start: Date.now(),
+
 
 	mouse_zoom: function(event) {
 		if(event.originalEvent.wheelDelta /120 > 0) {
@@ -161,24 +164,24 @@ var ZIL_BUILD = {
 
 			// move the cursor
 			if(event.which == 37) { // W
-				if(ZIL_BUILD.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH) {
-					ZIL_BUILD.global_pos[0]++;
+				if(ZIL_BUILD.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH - ZIL_UTIL.CHUNK_SIZE) {
+					ZIL_BUILD.global_pos[0] += ZIL_UTIL.CHUNK_SIZE;
 					ZIL_BUILD.redraw_shape();
 				}
 			} else if(event.which == 39) { // E
 				if(ZIL_BUILD.global_pos[0] > 0) { 
-					ZIL_BUILD.global_pos[0]--;
+					ZIL_BUILD.global_pos[0] -= ZIL_UTIL.CHUNK_SIZE;
 					ZIL_BUILD.redraw_shape();
 				}
 				
 			} else if(event.which == 38) { // N
 				if(ZIL_BUILD.global_pos[1] > 0) { 
-					ZIL_BUILD.global_pos[1]--;
+					ZIL_BUILD.global_pos[1] -= ZIL_UTIL.CHUNK_SIZE;
 					ZIL_BUILD.redraw_shape();
 				}
 			} else if(event.which == 40) { // S
 				if(ZIL_BUILD.global_pos[1] < ZIL_UTIL.HEIGHT - ZIL_UTIL.VIEW_HEIGHT) {
-					ZIL_BUILD.global_pos[1]++;
+					ZIL_BUILD.global_pos[1] += ZIL_UTIL.CHUNK_SIZE;
 					ZIL_BUILD.redraw_shape();
 				}
 			} else if(event.which == 88 && ZIL_BUILD.cursor[2] > 0) { // <,
@@ -309,6 +312,8 @@ var ZIL_BUILD = {
 
 	redraw_shape: function() {
 		ZIL_BUILD.shape.render_shape(ZIL_BUILD.rendered_shape, ZIL_BUILD.global_pos);
+		$("#chunks_info").html("shown: " + Object.keys(ZIL_BUILD.shape.chunks_on_screen).length + 
+			" in memory: " + Object.keys(ZIL_BUILD.shape.chunks_in_memory).length);
 	},
 
 	start_builder: function() {
@@ -627,6 +632,15 @@ var ZIL_BUILD = {
 			ZIL_BUILD.move_cursor(now);
 
 			ZIL_BUILD.renderer.render(ZIL_BUILD.scene, ZIL_BUILD.camera);
+
+			ZIL_BUILD.fps_counter++;
+			if(ZIL_BUILD.fps_counter >= 25) {
+				var fps = ZIL_BUILD.fps_counter / (now - ZIL_BUILD.fps_start) * 1000;
+				$("#fps").html(fps.toFixed(2));
+				ZIL_BUILD.fps_counter = 0;
+				ZIL_BUILD.fps_start = now;
+			}
+			
 		}
 		requestAnimationFrame(ZIL_BUILD.render); 
 	}	
