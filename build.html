@@ -7,7 +7,9 @@
 				text-align: center;
 				background: #111;
 			}
-			canvas { width: 100%; height: 100%; border-left: 3px solid #222; border-right: 3px solid #222; cursor: crosshair;}
+			canvas { border-left: 3px solid #222; border-right: 3px solid #222; cursor: crosshair;
+				float: left;
+			}
 			* {
 				font-family: arial, sans-serif;
 				font-size: 10px;
@@ -17,10 +19,19 @@
 				display: inline-block;
 				width: 55px;
 			}
-			#palette {
-				position: fixed; top: 0; left: 0; background: #ccc;
+			.panel {
+				background: #ccc;
 				padding: 2px; margin: 2px;
-				z-index: 100;
+			}
+			#shape_chooser {
+				width: 200px;
+				float: right;
+			}
+			#palette {
+				background: #ccc;
+				padding: 2px; margin: 2px;
+				width: 200px;
+				float: left;
 			}
 			#sample {
 				width: 30px; height: 30px; display: inline-block;
@@ -46,7 +57,7 @@
 	</head>
 	<body>
 		<div id="include_message" class="message">Hit Esc to stop including object</div>
-		<div id="palette">
+		<div id="palette" class="panel">
 			<div class="group">
 				<div><label for="category_names">Categories:</label><select id="category_names"></select></div>
 				<div><label for="shape_names">Shapes:</label><select id="shape_names"></select></div>
@@ -55,9 +66,6 @@
 			<div class="group">
 				<div><label for="category">Category:</label><input id="category"></div>
 				<div><label for="name">Name:</label><input id="name"></div>
-				<div><label for="width">X Size:</label><input id="width" size="3"></div>
-				<div><label for="height">Y Size:</label><input id="height" size="3"></div>
-				<div><label for="depth">Z Size:</label><input id="depth" size="3"></div>
 			</div>
 			<div class="group">
 				<div><label for="color">Color:</label><select size=4 id="color"></select><span id="sample"></span></div>
@@ -68,6 +76,49 @@
 				<div>Global: <span id="global_pos"></span></div>
 				<div>Chunks: <span id="chunks_info"></span></div>
 				<div>FPS: <span id="fps"></span></div>
+			</div>
+		</div>
+		<canvas id="view"></canvas>
+		<div id="shape_chooser" class="panel">
+			<div class="group">
+				<div class="the_shape"> - </div>
+				<button class="select_shape">Select / 1</button>
+			</div>
+			<div class="group">
+				<div class="the_shape"> - </div>
+				<button class="select_shape">Select / 2</button>
+			</div>
+			<div class="group">
+				<div class="the_shape"> - </div>
+				<button class="select_shape">Select / 3</button>
+			</div>
+			<div class="group">
+				<div class="the_shape"> - </div>
+				<button class="select_shape">Select / 4</button>
+			</div>
+			<div class="group">
+				<div class="the_shape"> - </div>
+				<button class="select_shape">Select / 5</button>
+			</div>
+			<div class="group">
+				<div class="the_shape"> - </div>
+				<button class="select_shape">Select / 6</button>
+			</div>
+			<div class="group">
+				<div class="the_shape"> - </div>
+				<button class="select_shape">Select / 7</button>
+			</div>
+			<div class="group">
+				<div class="the_shape"> - </div>
+				<button class="select_shape">Select / 8</button>
+			</div>
+			<div class="group">
+				<div class="the_shape"> - </div>
+				<button class="select_shape">Select / 9</button>
+			</div>
+			<div class="group">
+				<div class="the_shape"> - </div>
+				<button class="select_shape">Select / 0</button>
 			</div>
 		</div>
 		<script src="lib/three.min.js"></script>

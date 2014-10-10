@@ -33,10 +33,10 @@ var ZIL_BUILD = {
 			}
 		}
 
-		ZIL_BUILD.camera.left = -ZIL_UTIL.VIEW_WIDTH * ZIL_BUILD.zoom;
-		ZIL_BUILD.camera.right = ZIL_UTIL.VIEW_WIDTH * ZIL_BUILD.zoom;
-		ZIL_BUILD.camera.top = ZIL_UTIL.VIEW_HEIGHT * ZIL_BUILD.zoom;
-		ZIL_BUILD.camera.bottom = -ZIL_UTIL.VIEW_HEIGHT * ZIL_BUILD.zoom;
+		ZIL_BUILD.camera.left = -ZIL_UTIL.VIEW_WIDTH / ZIL_UTIL.CAM_ZOOM * ZIL_BUILD.zoom;
+		ZIL_BUILD.camera.right = ZIL_UTIL.VIEW_WIDTH / ZIL_UTIL.CAM_ZOOM * ZIL_BUILD.zoom;
+		ZIL_BUILD.camera.top = ZIL_UTIL.VIEW_HEIGHT / ZIL_UTIL.CAM_ZOOM * ZIL_BUILD.zoom;
+		ZIL_BUILD.camera.bottom = -ZIL_UTIL.VIEW_HEIGHT / ZIL_UTIL.CAM_ZOOM * ZIL_BUILD.zoom;
 		ZIL_BUILD.camera.updateProjectionMatrix();
 
 		if(ZIL_BUILD.zoom < 1) {
@@ -59,16 +59,16 @@ var ZIL_BUILD = {
 	mouse_move: function(event) {
 		if(ZIL_BUILD.dragging) {
 			if(ZIL_BUILD.last_mouse_x == null) {
-				ZIL_BUILD.last_mouse_x = event.clientX;
-				ZIL_BUILD.last_mouse_y = event.clientY;
+				ZIL_BUILD.last_mouse_x = event.offsetX;
+				ZIL_BUILD.last_mouse_y = event.offsetY;
 			}
-			var dx = event.clientX - ZIL_BUILD.last_mouse_x;
-			var dy = event.clientY - ZIL_BUILD.last_mouse_y;
+			var dx = event.offsetX - ZIL_BUILD.last_mouse_x;
+			var dy = event.offsetY - ZIL_BUILD.last_mouse_y;
 			
 			ZIL_BUILD.world.rotation.z += dx / 100.0;
 
-			ZIL_BUILD.last_mouse_x = event.clientX;
-			ZIL_BUILD.last_mouse_y = event.clientY;
+			ZIL_BUILD.last_mouse_x = event.offsetX;
+			ZIL_BUILD.last_mouse_y = event.offsetY;
 		} else {
 			var point = ZIL_BUILD.mouse_to_world(event);
 			if(point) { 
@@ -101,8 +101,8 @@ var ZIL_BUILD = {
 	},
 
 	mouse_to_world: function(event) {
-		var mousex = (( (event.clientX - ZIL_BUILD.offset_x) / ZIL_BUILD.canvas_size ) * 2 - 1);
-		var mousey = (-( (event.clientY - ZIL_BUILD.offset_y) / ZIL_BUILD.canvas_size ) * 2 + 1);
+		var mousex = (( (event.offsetX - ZIL_BUILD.offset_x) / ZIL_BUILD.canvas_size ) * 2 - 1);
+		var mousey = (-( (event.offsetY - ZIL_BUILD.offset_y) / ZIL_BUILD.canvas_size ) * 2 + 1);
 		// console.log("" + mousex + "," + mousey);
 		var vector = new THREE.Vector3( mousex, mousey, 1 );
 		var ray_caster = ZIL_BUILD.projector.pickingRay(vector, ZIL_BUILD.camera);
@@ -318,15 +318,15 @@ var ZIL_BUILD = {
 
 	start_builder: function() {
 		ZIL_BUILD.scene = new THREE.Scene();
-		ZIL_BUILD.renderer = new THREE.WebGLRenderer();
+		ZIL_BUILD.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
 		ZIL_BUILD.init_camera();
 
 		var size = Math.min(window.innerWidth, window.innerHeight);
 		ZIL_BUILD.renderer.setSize( size, size );
 		ZIL_BUILD.canvas_size = size;
 		document.body.appendChild( ZIL_BUILD.renderer.domElement );
-		ZIL_BUILD.offset_x = ($("body").width() - size) / 2;
-		ZIL_BUILD.offset_y = ($("body").height() - size) / 2;
+		ZIL_BUILD.offset_x = 0;
+		ZIL_BUILD.offset_y = 0;
 
 		ZIL_BUILD.init_dom();
 		ZIL_BUILD.load_last_shape();		
@@ -390,8 +390,8 @@ var ZIL_BUILD = {
 
 	init_camera: function() {
 		ZIL_BUILD.camera = new THREE.OrthographicCamera( 
-			-ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_WIDTH, 
-			ZIL_UTIL.VIEW_HEIGHT, -ZIL_UTIL.VIEW_HEIGHT, 
+			-ZIL_UTIL.VIEW_WIDTH / ZIL_UTIL.CAM_ZOOM, ZIL_UTIL.VIEW_WIDTH / ZIL_UTIL.CAM_ZOOM, 
+			ZIL_UTIL.VIEW_HEIGHT / ZIL_UTIL.CAM_ZOOM, -ZIL_UTIL.VIEW_HEIGHT / ZIL_UTIL.CAM_ZOOM, 
 			-1000, 1000 );
 		ZIL_BUILD.camera.position.set(
 			ZIL_UTIL.VIEW_WIDTH, 
@@ -525,20 +525,6 @@ var ZIL_BUILD = {
 			return false;
 		});
 
-		$("#width,#height,#depth").keyup(function (e) {
-			if (e.keyCode == 13) {
-				ZIL_UTIL.WIDTH = parseInt($("#width").val(), 10);
-				ZIL_UTIL.HEIGHT = parseInt($("#height").val(), 10);
-				ZIL_UTIL.DEPTH = parseInt($("#depth").val(), 10);
-				ZIL_BUILD.save_shape();
-				
-				ZIL_BUILD.init_coords();
-				ZIL_BUILD.init_camera();
-
-				return false;	
-			}
-			return true;
-		});
 		console.log("canvas=" + $("canvas"));
 		$("canvas").
 			bind("mousemove", ZIL_BUILD.mouse_move).
@@ -606,9 +592,9 @@ var ZIL_BUILD = {
 		$("#name").val(shape_name);
 		ZIL_BUILD.shape = ZilShape.load_shape(category_name, shape_name, true);
 
-		ZIL_UTIL.WIDTH = ZIL_BUILD.shape.width;
-		ZIL_UTIL.HEIGHT = ZIL_BUILD.shape.height;
-		ZIL_UTIL.DEPTH = ZIL_BUILD.shape.depth;
+		// ZIL_UTIL.WIDTH = ZIL_BUILD.shape.width;
+		// ZIL_UTIL.HEIGHT = ZIL_BUILD.shape.height;
+		// ZIL_UTIL.DEPTH = ZIL_BUILD.shape.depth;
 		$("#width").val(ZIL_UTIL.WIDTH);
 		$("#height").val(ZIL_UTIL.HEIGHT);
 		$("#depth").val(ZIL_UTIL.DEPTH);

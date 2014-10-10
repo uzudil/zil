@@ -2,7 +2,6 @@ var ZilShape = function(category, name, shape, width, height, depth) {
 	this.category = category;
 	this.name = name;
 	this.shape = shape; // what to persist
-	this.expand_all();
 	this.width = width;
 	this.height = height;
 	this.depth = depth;
@@ -10,6 +9,11 @@ var ZilShape = function(category, name, shape, width, height, depth) {
 	this.undo_shape = null;
 	this.chunks_in_memory = {};
 	this.chunks_on_screen = {};
+	this.all_chunks_updated = true;
+	this.chunks_updated = {};
+
+	// do this last
+	this.expand_all();
 }
 
 ZilShape.SHAPE_CACHE = {};
@@ -31,6 +35,15 @@ ZilShape.prototype.undo = function() {
 	}
 };
 
+ZilShape.prototype.mark_chunk_updated = function(key) {
+	var pos = ZilShape._pos(key);
+	var cx = (pos[0] / ZIL_UTIL.CHUNK_SIZE)|0;
+	var cy = (pos[1] / ZIL_UTIL.CHUNK_SIZE)|0;
+	var cz = (pos[2] / ZIL_UTIL.CHUNK_SIZE)|0;
+	var chunk_key = [cx, cy, cz].join(",");
+	this.chunks_updated[chunk_key] = true;
+};
+
 ZilShape.prototype.expand_shape = function(key) {
 	var value = this.shape[key];
 	if(isNaN(value)) {
@@ -42,15 +55,18 @@ ZilShape.prototype.expand_shape = function(key) {
 			var child_value = child_shape.expanded_shape[child_key];
 			var child_pos = ZilShape._pos(child_key);
 			var new_key = ZilShape._key(pos[0] + child_pos[0], pos[1] + child_pos[1], pos[2] + child_pos[2]);
+			this.mark_chunk_updated(new_key);
 			this.expanded_shape[new_key] = child_value;
 			this.shape_pos[new_key] = key;
 		}
 	} else {
+		this.mark_chunk_updated(key);
 		this.expanded_shape[key] = value;
 	}
 };
 
 ZilShape.prototype.expand_all = function() {
+	this.all_chunks_updated = true;
 	this.expanded_shape = {}; // what to draw
 	this.shape_pos = {}; // where are the child shapes
 	for(var key in this.shape) {
@@ -139,6 +155,7 @@ ZilShape.prototype.del_position = function(x, y, z) {
 				origin_pos[0] + child_pos[0], 
 				origin_pos[1] + child_pos[1], 
 				origin_pos[2] + child_pos[2]);
+			this.mark_chunk_updated(new_key);
 			delete this.expanded_shape[new_key];
 			delete this.shape_pos[new_key];
 		}
@@ -146,6 +163,7 @@ ZilShape.prototype.del_position = function(x, y, z) {
 	} else {
 		delete this.shape[key];
 		delete this.expanded_shape[key];
+		this.mark_chunk_updated(key);
 	}
 };
 
@@ -169,6 +187,7 @@ ZilShape.prototype.set_shape = function(x, y, z, child_shape) {
 ZilShape.prototype.clear_shape = function() {
 	this.shape = {};
 	this.expanded_shape = {};
+	this.all_chunks_updated = true;
 };
 
 
@@ -190,13 +209,20 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 				cz = (gz / ZIL_UTIL.CHUNK_SIZE)|0;
 				chunk_key = [cx, cy, cz].join(",");				
 				
+				// create the chunk
 				if(this.chunks_in_memory[chunk_key] == null) {
-					var chunk = this.render_chunk(cx, cy, cz, chunk_key);
+					var chunk = new Chunk(chunk_key);
 					this.chunks_in_memory[chunk_key] = chunk;
 				}
 
-				// if not visible, add it
+				// render the chunk if needed
 				chunk = this.chunks_in_memory[chunk_key];
+				if(this.all_chunks_updated || this.chunks_updated[chunk_key]) {
+					this.render_chunk(cx, cy, cz, chunk);
+					this.chunks_updated[chunk_key] = false;
+				}
+
+				// if not visible, add it
 				if(this.chunks_on_screen[chunk_key] == null) {
 					parent_shape.add(chunk.shape);
 					this.chunks_on_screen[chunk_key] = true;
@@ -210,6 +236,7 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 			}
 		}
 	}
+	this.all_chunks_updated = false;
 	for(var chunk_key in this.chunks_on_screen) {
 		if(chunk_key && drawn_chunks[chunk_key] == null) {
 			var chunk = this.chunks_in_memory[chunk_key];
@@ -224,23 +251,21 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 	return parent_shape;
 };
 
-ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk_key) {
-	var chunk = new Chunk(chunk_key);
+ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk) {
 	for(var xx = 0; xx < ZIL_UTIL.CHUNK_SIZE; xx++) {
 		for(var yy = 0; yy < ZIL_UTIL.CHUNK_SIZE; yy++) {
 			for(var zz = 0; zz < ZIL_UTIL.CHUNK_SIZE; zz++) {
 				var block = chunk.blocks[xx][yy][zz];
 				var color = this.get_position(cx * ZIL_UTIL.CHUNK_SIZE + xx, cy * ZIL_UTIL.CHUNK_SIZE + yy, cz * ZIL_UTIL.CHUNK_SIZE + zz);
-				if(color) {
+				if(color == null) {
+					block.active = false;
+				} else {
 					block.active = true;
 					block.color = color;
-				} else {
-					block.active = false;
 				}
 			}
 		}
 	}
-	chunk.render();
-	return chunk;
+	chunk.render(true); // force refresh
 };
 

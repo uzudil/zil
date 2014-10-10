@@ -54,8 +54,10 @@ Chunk.get_material = function(color) {
 	return material;
 };
 
-Chunk.prototype.render = function() {
-	if(!this._shape_changed) return;
+Chunk.prototype.render = function(force) {
+	if(!(this._shape_changed || force)) return;
+
+	console.log("* Rendering chunk " + this.name);
 
 	ZIL_UTIL.clear_node(this.shape);
 
