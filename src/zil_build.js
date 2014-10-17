@@ -20,7 +20,7 @@ var ZIL_BUILD = {
 	editing: false,
 	fps_counter: 0,
 	fps_start: Date.now(),
-
+    shortcut_shape: [ null, null, null, null, null, null, null, null, null, null ],
 
 	mouse_zoom: function(event) {
 		if(event.originalEvent.wheelDelta /120 > 0) {
@@ -214,7 +214,16 @@ var ZIL_BUILD = {
 			ZIL_BUILD.global_pos[0] = ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH;
 			ZIL_BUILD.global_pos[1] = ZIL_UTIL.HEIGHT - ZIL_UTIL.VIEW_HEIGHT;
 			ZIL_BUILD.redraw_shape();
-		}
+		} else if(event.which >= 0x30 && event.which <= 0x39) {
+            var index = event.which - 0x30;
+            var el = $("#shape_chooser .group").eq(index);
+            var category = $(".category_selector", el).val();
+            var shape_name = $(".shape_selector", el).val();
+            console.log("index=" + index + " cat=" + category + " shape=" + shape_name);
+            if(shape_name) {
+                ZIL_BUILD._include_shape(category, shape_name);
+            }
+        }
 
 		$("#global_pos").empty().html(ZIL_BUILD.global_pos.join(",") + "-" + [
 			ZIL_BUILD.global_pos[0] + ZIL_UTIL.VIEW_WIDTH, 
@@ -465,12 +474,26 @@ var ZIL_BUILD = {
 		// load the cateogry names
 		var cat_names = JSON.parse(window.localStorage["cat_names"] || "[\"default\"]");
 		for(var i = 0; i < cat_names.length; i++) {
-			$("#category_names").append("<option>" + cat_names[i] + "</option>");
+			ZIL_BUILD.add_category(cat_names[i]);
 		}
 		$("#category_names").change(function(e) {
 			var category_name = $("#category_names").val();
 			ZIL_BUILD.load_shape_names(category_name);
 		});
+		$("#shape_chooser .group .category_selector").change(function(e) {
+			var t = $(e.target);
+			var category_name = t.val();
+			ZIL_BUILD.load_shape_names(category_name, $(".shape_selector", t.closest(".group")));
+            t.blur();
+		});
+        $("#shape_chooser .group .shape_selector").change(function(e) {
+            var t = $(e.target);
+            var values = $.map($("#shape_chooser .group"), function(x) {
+                return $(".category_selector", $(x)).val() + "." + $(".shape_selector", $(x)).val();
+            });
+            window.localStorage["shortcuts"] = JSON.stringify(values);
+            t.blur();
+        });
 
 		// event handlers
 		$("#load_shape").click(function(event) {
@@ -494,6 +517,7 @@ var ZIL_BUILD = {
 			var name = $("#shape_names option").eq(n).text() ? n >= 0 : "";
 			if(n >= 0 && confirm("Delete shape \"" + name + "\"?")) {
 				$("#shape_names option").eq(n).remove();
+				// todo: remove from choosers
 				var names = $.map($("#shape_names option"), function(e) { return $(e).text(); });
 				window.localStorage["shape_names"] = JSON.stringify(names);
 				delete window.localStorage[name];
@@ -501,30 +525,6 @@ var ZIL_BUILD = {
 			}
 			return false;
 		});
-		$("#include").click(function(event) {
-			var category = $("#category_names").val();
-			var shape_name = $("#shape_names").val();
-			// make sure it's not the current shape 
-			if(!(category == $("#category").val() && shape_name == $("#name").val())) {
-				// remove the old cursor shape
-				if(ZIL_BUILD.include_shape_obj != null) {
-					ZIL_BUILD.obj.remove(ZIL_BUILD.include_shape_obj);
-				}
-
-				// load this shape and add it to the cursor
-				ZIL_BUILD.include_shape = ZilShape.load_shape(category, shape_name);
-				ZIL_BUILD.include_shape_obj = ZIL_BUILD.include_shape.render_shape();
-				ZIL_BUILD.obj.add(ZIL_BUILD.include_shape_obj);
-
-				// reset the ui
-				$("#category_names").val($("#category").val());
-				$("#shape_names").val($("#name").val());
-				$("#include").blur();
-				$("#include_message").fadeIn();
-			}
-			return false;
-		});
-
 		console.log("canvas=" + $("canvas"));
 		$("canvas").
 			bind("mousemove", ZIL_BUILD.mouse_move).
@@ -535,6 +535,31 @@ var ZIL_BUILD = {
 		document.body.onkeydown = ZIL_BUILD.key_down;
 	},
 
+    _include_shape: function(category, shape_name) {
+        // make sure it's not the current shape
+        if(!(category == $("#category").val() && shape_name == $("#name").val())) {
+            // remove the old cursor shape
+            if(ZIL_BUILD.include_shape_obj != null) {
+                ZIL_BUILD.obj.remove(ZIL_BUILD.include_shape_obj);
+            }
+
+            // load this shape and add it to the cursor
+            ZIL_BUILD.include_shape = ZilShape.load_shape(category, shape_name);
+            ZIL_BUILD.include_shape.reset_shape();
+            console.log("Including shape: ", ZIL_BUILD.include_shape);
+            ZIL_BUILD.include_shape_obj = ZIL_BUILD.include_shape.render_shape();
+            ZIL_BUILD.obj.add(ZIL_BUILD.include_shape_obj);
+
+            $("#include_message").fadeIn();
+        }
+    },
+
+	add_category: function(cat_name) {
+		var option = "<option>" + cat_name + "</option>";
+		$("#category_names").append(option);
+		$("#shape_chooser .group .category_selector").append(option);
+	},
+
 	load_last_shape: function() {
 		// load the current shape name
 		var name = JSON.parse(window.localStorage["shape_name"] || "\"default.default\"");
@@ -542,19 +567,42 @@ var ZIL_BUILD = {
 		var category_name = s[0];
 		var shape_name = s[1];
 		ZIL_BUILD.load_shape(category_name, shape_name);
+
+        var shortcuts_str = window.localStorage["shortcuts"];
+        if(shortcuts_str) {
+            var shortcuts = JSON.parse(shortcuts_str);
+            for (var i = 0; shortcuts && i < shortcuts.length; i++) {
+                var s = shortcuts[i].split(".");
+                if (s[1] && s[1] != "null") {
+                    var el = $("#shape_chooser .group").eq(i);
+                    ZIL_BUILD.shortcut_shape[i] = s[1];
+                    $(".category_selector", el).val(s[0]); // this will select the shape
+                    ZIL_BUILD.load_shape_names(s[0], $(".shape_selector", el));
+                }
+            }
+        }
 	},
 
-	load_shape_names: function(category_name) {
+	load_shape_names: function(category_name, el) {
 		// load the shape names
 		var shape_names = JSON.parse(window.localStorage[category_name + "_shape_names"] || "[\"default\"]");
-		$("#shape_names").empty();
+		if(el == null) el = $("#shape_names");
+		el.empty();
 		for(var i = 0; i < shape_names.length; i++) {
-			$("#shape_names").append("<option>" + shape_names[i] + "</option>");
+			el.append("<option>" + shape_names[i] + "</option>")
 		}
 
 		// select the one being edited
-		$("#shape_names option:contains('" + $("#name").val() + "')").attr("selected", "selected");
-	},
+        if(el == $("#shape_names")) {
+            $("option:contains('" + $("#name").val() + "')", el).attr("selected", "selected");
+        } else {
+            var index = el.closest(".group").index();
+            if (ZIL_BUILD.shortcut_shape[index]) {
+                $("option:contains('" + ZIL_BUILD.shortcut_shape[index] + "')", el).attr("selected", "selected");
+                ZIL_BUILD.shortcut_shape[index] = null;
+            }
+        }
+    },
 
 	save_shape: function() {
 		var category_name = $("#category").val();
@@ -574,7 +622,7 @@ var ZIL_BUILD = {
 
 		// add/select the category
 		if($("#category_names option:contains('" + category_name + "')").length == 0) {
-			$("#category_names").append("<option>" + category_name + "</option>");
+			ZIL_BUILD.add_category(category_name);
 			var names = $.map($("#category_names option"), function(e) { return $(e).text(); });
 			window.localStorage["cat_names"] = JSON.stringify(names);
 		}
@@ -612,22 +660,21 @@ var ZIL_BUILD = {
 	render: function() {
 		var now = Date.now();
 		var dx = now - ZIL_BUILD.last_time;
-		if(dx > 50) { // reduce fan noise
-			ZIL_BUILD.last_time = now;
+		ZIL_BUILD.last_time = now;
 
-			ZIL_BUILD.move_cursor(now);
+		ZIL_BUILD.move_cursor(now);
 
-			ZIL_BUILD.renderer.render(ZIL_BUILD.scene, ZIL_BUILD.camera);
+		ZIL_BUILD.renderer.render(ZIL_BUILD.scene, ZIL_BUILD.camera);
 
-			ZIL_BUILD.fps_counter++;
-			if(ZIL_BUILD.fps_counter >= 25) {
-				var fps = ZIL_BUILD.fps_counter / (now - ZIL_BUILD.fps_start) * 1000;
-				$("#fps").html(fps.toFixed(2));
-				ZIL_BUILD.fps_counter = 0;
-				ZIL_BUILD.fps_start = now;
-			}
-			
+        // draw fps
+		ZIL_BUILD.fps_counter++;
+		if(ZIL_BUILD.fps_counter >= 25) {
+			var fps = ZIL_BUILD.fps_counter / (now - ZIL_BUILD.fps_start) * 1000;
+			$("#fps").html(fps.toFixed(2));
+			ZIL_BUILD.fps_counter = 0;
+			ZIL_BUILD.fps_start = now;
 		}
-		requestAnimationFrame(ZIL_BUILD.render); 
+//		requestAnimationFrame(ZIL_BUILD.render);
+		setTimeout(ZIL_BUILD.render, 50); // reduce fan noise
 	}	
 }

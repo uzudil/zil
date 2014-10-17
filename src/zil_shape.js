@@ -7,16 +7,19 @@ var ZilShape = function(category, name, shape, width, height, depth) {
 	this.depth = depth;
 	this.bounds = { w: 0, h: 0, d: 0 };
 	this.undo_shape = null;
-	this.chunks_in_memory = {};
+	this.reset_shape();
+};
+
+ZilShape.SHAPE_CACHE = {};
+
+ZilShape.prototype.reset_shape = function() {
+    this.chunks_in_memory = {};
 	this.chunks_on_screen = {};
 	this.all_chunks_updated = true;
 	this.chunks_updated = {};
-
-	// do this last
+    // do this last
 	this.expand_all();
-}
-
-ZilShape.SHAPE_CACHE = {};
+};
 
 ZilShape.prototype.set_undo_shape = function() {
 	this.undo_shape = {};
@@ -192,7 +195,7 @@ ZilShape.prototype.clear_shape = function() {
 
 
 ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
-	if(position_offset == null) position_offset = ZilShape.ORIGIN;
+	if(position_offset == null) position_offset = ZIL_UTIL.ORIGIN;
 	if(parent_shape == null) parent_shape = new THREE.Object3D();
 
 	var drawn_chunks = {};

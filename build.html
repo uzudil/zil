@@ -16,7 +16,7 @@
 			}
 			label {
 				vertical-align: top;
-				display: inline-block;
+				display: inline;
 				width: 55px;
 			}
 			.panel {
@@ -27,6 +27,9 @@
 				width: 200px;
 				float: right;
 			}
+            #shape_chooser * {
+                text-align: left;
+            }
 			#palette {
 				background: #ccc;
 				padding: 2px; margin: 2px;
@@ -61,7 +64,7 @@
 			<div class="group">
 				<div><label for="category_names">Categories:</label><select id="category_names"></select></div>
 				<div><label for="shape_names">Shapes:</label><select id="shape_names"></select></div>
-				<div><label></label><button id="load_shape">Load</button> <button id="delete">Delete</button> <button id="include">Include</button></div>
+				<div><label></label><button id="load_shape">Load</button> <button id="delete">Delete</button></div>
 			</div>
 			<div class="group">
 				<div><label for="category">Category:</label><input id="category"></div>
@@ -81,44 +84,54 @@
 		<canvas id="view"></canvas>
 		<div id="shape_chooser" class="panel">
 			<div class="group">
-				<div class="the_shape"> - </div>
-				<button class="select_shape">Select / 1</button>
+				<div>0</div>
+				<div><label>Categories:<select class="category_selector"></select></label></div>
+				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div class="the_shape"> - </div>
-				<button class="select_shape">Select / 2</button>
+				<div>1</div>
+				<div><label>Categories:<select class="category_selector"></select></label></div>
+				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div class="the_shape"> - </div>
-				<button class="select_shape">Select / 3</button>
+				<div>2</div>
+				<div><label>Categories:<select class="category_selector"></select></label></div>
+				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div class="the_shape"> - </div>
-				<button class="select_shape">Select / 4</button>
+				<div>3</div>
+				<div><label>Categories:<select class="category_selector"></select></label></div>
+				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div class="the_shape"> - </div>
-				<button class="select_shape">Select / 5</button>
+				<div>4</div>
+				<div><label>Categories:<select class="category_selector"></select></label></div>
+				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div class="the_shape"> - </div>
-				<button class="select_shape">Select / 6</button>
+				<div>5</div>
+				<div><label>Categories:<select class="category_selector"></select></label></div>
+				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div class="the_shape"> - </div>
-				<button class="select_shape">Select / 7</button>
+				<div>6</div>
+				<div><label>Categories:<select class="category_selector"></select></label></div>
+				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div class="the_shape"> - </div>
-				<button class="select_shape">Select / 8</button>
+				<div>7</div>
+				<div><label>Categories:<select class="category_selector"></select></label></div>
+				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div class="the_shape"> - </div>
-				<button class="select_shape">Select / 9</button>
+				<div>8</div>
+				<div><label>Categories:<select class="category_selector"></select></label></div>
+				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div class="the_shape"> - </div>
-				<button class="select_shape">Select / 0</button>
+				<div>9</div>
+				<div><label>Categories:<select class="category_selector"></select></label></div>
+				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 		</div>
 		<script src="lib/three.min.js"></script>
