@@ -180,6 +180,30 @@ ZilShape.prototype.get_position = function(x, y, z) {
 	return this.expanded_shape[ZilShape._key(x, y, z)];
 };
 
+ZilShape.prototype.get_highest_empty_space = function(x, y, shape) {
+    var max_z = 0;
+    var w = 1;
+    var h = 1;
+    if(shape) {
+        w = shape.bounds.w;
+        h = shape.bounds.h;
+    }
+    for(var xx = 0; xx < w; xx++) {
+        for (var yy = 0; yy < h; yy++) {
+            var z = this.get_highest_empty_space_at_point(x + xx, y + yy);
+            if(z > max_z) max_z = z;
+        }
+    }
+    return max_z;
+};
+
+ZilShape.prototype.get_highest_empty_space_at_point = function(x, y) {
+    for (var z = ZIL_UTIL.DEPTH - 2; z >= 0; z--) {
+        if (this.get_position(x, y, z)) return z + 1;
+    }
+    return 0; // all free
+};
+
 ZilShape.prototype.set_shape = function(x, y, z, child_shape) {
 	// todo: add rotation
 	var key = ZilShape._key(x, y, z);

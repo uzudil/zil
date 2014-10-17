@@ -58,6 +58,7 @@ var ZIL_BUILD = {
 
 	mouse_move: function(event) {
 		if(ZIL_BUILD.dragging) {
+            // rotating the view
 			if(ZIL_BUILD.last_mouse_x == null) {
 				ZIL_BUILD.last_mouse_x = event.offsetX;
 				ZIL_BUILD.last_mouse_y = event.offsetY;
@@ -70,6 +71,7 @@ var ZIL_BUILD = {
 			ZIL_BUILD.last_mouse_x = event.offsetX;
 			ZIL_BUILD.last_mouse_y = event.offsetY;
 		} else {
+            // regular mouse movement
 			var point = ZIL_BUILD.mouse_to_world(event);
 			if(point) { 
 				if(event.ctrlKey) {
@@ -86,6 +88,13 @@ var ZIL_BUILD = {
 				}
 				if(ZIL_BUILD.mouse_dir_lock != "y") ZIL_BUILD.cursor[0] = Math.round(point.x);
 				if(ZIL_BUILD.mouse_dir_lock != "x") ZIL_BUILD.cursor[1] = Math.round(point.y);
+
+                // find the highest location here
+                ZIL_BUILD.cursor[2] = ZIL_BUILD.shape.get_highest_empty_space(
+                        ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0],
+                        ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1],
+                        ZIL_BUILD.include_shape);
+
 				ZIL_BUILD.last_point.x = event.ctrlKey ? point.x : 0;
 				ZIL_BUILD.last_point.y = event.ctrlKey ? point.y : 0;
 
@@ -312,7 +321,7 @@ var ZIL_BUILD = {
 			} else if(force == 1) {
 				ZIL_BUILD.shape.set_position(x, y, z, $("#color option:selected").index());
 			} else if(force == 0) {
-				ZIL_BUILD.shape.del_position(x, y, z);
+				ZIL_BUILD.shape.del_position(x, y, Math.max(z - 1, 0));
 			}
 		}
 		ZIL_BUILD.save_shape();
