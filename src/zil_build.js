@@ -455,11 +455,19 @@ var ZIL_BUILD = {
 
 	init_dom: function() {
 		// colors
-		for(var i = 0; i < ZIL_UTIL.palette.length; i++) {
-			var s = "#" + ZIL_UTIL.palette[i].toString(16);
-			$("#color").append("<option value='" + ZIL_UTIL.palette[i] + "'>" + s + "</option>");
-			$("#color option[value='" + ZIL_UTIL.palette[i] + "']").css("color", s);
-			$("#color option[value='" + ZIL_UTIL.palette[i] + "']:checked").css("color", s);
+        var colors = window.localStorage["colors"];
+        if(colors == null) colors = ZIL_UTIL.palette;
+        else colors = JSON.parse(colors);
+
+        // set the global palette (todo: this should not be hidden here)
+        ZIL_UTIL.palette = colors;
+
+		for(var i = 0; i < colors.length; i++) {
+			var s = "#" + colors[i].toString(16);
+            console.log(">>> setting color=" + s);
+			$("#color").append("<option value='" + colors[i] + "'>" + s + "</option>");
+			$("#color option[value='" + colors[i] + "']").css("color", s);
+			$("#color option[value='" + colors[i] + "']:checked").css("color", s);
 		}
 		$("#color").change(function(event) {
 			var palette_index = $("#color option:selected").index();
@@ -469,6 +477,19 @@ var ZIL_BUILD = {
 			return true;
 		});
 		$("#color option").eq(0).attr("selected", "selected").change();
+
+        $("#add_color").click(function(e) {
+            var s = $(".color", $(e.target).parent()).val();
+            var c = parseInt(s, 16);
+            s = "#" + s;
+            $("#color").append("<option value='" + c + "'>" + s + "</option>");
+            ZIL_UTIL.palette.push(c);
+            $("#color option[value='" + c + "']").css("color", s);
+			$("#color option[value='" + c + "']:checked").css("color", s);
+
+            var colors = $.map($("#color option"), function(x) { return parseInt($(x).attr("value"), 10); });
+            window.localStorage["colors"] = JSON.stringify(colors);
+        });
 
 		// the shape name
 		$("#name").keyup(function (e) {

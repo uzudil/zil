@@ -57,6 +57,7 @@
 			}
 		</style>
 		<script type="text/javascript" src="lib/jquery-2.0.3.min.js"></script>
+        <script type="text/javascript" src="lib/jscolor/jscolor.js"></script>
 	</head>
 	<body>
 		<div id="include_message" class="message">Hit Esc to stop including object</div>
@@ -72,7 +73,8 @@
 			</div>
 			<div class="group">
 				<div><label for="color">Color:</label><select size=4 id="color"></select><span id="sample"></span></div>
-				<div><label for="clear">New shape:</label><button id="clear">Clear</button></div>
+                <div><input class="color"> <button id="add_color">Add Color</button></div>
+                <div><label for="clear">New shape:</label><button id="clear">Clear</button></div>
 			</div>
 			<div class="group">
 				<div>Cursor: <span id="cursor_pos"></span></div>
