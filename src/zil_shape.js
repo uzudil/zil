@@ -7,18 +7,20 @@ var ZilShape = function(category, name, shape, width, height, depth) {
 	this.depth = depth;
 	this.bounds = { w: 0, h: 0, d: 0 };
 	this.undo_shape = null;
+    this.rotation = 0;
 	this.reset_shape();
 };
 
 ZilShape.SHAPE_CACHE = {};
 
-ZilShape.prototype.reset_shape = function() {
+ZilShape.prototype.reset_shape = function(skip_expand) {
     this.chunks_in_memory = {};
 	this.chunks_on_screen = {};
 	this.all_chunks_updated = true;
 	this.chunks_updated = {};
+
     // do this last
-	this.expand_all();
+    if(!skip_expand) this.expand_all();
 };
 
 ZilShape.prototype.set_undo_shape = function() {
@@ -52,6 +54,11 @@ ZilShape.prototype.expand_shape = function(key) {
 	if(isNaN(value)) {
 		var s = value.name.split(".");
 		child_shape = ZilShape.load_shape(s[0], s[1]);
+        if(value.rot) {
+            for (var i = 0; i < value.rot; i++) {
+                child_shape.rotate(1);
+            }
+        }
 
 		var pos = ZilShape._pos(key);
 		for(var child_key in child_shape.expanded_shape) {
@@ -62,6 +69,7 @@ ZilShape.prototype.expand_shape = function(key) {
 			this.expanded_shape[new_key] = child_value;
 			this.shape_pos[new_key] = key;
 		}
+
 	} else {
 		this.mark_chunk_updated(key);
 		this.expanded_shape[key] = value;
@@ -207,7 +215,7 @@ ZilShape.prototype.get_highest_empty_space_at_point = function(x, y) {
 ZilShape.prototype.set_shape = function(x, y, z, child_shape) {
 	// todo: add rotation
 	var key = ZilShape._key(x, y, z);
-	this.shape[key] = { name: child_shape.category + "." + child_shape.name };
+	this.shape[key] = { name: child_shape.category + "." + child_shape.name, rot: child_shape.rotation };
 	this.expand_shape(key);
 };
 
@@ -296,3 +304,24 @@ ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk) {
 	chunk.render(true); // force refresh
 };
 
+ZilShape.prototype.rotate = function(dir) {
+    this.rotation += dir;
+    if (this.rotation >= 4) this.rotation -= 4;
+    if (this.rotation < 0) this.rotation += 4;
+
+    var tmp = this.bounds.w;
+    this.bounds.w = this.bounds.h;
+    this.bounds.h = tmp;
+    var new_shape = {};
+    for(var key in this.expanded_shape) {
+        var value = this.expanded_shape[key];
+        var pos = ZilShape._pos(key);
+        var new_key = dir > 0 ?
+            ZilShape._key(this.bounds.w - 1 - pos[1], pos[0], pos[2]) :
+            ZilShape._key(pos[1], this.bounds.h - 1 - pos[0], pos[2]);
+        new_shape[new_key] = value;
+    }
+    this.expanded_shape = new_shape;
+
+    this.reset_shape(true);
+};

@@ -64,7 +64,7 @@ var ZIL_BUILD = {
 				ZIL_BUILD.last_mouse_y = event.offsetY;
 			}
 			var dx = event.offsetX - ZIL_BUILD.last_mouse_x;
-			var dy = event.offsetY - ZIL_BUILD.last_mouse_y;
+//			var dy = event.offsetY - ZIL_BUILD.last_mouse_y;
 			
 			ZIL_BUILD.world.rotation.z += dx / 100.0;
 
@@ -167,7 +167,7 @@ var ZIL_BUILD = {
 	},
 
 	key_down: function(event) {
-		// console.log(event.which);
+//		console.log(event.which);
 		if(event.target != document.body) return true;
 		if(ZIL_BUILD.move_timer == 0 && !event.ctrlKey) {
 
@@ -199,7 +199,7 @@ var ZIL_BUILD = {
 			} else if(event.which == 90 && ZIL_BUILD.cursor[2] < ZIL_UTIL.VIEW_DEPTH - 1) { // >.
 				ZIL_BUILD.move_timer = Date.now();
 				ZIL_BUILD.move = [0, 0, 1];
-			}
+            }
 		}
 
 		if(event.which == 32) {
@@ -232,6 +232,10 @@ var ZIL_BUILD = {
             if(shape_name) {
                 ZIL_BUILD._include_shape(category, shape_name);
             }
+        } else if(event.which == 219) {
+            ZIL_BUILD.rotate_include_shape(1);
+        } else if(event.which == 221) {
+            ZIL_BUILD.rotate_include_shape(-1);
         }
 
 		$("#global_pos").empty().html(ZIL_BUILD.global_pos.join(",") + "-" + [
@@ -464,7 +468,6 @@ var ZIL_BUILD = {
 
 		for(var i = 0; i < colors.length; i++) {
 			var s = "#" + colors[i].toString(16);
-            console.log(">>> setting color=" + s);
 			$("#color").append("<option value='" + colors[i] + "'>" + s + "</option>");
 			$("#color option[value='" + colors[i] + "']").css("color", s);
 			$("#color option[value='" + colors[i] + "']:checked").css("color", s);
@@ -564,6 +567,16 @@ var ZIL_BUILD = {
 		document.body.oncontextmenu = function() { return false; };
 		document.body.onkeydown = ZIL_BUILD.key_down;
 	},
+
+    rotate_include_shape: function(dir) {
+        if(ZIL_BUILD.include_shape) {
+            ZIL_BUILD.include_shape.rotate(dir);
+//            ZIL_BUILD.include_shape.reset_shape();
+            ZIL_BUILD.obj.remove(ZIL_BUILD.include_shape_obj);
+            ZIL_BUILD.include_shape_obj = ZIL_BUILD.include_shape.render_shape();
+            ZIL_BUILD.obj.add(ZIL_BUILD.include_shape_obj);
+        }
+    },
 
     _include_shape: function(category, shape_name) {
         // make sure it's not the current shape
@@ -670,9 +683,6 @@ var ZIL_BUILD = {
 		$("#name").val(shape_name);
 		ZIL_BUILD.shape = ZilShape.load_shape(category_name, shape_name, true);
 
-		// ZIL_UTIL.WIDTH = ZIL_BUILD.shape.width;
-		// ZIL_UTIL.HEIGHT = ZIL_BUILD.shape.height;
-		// ZIL_UTIL.DEPTH = ZIL_BUILD.shape.depth;
 		$("#width").val(ZIL_UTIL.WIDTH);
 		$("#height").val(ZIL_UTIL.HEIGHT);
 		$("#depth").val(ZIL_UTIL.DEPTH);
@@ -704,7 +714,7 @@ var ZIL_BUILD = {
 			ZIL_BUILD.fps_counter = 0;
 			ZIL_BUILD.fps_start = now;
 		}
-//		requestAnimationFrame(ZIL_BUILD.render);
-		setTimeout(ZIL_BUILD.render, 50); // reduce fan noise
+		requestAnimationFrame(ZIL_BUILD.render);
+//		setTimeout(ZIL_BUILD.render, 50); // reduce fan noise
 	}	
 }
