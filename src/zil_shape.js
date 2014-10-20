@@ -207,7 +207,7 @@ ZilShape.prototype.get_highest_empty_space = function(x, y, shape) {
 
 ZilShape.prototype.get_highest_empty_space_at_point = function(x, y) {
     for (var z = ZIL_UTIL.DEPTH - 2; z >= 0; z--) {
-        if (this.get_position(x, y, z)) return z + 1;
+        if (this.get_position(x, y, z) != null) return z + 1;
     }
     return 0; // all free
 };
@@ -246,39 +246,48 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 				
 				// create the chunk
 				if(this.chunks_in_memory[chunk_key] == null) {
-					var chunk = new Chunk(chunk_key);
+					chunk = new Chunk(chunk_key);
 					this.chunks_in_memory[chunk_key] = chunk;
 				}
 
 				// render the chunk if needed
 				chunk = this.chunks_in_memory[chunk_key];
 				if(this.all_chunks_updated || this.chunks_updated[chunk_key]) {
+                    if(chunk.shape && this.chunks_on_screen[chunk_key]) {
+                        // remove the shape, since we're recreating it
+                        parent_shape.remove(chunk.shape);
+                        delete this.chunks_on_screen[chunk_key];
+                    }
 					this.render_chunk(cx, cy, cz, chunk);
 					this.chunks_updated[chunk_key] = false;
 				}
 
-				// if not visible, add it
-				if(this.chunks_on_screen[chunk_key] == null) {
-					parent_shape.add(chunk.shape);
-					this.chunks_on_screen[chunk_key] = true;
-				}
+                // here chunk.shape can be null if it's a blank chunk
+                if(chunk.shape) {
+                    // if not visible, add it
+                    if (this.chunks_on_screen[chunk_key] == null) {
+                        parent_shape.add(chunk.shape);
+                        this.chunks_on_screen[chunk_key] = true;
+                    }
 
-				// position the chunk
-				chunk.shape.position.set(cx * ZIL_UTIL.CHUNK_SIZE - position_offset[0], cy * ZIL_UTIL.CHUNK_SIZE - position_offset[1], cz * ZIL_UTIL.CHUNK_SIZE - position_offset[2]);
+                    // position the chunk
+                    chunk.shape.position.set(cx * ZIL_UTIL.CHUNK_SIZE - position_offset[0], cy * ZIL_UTIL.CHUNK_SIZE - position_offset[1], cz * ZIL_UTIL.CHUNK_SIZE - position_offset[2]);
 
-				// remember we drew it
-				drawn_chunks[chunk_key] = true;
+                    // remember we drew it
+                    drawn_chunks[chunk_key] = true;
+                }
 			}
 		}
 	}
 	this.all_chunks_updated = false;
-	for(var chunk_key in this.chunks_on_screen) {
-		if(chunk_key && drawn_chunks[chunk_key] == null) {
-			var chunk = this.chunks_in_memory[chunk_key];
+	for(var _chunk_key in this.chunks_on_screen) {
+		if(_chunk_key && drawn_chunks[_chunk_key] == null) {
+			var _chunk = this.chunks_in_memory[_chunk_key];
 			// remove from screen
-			parent_shape.remove(chunk.shape);
-			delete this.chunks_on_screen[chunk_key];
-			// todo: optionally remove from memory (if far from player)
+			parent_shape.remove(_chunk.shape);
+			delete this.chunks_on_screen[_chunk_key];
+            // todo: remove from memory also eventually... (maybe when far from player)
+//			delete this.chunks_in_memory[_chunk_key];
 
 		}
 	}
