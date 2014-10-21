@@ -21,6 +21,7 @@ var ZIL_BUILD = {
 	fps_counter: 0,
 	fps_start: Date.now(),
     shortcut_shape: [ null, null, null, null, null, null, null, null, null, null ],
+    rotation: 0,
 
 	mouse_zoom: function(event) {
 		if(event.originalEvent.wheelDelta /120 > 0) {
@@ -214,6 +215,7 @@ var ZIL_BUILD = {
 				ZIL_BUILD.obj.remove(ZIL_BUILD.include_shape_obj);
 				ZIL_BUILD.include_shape_obj = null;
 				ZIL_BUILD.include_shape = null;
+                ZIL_BUILD.rotation = 0;
 				$("#include_message").fadeOut();
 			}
 		} else if(event.which == 36) {
@@ -228,7 +230,6 @@ var ZIL_BUILD = {
             var el = $("#shape_chooser .group").eq(index);
             var category = $(".category_selector", el).val();
             var shape_name = $(".shape_selector", el).val();
-            console.log("index=" + index + " cat=" + category + " shape=" + shape_name);
             if(shape_name) {
                 ZIL_BUILD._include_shape(category, shape_name);
             }
@@ -236,6 +237,8 @@ var ZIL_BUILD = {
             ZIL_BUILD.rotate_include_shape(1);
         } else if(event.which == 221) {
             ZIL_BUILD.rotate_include_shape(-1);
+        } else if(event.which == 68) {
+            ZIL_BUILD.set_position(0);
         }
 
 		$("#global_pos").empty().html(ZIL_BUILD.global_pos.join(",") + "-" + [
@@ -558,7 +561,6 @@ var ZIL_BUILD = {
 			}
 			return false;
 		});
-		console.log("canvas=" + $("canvas"));
 		$("canvas").
 			bind("mousemove", ZIL_BUILD.mouse_move).
 			bind("mousedown", ZIL_BUILD.mouse_down).
@@ -570,15 +572,17 @@ var ZIL_BUILD = {
 
     rotate_include_shape: function(dir) {
         if(ZIL_BUILD.include_shape) {
-            ZIL_BUILD.include_shape.rotate(dir);
-//            ZIL_BUILD.include_shape.reset_shape();
-            ZIL_BUILD.obj.remove(ZIL_BUILD.include_shape_obj);
-            ZIL_BUILD.include_shape_obj = ZIL_BUILD.include_shape.render_shape();
-            ZIL_BUILD.obj.add(ZIL_BUILD.include_shape_obj);
+
+            ZIL_BUILD.rotation += dir;
+            if (ZIL_BUILD.rotation >= 4) ZIL_BUILD.rotation -= 4;
+            if (ZIL_BUILD.rotation < 0) ZIL_BUILD.rotation += 4;
+
+            ZIL_BUILD._include_shape(ZIL_BUILD.include_shape.category, ZIL_BUILD.include_shape.name, ZIL_BUILD.rotation);
+
         }
     },
 
-    _include_shape: function(category, shape_name) {
+    _include_shape: function(category, shape_name, rotation) {
         // make sure it's not the current shape
         if(!(category == $("#category").val() && shape_name == $("#name").val())) {
             // remove the old cursor shape
@@ -587,8 +591,8 @@ var ZIL_BUILD = {
             }
 
             // load this shape and add it to the cursor
-            ZIL_BUILD.include_shape = ZilShape.load_shape(category, shape_name);
-            ZIL_BUILD.include_shape.reset_shape();
+            ZIL_BUILD.include_shape = ZilShape.load_shape(category, shape_name, rotation);
+//            ZIL_BUILD.include_shape.reset_shape();
             console.log("Including shape: ", ZIL_BUILD.include_shape);
             ZIL_BUILD.include_shape_obj = ZIL_BUILD.include_shape.render_shape();
             ZIL_BUILD.obj.add(ZIL_BUILD.include_shape_obj);
@@ -681,7 +685,7 @@ var ZIL_BUILD = {
 	load_shape: function(category_name, shape_name) {
 		$("#category").val(category_name);
 		$("#name").val(shape_name);
-		ZIL_BUILD.shape = ZilShape.load_shape(category_name, shape_name, true);
+		ZIL_BUILD.shape = ZilShape.load_shape(category_name, shape_name);
 
 		$("#width").val(ZIL_UTIL.WIDTH);
 		$("#height").val(ZIL_UTIL.HEIGHT);

@@ -1,4 +1,4 @@
-var ZilShape = function(category, name, shape, width, height, depth) {
+var ZilShape = function(category, name, shape, width, height, depth, rotation) {
 	this.category = category;
 	this.name = name;
 	this.shape = shape; // what to persist
@@ -7,25 +7,30 @@ var ZilShape = function(category, name, shape, width, height, depth) {
 	this.depth = depth;
 	this.bounds = { w: 0, h: 0, d: 0 };
 	this.undo_shape = null;
-    this.rotation = 0;
+    this.rotation = rotation ? rotation : 0;
 	this.reset_shape();
+    for(var i = 0; i < this.rotation; i++) this.rotate(1);
 };
 
 ZilShape.SHAPE_CACHE = {};
 
-ZilShape.prototype.reset_shape = function(skip_expand) {
+ZilShape.prototype.invalidate = function() {
     this.chunks_in_memory = {};
 	this.chunks_on_screen = {};
 	this.all_chunks_updated = true;
 	this.chunks_updated = {};
+};
 
+ZilShape.prototype.reset_shape = function() {
+    this.invalidate();
+    this.calculate_bounds();
     // do this last
-    if(!skip_expand) this.expand_all();
+    this.expand_all();
 };
 
 ZilShape.prototype.set_undo_shape = function() {
 	this.undo_shape = {};
-	for(k in this.shape) {
+	for(var k in this.shape) {
 		this.undo_shape[k] = this.shape[k];
 	}
 };
@@ -53,12 +58,7 @@ ZilShape.prototype.expand_shape = function(key) {
 	var value = this.shape[key];
 	if(isNaN(value)) {
 		var s = value.name.split(".");
-		child_shape = ZilShape.load_shape(s[0], s[1]);
-        if(value.rot) {
-            for (var i = 0; i < value.rot; i++) {
-                child_shape.rotate(1);
-            }
-        }
+		var child_shape = ZilShape.load_shape(s[0], s[1], value.rot);
 
 		var pos = ZilShape._pos(key);
 		for(var child_key in child_shape.expanded_shape) {
@@ -85,19 +85,19 @@ ZilShape.prototype.expand_all = function() {
 	}
 };
 	
-ZilShape.load_shape = function(category_name, shape_name, skip_bounds) {
+ZilShape.load_shape = function(category_name, shape_name, rotation) {
 	var name = category_name + "." + shape_name;
-	var shape_obj = ZilShape.SHAPE_CACHE[name];
-	if(!shape_obj || skip_bounds) { // load from scratch when skip_bounds is true (so we update changed child shapes)
-		console.log("* Loading shape: " + name);
+    if(rotation == null) rotation = 0;
+    var cache_name = name + "." + rotation;
+	var shape_obj = ZilShape.SHAPE_CACHE[cache_name];
+	if(!shape_obj) { // load from scratch when skip_bounds is true (so we update changed child shapes)
+		console.log("* Loading shape: " + cache_name);
 		var js = window.localStorage[name];
 		var shape = js ? JSON.parse(js) : { width: ZIL_UTIL.WIDTH, height: ZIL_UTIL.HEIGHT, depth: ZIL_UTIL.DEPTH, shape: {} };
-		var shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth);
-		if(!skip_bounds) {
-			shape_obj.calculate_bounds();
-		}
-		ZilShape.SHAPE_CACHE[name] = shape_obj;
+		shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth, rotation);
+		ZilShape.SHAPE_CACHE[cache_name] = shape_obj;
 	}
+    shape_obj.invalidate();
 	return shape_obj;
 };
 
@@ -107,7 +107,7 @@ ZilShape.prototype.save_shape = function() {
 		height: this.height,
 		depth: this.depth,
 		shape: this.shape
-	}
+	};
 	var name = this.category + "." + this.name;
 	window.localStorage[name] = JSON.stringify(obj);
 	ZilShape.SHAPE_CACHE[name] = this;
@@ -213,7 +213,6 @@ ZilShape.prototype.get_highest_empty_space_at_point = function(x, y) {
 };
 
 ZilShape.prototype.set_shape = function(x, y, z, child_shape) {
-	// todo: add rotation
 	var key = ZilShape._key(x, y, z);
 	this.shape[key] = { name: child_shape.category + "." + child_shape.name, rot: child_shape.rotation };
 	this.expand_shape(key);
@@ -224,7 +223,6 @@ ZilShape.prototype.clear_shape = function() {
 	this.expanded_shape = {};
 	this.all_chunks_updated = true;
 };
-
 
 ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 	if(position_offset == null) position_offset = ZIL_UTIL.ORIGIN;
@@ -314,10 +312,6 @@ ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk) {
 };
 
 ZilShape.prototype.rotate = function(dir) {
-    this.rotation += dir;
-    if (this.rotation >= 4) this.rotation -= 4;
-    if (this.rotation < 0) this.rotation += 4;
-
     var tmp = this.bounds.w;
     this.bounds.w = this.bounds.h;
     this.bounds.h = tmp;
@@ -331,6 +325,5 @@ ZilShape.prototype.rotate = function(dir) {
         new_shape[new_key] = value;
     }
     this.expanded_shape = new_shape;
-
-    this.reset_shape(true);
+    this.invalidate();
 };
