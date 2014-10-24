@@ -20,7 +20,6 @@ Chunk.prototype._init = function() {
 		}
 	}
     this.shape = null;
-	this._shape_changed = true;
 };
 
 Chunk.get_face_geometry = function() {
@@ -52,12 +51,10 @@ Chunk.get_material = function(color) {
 	return material;
 };
 
-Chunk.prototype.render = function(force) {
-	if(!(this._shape_changed || force)) return;
-
+Chunk.prototype.render = function() {
 //	console.log("* Rendering chunk " + this.name);
 
-//	ZIL_UTIL.clear_node(this.shape);
+    if(this.geo) this.geo.dispose();
     this.geo = new THREE.Geometry();
 
     var empty = true;
@@ -124,8 +121,9 @@ Chunk.prototype.render = function(force) {
     if(!empty) {
         this.materials = new THREE.MeshFaceMaterial(materials);
         this.shape = new THREE.Mesh(this.geo, this.materials);
-        //    this.materials.materials = materials;
+    } else {
+        this.materials = null;
+        this.shape = null;
     }
-	this._shape_changed = true;
 };
 

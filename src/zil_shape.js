@@ -308,7 +308,7 @@ ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk) {
 			}
 		}
 	}
-	chunk.render(true); // force refresh
+	chunk.render(); // force refresh
 };
 
 ZilShape.prototype.rotate = function(dir) {
