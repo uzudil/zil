@@ -533,15 +533,18 @@ var ZIL_BUILD = {
 
 		// event handlers
 		$("#load_shape").click(function(event) {
-			var category_name = $("#category_names").val();
-			var shape_name = $("#shape_names").val();
+            ZIL_BUILD.shape.clear_shape(ZIL_BUILD.rendered_shape);
+            var category_name = $("#category_names").val();
+            var shape_name = $("#shape_names").val();
 			ZIL_BUILD.load_shape(category_name, shape_name);
 			$("#shape_names").blur();
+            // update the last edited shape name
+		    window.localStorage["shape_name"] = JSON.stringify(category_name + "." + shape_name);
 			return false;
 		});
 		$("#clear").click(function(event) {
 			if(confirm("Are you sure?")) {
-				ZIL_BUILD.shape.clear_shape();
+				ZIL_BUILD.shape.clear_shape(ZIL_BUILD.rendered_shape);
 				ZIL_BUILD.redraw_shape();
 				ZIL_BUILD.save_shape();
 				$("#clear").blur();
@@ -640,7 +643,7 @@ var ZIL_BUILD = {
 		}
 
 		// select the one being edited
-        if(el == $("#shape_names")) {
+        if(el.attr("id") == "shape_names") {
             $("option:contains('" + $("#name").val() + "')", el).attr("selected", "selected");
         } else {
             var index = el.closest(".group").index();
@@ -685,20 +688,14 @@ var ZIL_BUILD = {
 	load_shape: function(category_name, shape_name) {
 		$("#category").val(category_name);
 		$("#name").val(shape_name);
+
+        ZilShape.reset_cache();
 		ZIL_BUILD.shape = ZilShape.load_shape(category_name, shape_name);
 
-		$("#width").val(ZIL_UTIL.WIDTH);
-		$("#height").val(ZIL_UTIL.HEIGHT);
-		$("#depth").val(ZIL_UTIL.DEPTH);
+        $("#category_names option:contains('" + category_name + "')").attr("selected", "selected");
+        ZIL_BUILD.load_shape_names(category_name);
 
-		$("#category_names option:contains('" + category_name + "')").attr("selected", "selected");
-		ZIL_BUILD.load_shape_names(category_name);
-
-		if(ZIL_BUILD.rendered_shape) {
-			ZIL_BUILD.init_coords();
-			ZIL_BUILD.init_camera();
-			ZIL_BUILD.redraw_shape();		
-		}
+		if(ZIL_BUILD.rendered_shape) ZIL_BUILD.redraw_shape();
 	},
 
 	render: function() {

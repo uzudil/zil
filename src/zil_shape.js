@@ -14,6 +14,10 @@ var ZilShape = function(category, name, shape, width, height, depth, rotation) {
 
 ZilShape.SHAPE_CACHE = {};
 
+ZilShape.reset_cache = function() {
+    ZilShape.SHAPE_CACHE = {};
+};
+
 ZilShape.prototype.invalidate = function() {
     this.chunks_in_memory = {};
 	this.chunks_on_screen = {};
@@ -218,10 +222,18 @@ ZilShape.prototype.set_shape = function(x, y, z, child_shape) {
 	this.expand_shape(key);
 };
 
-ZilShape.prototype.clear_shape = function() {
+ZilShape.prototype.clear_shape = function(parent_shape) {
 	this.shape = {};
 	this.expanded_shape = {};
-	this.all_chunks_updated = true;
+    this.shape_pos = {};
+
+    for(var _chunk_key in this.chunks_in_memory) {
+        var _chunk = this.chunks_in_memory[_chunk_key];
+        if(_chunk.shape) {
+            parent_shape.remove(_chunk.shape);
+        }
+    }
+    this.invalidate();
 };
 
 ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
