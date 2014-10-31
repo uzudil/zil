@@ -262,7 +262,7 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 
 				// render the chunk if needed
 				chunk = this.chunks_in_memory[chunk_key];
-				if(this.all_chunks_updated || this.chunks_updated[chunk_key]) {
+				if(this.all_chunks_updated || this.chunks_updated[chunk_key] || !chunk.shape) {
                     if(chunk.shape && this.chunks_on_screen[chunk_key]) {
                         // remove the shape, since we're recreating it
                         parent_shape.remove(chunk.shape);
