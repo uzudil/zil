@@ -30,3 +30,68 @@ ZIL_UTIL.clear_node = function(node) {
 		node.remove(node.children[0]);
 	}
 };
+
+ZIL_UTIL.update_progress = function(percent) {
+    if(percent >= 1) {
+        $("#progress").hide();
+        $("#progress_overlay").hide();
+    } else {
+        if ($("#progress").length == 0) {
+            $("body").append("" +
+                "<div id='progress'>" +
+                "   <div>Loading...</div>" +
+                "   <div id='progress_bar_container'>" +
+                "      <div id='progress_bar'></div>" +
+                "   </div>" +
+                "</div>" +
+                "<div id='progress_overlay'></div>");
+        }
+        var w = 320;
+        var h = 50;
+        $("#progress").css({
+            "display": "block",
+            "position": "absolute",
+            "width": w + "px",
+            "height": h + "px",
+            "z-index": "1000",
+            "background": "#666",
+            "padding": "20px",
+            "border": "3px solid #333",
+            "border-radius": "5px",
+            "left": ($(document).width() - w)/2 + "px",
+            "top": ($(document).height() - h)/2 + "px"
+        });
+        $("#progress_bar_container").css({
+            "border": "1px solid #333",
+            "padding": "5px",
+            "margin-top": "10px",
+        });
+        $("#progress_bar").css({
+            "background": "#66c",
+            "border": "1px solid #448",
+            "height": "5px",
+            "width": (percent * 100) + "%"
+        });
+        $("#progress_overlay").css({
+            "display": "block",
+            "position": "fixed",
+            "width": "100%",
+            "height": "100%",
+            "background": "#000",
+            "opacity": "0.75",
+            "z-index": "100"
+        });
+    }
+};
+
+ZIL_UTIL.bind = function(callerObj, method) {
+	if (callerObj == null || method == null)
+		console.error("neither caller nor method may be null");
+
+	var f = function() {
+		return method.apply(callerObj, arguments);
+	};
+	// Store the caller as a property on the function so that we can retrieve it later if needed
+	f['_caller'] = callerObj;
+	return f;
+}

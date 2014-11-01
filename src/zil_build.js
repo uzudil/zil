@@ -354,7 +354,6 @@ var ZIL_BUILD = {
 		ZIL_BUILD.offset_y = 0;
 
 		ZIL_BUILD.init_dom();
-		ZIL_BUILD.load_last_shape();		
 
 		ZIL_BUILD.world = new THREE.Object3D();
 		ZIL_BUILD.world.position.set(ZIL_UTIL.VIEW_WIDTH / 2, ZIL_UTIL.VIEW_HEIGHT / 2, 0);
@@ -378,10 +377,8 @@ var ZIL_BUILD = {
 		ZIL_BUILD.init_cursor();
 
 		ZIL_BUILD.init_light();
-		
-		ZIL_BUILD.redraw_shape();
-		
-		ZIL_BUILD.render();
+
+        ZIL_BUILD.load_last_shape();
 	},
 
 	init_light: function() {
@@ -595,12 +592,12 @@ var ZIL_BUILD = {
 
             // load this shape and add it to the cursor
             ZIL_BUILD.include_shape = ZilShape.load_shape(category, shape_name, rotation);
-//            ZIL_BUILD.include_shape.reset_shape();
-            console.log("Including shape: ", ZIL_BUILD.include_shape);
-            ZIL_BUILD.include_shape_obj = ZIL_BUILD.include_shape.render_shape();
-            ZIL_BUILD.obj.add(ZIL_BUILD.include_shape_obj);
-
-            $("#include_message").fadeIn();
+            ZIL_BUILD.include_shape.build_shape(ZIL_UTIL.update_progress, function() {
+                console.log("Including shape: ", ZIL_BUILD.include_shape);
+                ZIL_BUILD.include_shape_obj = ZIL_BUILD.include_shape.render_shape();
+                ZIL_BUILD.obj.add(ZIL_BUILD.include_shape_obj);
+                $("#include_message").fadeIn();
+            });
         }
     },
 
@@ -688,14 +685,15 @@ var ZIL_BUILD = {
 	load_shape: function(category_name, shape_name) {
 		$("#category").val(category_name);
 		$("#name").val(shape_name);
-
-        ZilShape.reset_cache();
-		ZIL_BUILD.shape = ZilShape.load_shape(category_name, shape_name);
-
         $("#category_names option:contains('" + category_name + "')").attr("selected", "selected");
         ZIL_BUILD.load_shape_names(category_name);
 
-		if(ZIL_BUILD.rendered_shape) ZIL_BUILD.redraw_shape();
+        ZilShape.reset_cache();
+		ZIL_BUILD.shape = ZilShape.load_shape(category_name, shape_name);
+        ZIL_BUILD.shape.build_shape(ZIL_UTIL.update_progress, function() {
+            ZIL_BUILD.redraw_shape();
+            ZIL_BUILD.render();
+        });
 	},
 
 	render: function() {

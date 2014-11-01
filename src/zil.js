@@ -158,7 +158,6 @@ var ZIL = {
 		ZIL.offset_y = 0;
 
 		ZIL.init_dom();
-		ZIL.load_shape("maps", "first");
 
 		ZIL.world = new THREE.Object3D();
 		ZIL.world.position.set(ZIL_UTIL.VIEW_WIDTH / 2, ZIL_UTIL.VIEW_HEIGHT / 2, 0);
@@ -183,9 +182,7 @@ var ZIL = {
 
 		ZIL.init_light();
 
-		ZIL.redraw_shape();
-
-		ZIL.render();
+        ZIL.load_shape("maps", "first");
 	},
 
 	init_light: function() {
@@ -270,7 +267,10 @@ var ZIL = {
 	load_shape: function(category_name, shape_name) {
         ZilShape.reset_cache();
 		ZIL.shape = ZilShape.load_shape(category_name, shape_name);
-		if(ZIL.rendered_shape) ZIL.redraw_shape();
+        ZIL.shape.build_shape(ZIL_UTIL.update_progress, function() {
+            ZIL.redraw_shape();
+		    ZIL.render();
+        });
 	},
 
 	render: function() {
