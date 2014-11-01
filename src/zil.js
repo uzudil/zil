@@ -135,7 +135,7 @@ var ZIL = {
 	start_game: function() {
         ZIL_UTIL.VIEW_WIDTH *= 3;
         ZIL_UTIL.VIEW_HEIGHT *= 3;
-        ZIL_UTIL.CAM_ZOOM *= 2.4;
+        ZIL_UTIL.CAM_ZOOM *= 2.55;
 
 		ZIL.scene = new THREE.Scene();
 		ZIL.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
@@ -198,9 +198,9 @@ var ZIL = {
 			ZIL_UTIL.VIEW_HEIGHT / ZIL_UTIL.CAM_ZOOM, -ZIL_UTIL.VIEW_HEIGHT / ZIL_UTIL.CAM_ZOOM,
 			-1000, 1000 );
         var p = Math.max(ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT);
-		ZIL.camera.position.set(p * 2, p * 2, p * 2);
+		ZIL.camera.position.set(p * 1.7, p * 1.7, p * 2);
 		ZIL.camera.up = new THREE.Vector3(0,0,1);
-		ZIL.camera.lookAt(new THREE.Vector3(p / 2, p / 2, 0));
+		ZIL.camera.lookAt(new THREE.Vector3(p * 0.45, p * 0.45, 0));
 		ZIL.projector = new THREE.Projector();
 	},
 
