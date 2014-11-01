@@ -13,6 +13,6 @@ The editor:
 - preset number keys speed up map editing
 - map/shape storage is currently in localStorage, will have to address this soon (maybe firebase?)
 
-The story:
-TBD
-
+Gameplay:
+- story: TBD
+- combat will be turn-based
