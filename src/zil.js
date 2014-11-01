@@ -23,6 +23,7 @@ var ZIL = {
     shortcut_shape: [ null, null, null, null, null, null, null, null, null, null ],
     rotation: 0,
 	XY_PLANE: new THREE.Plane(new THREE.Vector3(0, 0, 1), 1),
+    show_grid: false,
 
 	mouse_move: function(event) {
         // regular mouse movement
@@ -78,33 +79,37 @@ var ZIL = {
 	key_down: function(event) {
 //		console.log(event.which);
 		if(event.target != document.body) return true;
-		if(ZIL.move_timer == 0 && !event.ctrlKey) {
 
-			// move the cursor
-			if(event.which == 37) { // W
-				if(ZIL.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH - 1) {
-					ZIL.global_pos[0] += 1;
-					ZIL.redraw_shape();
-				}
-			} else if(event.which == 39) { // E
-				if(ZIL.global_pos[0] > 0) {
-					ZIL.global_pos[0] -= 1;
-					ZIL.redraw_shape();
-				}
-
-			} else if(event.which == 38) { // N
-				if(ZIL.global_pos[1] > 0) {
-					ZIL.global_pos[1] -= 1;
-					ZIL.redraw_shape();
-				}
-			} else if(event.which == 40) { // S
-				if(ZIL.global_pos[1] < ZIL_UTIL.HEIGHT - 1) {
-					ZIL.global_pos[1] += 1;
-					ZIL.redraw_shape();
-				}
+        // move the cursor
+        if(event.which == 37) { // W
+            if(ZIL.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH - 1) {
+                ZIL.global_pos[0] += 1;
+                ZIL.redraw_shape();
             }
-		}
+        } else if(event.which == 39) { // E
+            if(ZIL.global_pos[0] > 0) {
+                ZIL.global_pos[0] -= 1;
+                ZIL.redraw_shape();
+            }
 
+        } else if(event.which == 38) { // N
+            if(ZIL.global_pos[1] > 0) {
+                ZIL.global_pos[1] -= 1;
+                ZIL.redraw_shape();
+            }
+        } else if(event.which == 40) { // S
+            if(ZIL.global_pos[1] < ZIL_UTIL.HEIGHT - 1) {
+                ZIL.global_pos[1] += 1;
+                ZIL.redraw_shape();
+            }
+        } else if(event.which == 32) {
+            ZIL.show_grid = ZIL.show_grid ? false : true;
+            if(ZIL.show_grid) {
+                ZIL.inner.add( ZIL.coord );
+            } else {
+                ZIL.inner.remove( ZIL.coord );
+            }
+        }
 
 		$("#global_pos").empty().html(ZIL.global_pos.join(",") + "-" + [
 			ZIL.global_pos[0] + ZIL_UTIL.VIEW_WIDTH,
@@ -122,26 +127,12 @@ var ZIL = {
 	},
 
 	move_cursor: function(now) {
-		if(ZIL.move_timer > 0) {
-			var md = now - ZIL.move_timer;
-			if(md >= ZIL.MOVE_SPEED) {
-				ZIL.move_timer = 0;
-				ZIL.cursor[0] += ZIL.move[0];
-				ZIL.cursor[1] += ZIL.move[1];
-				ZIL.cursor[2] += ZIL.move[2];
-				ZIL.move = [0, 0, 0];
-				ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
-				ZIL.show_cursor_pos();
-			} else {
-				ZIL.obj.position.set(
-					ZIL.cursor[0] + ZIL.move[0] * (md / ZIL.MOVE_SPEED),
-					ZIL.cursor[1] + ZIL.move[1] * (md / ZIL.MOVE_SPEED),
-					ZIL.cursor[2] + ZIL.move[2] * (md / ZIL.MOVE_SPEED));
-			}
-			ZIL.xy.position.z = -ZIL.obj.position.z - 0.5;
-			ZIL.yz.position.x = -ZIL.obj.position.x - 0.5;
-			ZIL.xz.position.y = -ZIL.obj.position.y - 0.5;
-		}
+        ZIL.cursor[0] += ZIL.move[0];
+        ZIL.cursor[1] += ZIL.move[1];
+        ZIL.cursor[2] += ZIL.move[2];
+        ZIL.move = [0, 0, 0];
+        ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
+        ZIL.show_cursor_pos();
 	},
 
 	redraw_shape: function() {
@@ -151,6 +142,10 @@ var ZIL = {
 	},
 
 	start_game: function() {
+        ZIL_UTIL.VIEW_WIDTH *= 3;
+        ZIL_UTIL.VIEW_HEIGHT *= 3;
+        ZIL_UTIL.CAM_ZOOM *= 2.4;
+
 		ZIL.scene = new THREE.Scene();
 		ZIL.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
 		ZIL.init_camera();
@@ -174,6 +169,10 @@ var ZIL = {
 		ZIL.inner.position.x = -ZIL_UTIL.VIEW_WIDTH / 2;
 		ZIL.inner.position.y = -ZIL_UTIL.VIEW_HEIGHT / 2;
 		ZIL.world.add( ZIL.inner );
+
+        ZIL.coord = new THREE.Object3D();
+//		ZIL.inner.add( ZIL.coord );
+		ZIL.init_coords();
 
 		ZIL.rendered_shape = new THREE.Object3D();
 		ZIL.inner.add( ZIL.rendered_shape );
@@ -210,13 +209,44 @@ var ZIL = {
 			-ZIL_UTIL.VIEW_WIDTH / ZIL_UTIL.CAM_ZOOM, ZIL_UTIL.VIEW_WIDTH / ZIL_UTIL.CAM_ZOOM,
 			ZIL_UTIL.VIEW_HEIGHT / ZIL_UTIL.CAM_ZOOM, -ZIL_UTIL.VIEW_HEIGHT / ZIL_UTIL.CAM_ZOOM,
 			-1000, 1000 );
-		ZIL.camera.position.set(
-			ZIL_UTIL.VIEW_WIDTH,
-			ZIL_UTIL.VIEW_HEIGHT,
-			Math.max(ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT));
+        var p = Math.max(ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT);
+		ZIL.camera.position.set(p * 2, p * 2, p * 2);
 		ZIL.camera.up = new THREE.Vector3(0,0,1);
-		ZIL.camera.lookAt(new THREE.Vector3(ZIL_UTIL.VIEW_WIDTH / 4, ZIL_UTIL.VIEW_HEIGHT / 4, 0));
+		ZIL.camera.lookAt(new THREE.Vector3(p / 2, p / 2, 0));
 		ZIL.projector = new THREE.Projector();
+	},
+
+    init_coords: function() {
+		ZIL_UTIL.clear_node(ZIL.coord);
+
+		// add the x plane
+		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_DEPTH );
+		var material = new THREE.MeshLambertMaterial( {color: 0x808080, side: THREE.DoubleSide, wireframe: true, transparent: true, opacity: 0.25 } );
+		var plane = new THREE.Mesh( geometry, material );
+		plane.rotation.x = PI / -2;
+		plane.position.y = -0.5;
+		plane.position.z = -ZIL_UTIL.VIEW_DEPTH / -2 - 0.5;
+		plane.position.x = -ZIL_UTIL.VIEW_WIDTH / -2 - 0.5;
+		ZIL.coord.add( plane );
+
+		// add the y plane
+		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT, ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT );
+		var material = new THREE.MeshLambertMaterial( {color: 0x80cc80, side: THREE.DoubleSide, wireframe: true, transparent: true, opacity: 0.25 } );
+		var plane = new THREE.Mesh( geometry, material );
+		plane.position.z = -0.5
+		plane.position.x = -ZIL_UTIL.VIEW_WIDTH / -2 - 0.5;
+		plane.position.y = -ZIL_UTIL.VIEW_HEIGHT / -2 - 0.5;
+		ZIL.coord.add( plane );
+
+		// add the z plane
+		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_HEIGHT, ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_HEIGHT );
+		var material = new THREE.MeshLambertMaterial( {color: 0x8080cc, side: THREE.DoubleSide, wireframe: true, transparent: true, opacity: 0.25 } );
+		var plane = new THREE.Mesh( geometry, material );
+		plane.rotation.y = PI / -2;
+		plane.position.x = -0.5;
+		plane.position.z = ZIL_UTIL.VIEW_DEPTH/2 -0.5;
+		plane.position.y = ZIL_UTIL.VIEW_HEIGHT/2 -0.5;
+		ZIL.coord.add( plane );
 	},
 
 	init_dom: function() {
