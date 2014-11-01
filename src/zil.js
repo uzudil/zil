@@ -82,26 +82,17 @@ var ZIL = {
 
         // move the cursor
         if(event.which == 37) { // W
-            if(ZIL.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH - 1) {
-                ZIL.global_pos[0] += 1;
-                ZIL.redraw_shape();
-            }
+            ZIL.global_pos[0] += 1;
+            ZIL.redraw_shape();
         } else if(event.which == 39) { // E
-            if(ZIL.global_pos[0] > 0) {
-                ZIL.global_pos[0] -= 1;
-                ZIL.redraw_shape();
-            }
-
+            ZIL.global_pos[0] -= 1;
+            ZIL.redraw_shape();
         } else if(event.which == 38) { // N
-            if(ZIL.global_pos[1] > 0) {
-                ZIL.global_pos[1] -= 1;
-                ZIL.redraw_shape();
-            }
+            ZIL.global_pos[1] -= 1;
+            ZIL.redraw_shape();
         } else if(event.which == 40) { // S
-            if(ZIL.global_pos[1] < ZIL_UTIL.HEIGHT - 1) {
-                ZIL.global_pos[1] += 1;
-                ZIL.redraw_shape();
-            }
+            ZIL.global_pos[1] += 1;
+            ZIL.redraw_shape();
         } else if(event.which == 32) {
             ZIL.show_grid = ZIL.show_grid ? false : true;
             if(ZIL.show_grid) {

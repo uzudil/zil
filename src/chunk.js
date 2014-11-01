@@ -118,12 +118,7 @@ Chunk.prototype.render = function() {
 			}
 		}
 	}
-    if(!empty) {
-        this.materials = new THREE.MeshFaceMaterial(materials);
-        this.shape = new THREE.Mesh(this.geo, this.materials);
-    } else {
-        this.materials = null;
-        this.shape = null;
-    }
+    this.materials = new THREE.MeshFaceMaterial(materials);
+    this.shape = new THREE.Mesh(this.geo, this.materials);
 };
 

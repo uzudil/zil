@@ -306,29 +306,6 @@ ZilShape.prototype._build_shape_done = function(complete_fx) {
 };
 
 ZilShape.prototype.build_shape = function(progress_fx, complete_fx) {
-//    var cx, cy, cz, chunk_key, chunk;
-//    for(var x = 0; x < this.width + ZIL_UTIL.CHUNK_SIZE; x+=ZIL_UTIL.CHUNK_SIZE) {
-//        for(var y = 0; y < this.height + ZIL_UTIL.CHUNK_SIZE; y+=ZIL_UTIL.CHUNK_SIZE) {
-//            for(var z = 0; z < this.depth + ZIL_UTIL.CHUNK_SIZE; z+=ZIL_UTIL.CHUNK_SIZE) {
-//                progress_fx((x * this.height * this.depth + y * this.depth + z) / (this.width * this.height * this.depth));
-//                cx = (x / ZIL_UTIL.CHUNK_SIZE)|0;
-//                cy = (y / ZIL_UTIL.CHUNK_SIZE)|0;
-//                cz = (z / ZIL_UTIL.CHUNK_SIZE)|0;
-//                chunk_key = [cx, cy, cz].join(",");
-//
-//                // create the chunk
-//                chunk = new Chunk(chunk_key);
-//                this.chunks_in_memory[chunk_key] = chunk;
-//
-//                // render the chunk
-//                this.render_chunk(cx, cy, cz, chunk);
-//            }
-//        }
-//    }
-//    progress_fx(1.0);
-//    console.log("Built " + Object.keys(this.chunks_in_memory).length + " chunks. Map size=" + this.width + "x" + this.height + "x" + this.depth);
-//    this.all_chunks_updated = false;
-//    this.chunks_updated = {};
     this._build_shape(0, 0, 0, progress_fx, complete_fx);
 };
 
@@ -353,11 +330,11 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 				// re-render the chunk if needed
 				chunk = this.chunks_in_memory[chunk_key];
                 if(!chunk) {
-                    console.log(">>> Can't find chunk " + chunk_key + " size=" + this.width + "," + this.height + "," + this.depth);
-                    console.log(">>> All chunk keys: ", $.map(Object.keys(this.chunks_in_memory), function(x) { return "[" + x + "]"; }));
+//                    console.log(">>> Can't find chunk " + chunk_key + " size=" + this.width + "," + this.height + "," + this.depth);
+//                    console.log(">>> All chunk keys: ", $.map(Object.keys(this.chunks_in_memory), function(x) { return "[" + x + "]"; }));
                     continue;
                 }
-				if(this.all_chunks_updated || this.chunks_updated[chunk_key] || !chunk.shape) {
+				if(this.all_chunks_updated || this.chunks_updated[chunk_key]) {
                     if(chunk.shape && this.chunks_on_screen[chunk_key]) {
                         // remove the shape, since we're recreating it
                         parent_shape.remove(chunk.shape);
@@ -367,20 +344,17 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 					this.chunks_updated[chunk_key] = false;
 				}
 
-                // here chunk.shape can be null if it's a blank chunk
-                if(chunk.shape) {
-                    // if not visible, add it
-                    if (this.chunks_on_screen[chunk_key] == null) {
-                        parent_shape.add(chunk.shape);
-                        this.chunks_on_screen[chunk_key] = true;
-                    }
-
-                    // position the chunk
-                    chunk.shape.position.set(cx * ZIL_UTIL.CHUNK_SIZE - position_offset[0], cy * ZIL_UTIL.CHUNK_SIZE - position_offset[1], cz * ZIL_UTIL.CHUNK_SIZE - position_offset[2]);
-
-                    // remember we drew it
-                    drawn_chunks[chunk_key] = true;
+                // if not visible, add it
+                if (this.chunks_on_screen[chunk_key] == null) {
+                    parent_shape.add(chunk.shape);
+                    this.chunks_on_screen[chunk_key] = true;
                 }
+
+                // position the chunk
+                chunk.shape.position.set(cx * ZIL_UTIL.CHUNK_SIZE - position_offset[0], cy * ZIL_UTIL.CHUNK_SIZE - position_offset[1], cz * ZIL_UTIL.CHUNK_SIZE - position_offset[2]);
+
+                // remember we drew it
+                drawn_chunks[chunk_key] = true;
 			}
 		}
 	}
