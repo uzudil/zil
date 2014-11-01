@@ -292,7 +292,7 @@ ZilShape.prototype._build_shape = function(x, y, z, progress_fx, complete_fx) {
     });
 
     if(!never_yield && (done || will_yield || percent == 0)) {
-        setTimeout(_continue_build_shape);
+        setTimeout(_continue_build_shape, 0);
     } else {
         _continue_build_shape();
     }
