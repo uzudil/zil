@@ -7,8 +7,23 @@
 		</style>
 	</head>
 	<body>
+        <script type="text/javascript" src="lib/jquery-2.0.3.min.js"></script>
 		<script src="lib/three.min.js"></script>
+        <script src="src/zil_util.js"></script>
+		<script src="src/block.js"></script>
+		<script src="src/chunk.js"></script>
+		<script src="src/zil_shape.js"></script>
 		<script src="src/zil.js"></script>
+
+        <div class="group">
+            <div>Cursor: <span id="cursor_pos"></span></div>
+            <div>Global: <span id="global_pos"></span></div>
+            <div>Chunks: <span id="chunks_info"></span></div>
+            <div>FPS: <span id="fps"></span></div>
+        </div>
+
+        <canvas id="view"></canvas>
+
 		<script>
 			ZIL.start_game();
 		</script>
