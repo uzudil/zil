@@ -365,12 +365,8 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 			// remove from screen
 			parent_shape.remove(_chunk.shape);
 			delete this.chunks_on_screen[_chunk_key];
-            // todo: remove from memory also eventually... (maybe when far from player)
-//			delete this.chunks_in_memory[_chunk_key];
-
 		}
 	}
-	// console.log("added " + parent_shape.children.length + " shapes");
 	return parent_shape;
 };
 
