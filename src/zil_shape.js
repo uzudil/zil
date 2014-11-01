@@ -247,9 +247,8 @@ ZilShape.prototype.clear_shape = function(parent_shape) {
 };
 
 ZilShape.prototype._build_shape = function(x, y, z, progress_fx, complete_fx) {
-
-
-    progress_fx((x * this.height * this.depth + y * this.depth + z) / (this.width * this.height * this.depth));
+    var percent = (x * this.height * this.depth + y * this.depth + z) / (this.width * this.height * this.depth);
+    progress_fx(percent);
     var cx = (x / ZIL_UTIL.CHUNK_SIZE)|0;
     var cy = (y / ZIL_UTIL.CHUNK_SIZE)|0;
     var cz = (z / ZIL_UTIL.CHUNK_SIZE)|0;
@@ -262,30 +261,48 @@ ZilShape.prototype._build_shape = function(x, y, z, progress_fx, complete_fx) {
     // render the chunk
     this.render_chunk(cx, cy, cz, chunk);
 
-    setTimeout(ZIL_UTIL.bind(this, function() {
-        done = false;
-        z+=ZIL_UTIL.CHUNK_SIZE;
-        if(z >= this.depth + ZIL_UTIL.CHUNK_SIZE) {
-            z = 0;
-            y+=ZIL_UTIL.CHUNK_SIZE;
-            if(y >= this.height + ZIL_UTIL.CHUNK_SIZE) {
-                y = 0;
-                x+=ZIL_UTIL.CHUNK_SIZE;
-                if(x >= this.width + ZIL_UTIL.CHUNK_SIZE) {
-                    done = true;
-                }
+    var done = false;
+    var will_yield = false;
+    z+=ZIL_UTIL.CHUNK_SIZE;
+    if(z >= this.depth + ZIL_UTIL.CHUNK_SIZE) {
+        z = 0;
+        y+=ZIL_UTIL.CHUNK_SIZE;
+        if(y >= this.height + ZIL_UTIL.CHUNK_SIZE) {
+            y = 0;
+            x+=ZIL_UTIL.CHUNK_SIZE;
+            if(x >= this.width + ZIL_UTIL.CHUNK_SIZE) {
+                done = true;
             }
+            will_yield = (x % (ZIL_UTIL.CHUNK_SIZE * 4) == 0);
         }
-        if(done) {
-            progress_fx(1.0);
-            console.log("Built " + Object.keys(this.chunks_in_memory).length + " chunks. Map size=" + this.width + "x" + this.height + "x" + this.depth);
-            this.all_chunks_updated = false;
-            this.chunks_updated = {};
-            complete_fx();
+    }
+
+    if(done) {
+        progress_fx(1.0);
+    }
+
+    var never_yield = this.bounds.w < ZIL_UTIL.CHUNK_SIZE * 2 && this.bounds.h < ZIL_UTIL.CHUNK_SIZE * 2;
+
+    var _continue_build_shape = ZIL_UTIL.bind(this, function() {
+        if (done) {
+            this._build_shape_done(complete_fx);
         } else {
             this._build_shape(x, y, z, progress_fx, complete_fx);
         }
-    }));
+    });
+
+    if(!never_yield && (done || will_yield || percent == 0)) {
+        setTimeout(_continue_build_shape);
+    } else {
+        _continue_build_shape();
+    }
+};
+
+ZilShape.prototype._build_shape_done = function(complete_fx) {
+    console.log("Built " + Object.keys(this.chunks_in_memory).length + " chunks. Map size=" + this.width + "x" + this.height + "x" + this.depth);
+    this.all_chunks_updated = false;
+    this.chunks_updated = {};
+    complete_fx();
 };
 
 ZilShape.prototype.build_shape = function(progress_fx, complete_fx) {

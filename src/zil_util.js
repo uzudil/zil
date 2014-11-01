@@ -59,7 +59,8 @@ ZIL_UTIL.update_progress = function(percent) {
             "border": "3px solid #333",
             "border-radius": "5px",
             "left": ($(document).width() - w)/2 + "px",
-            "top": ($(document).height() - h)/2 + "px"
+            "top": ($(document).height() - h)/2 + "px",
+            "color": "#000"
         });
         $("#progress_bar_container").css({
             "border": "1px solid #333",
@@ -94,4 +95,4 @@ ZIL_UTIL.bind = function(callerObj, method) {
 	// Store the caller as a property on the function so that we can retrieve it later if needed
 	f['_caller'] = callerObj;
 	return f;
-}
+};
