@@ -3,25 +3,11 @@ var ZIL = {
 	scene: null,
 	camera: null,
 	renderer: null,
-	last_time: 0,
 	move: [0, 0, 0],
 	cursor: [0, 0, 0],
-	move_timer: 0,
-	MOVE_SPEED: 25,
 	global_pos: [0, 0, 0],
-	include_shape: null,
-	include_shape_obj: null,
-	dragging: false,
-	last_mouse_x: null,
-	last_mouse_y: null,
-	zoom: 1,
-	mouse_dir_lock: false,
-	last_point: { x: 0, y: 0 },
-	editing: false,
 	fps_counter: 0,
 	fps_start: Date.now(),
-    shortcut_shape: [ null, null, null, null, null, null, null, null, null, null ],
-    rotation: 0,
 	XY_PLANE: new THREE.Plane(new THREE.Vector3(0, 0, 1), 1),
     show_grid: false,
 
@@ -35,11 +21,7 @@ var ZIL = {
             // find the highest location here
             ZIL.cursor[2] = ZIL.shape.get_highest_empty_space(
                     ZIL.global_pos[0] + ZIL.cursor[0],
-                    ZIL.global_pos[1] + ZIL.cursor[1],
-                    ZIL.include_shape);
-
-            ZIL.last_point.x = event.ctrlKey ? point.x : 0;
-            ZIL.last_point.y = event.ctrlKey ? point.y : 0;
+                    ZIL.global_pos[1] + ZIL.cursor[1]);
 
             ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
             ZIL.show_cursor_pos();
@@ -117,7 +99,7 @@ var ZIL = {
 			ZIL.cursor[2] + ZIL.global_pos[2]].join(","));
 	},
 
-	move_cursor: function(now) {
+	move_cursor: function() {
         ZIL.cursor[0] += ZIL.move[0];
         ZIL.cursor[1] += ZIL.move[1];
         ZIL.cursor[2] += ZIL.move[2];
@@ -249,8 +231,7 @@ var ZIL = {
 		$("canvas").
 			bind("mousemove", ZIL.mouse_move).
 			bind("mousedown", ZIL.mouse_down).
-			bind("mouseup", ZIL.mouse_up).
-			bind('mousewheel', ZIL.mouse_zoom);
+			bind("mouseup", ZIL.mouse_up);
 		document.body.oncontextmenu = function() { return false; };
 		document.body.onkeydown = ZIL.key_down;
 	},
@@ -266,10 +247,8 @@ var ZIL = {
 
 	render: function() {
 		var now = Date.now();
-		var dx = now - ZIL.last_time;
-		ZIL.last_time = now;
 
-		ZIL.move_cursor(now);
+		ZIL.move_cursor();
 
 		ZIL.renderer.render(ZIL.scene, ZIL.camera);
 
