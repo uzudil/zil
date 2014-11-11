@@ -1,3 +1,19 @@
+var ZilNode = function(x, y, z, value) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.value = value;
+};
+
+ZilNode.prototype.toString = function() {
+    return "[" + this.x + " " + this.y + " " + this.z + "]";
+};
+
+ZilNode.prototype.getCost = function() {
+    return this.value ? 1 : 0;
+};
+
+
 var ZilShape = function(category, name, shape, width, height, depth, rotation) {
 	this.category = category;
 	this.name = name;
@@ -80,13 +96,14 @@ ZilShape.prototype.expand_shape = function(key) {
             if(nz > this.depth) this.depth = nz;
 			var new_key = ZilShape._key(nx, ny, nz);
 			this.mark_chunk_updated(new_key);
-			this.expanded_shape[new_key] = child_value;
+			this.expanded_shape[new_key] = new ZilNode(nx, ny, nz, child_value.value);
 			this.shape_pos[new_key] = key;
 		}
 
 	} else {
 		this.mark_chunk_updated(key);
-		this.expanded_shape[key] = value;
+        var pos = ZilShape._pos(key);
+		this.expanded_shape[key] = new ZilNode(pos[0], pos[1], pos[2], value);
 	}
 };
 
@@ -163,6 +180,23 @@ ZilShape._pos = function(key) {
 	return $.map(key.split(","), function(x) { return parseInt(x, 10); });
 };
 
+ZilShape.prototype.del_shape = function(x, y, z, shape) {
+    // remove all child shape points
+    var child_shape = ZilShape.load_shape(shape.category, shape.name);
+    for(var child_key in child_shape.expanded_shape) {
+        var child_pos = ZilShape._pos(child_key);
+        var new_key = ZilShape._key(
+            x + child_pos[0],
+            y + child_pos[1],
+            z + child_pos[2]);
+        this.mark_chunk_updated(new_key);
+        delete this.expanded_shape[new_key];
+        delete this.shape_pos[new_key];
+    }
+    var key = ZilShape._key(x, y, z);
+    delete this.shape[key];
+};
+
 ZilShape.prototype.del_position = function(x, y, z) {
 	var key = ZilShape._key(x, y, z);
 	if(key in this.shape_pos) {
@@ -171,7 +205,6 @@ ZilShape.prototype.del_position = function(x, y, z) {
 		var origin_pos = ZilShape._pos(origin_key);
 		
 		// remove all child shape points
-		console.log("* removing shape ", this.shape[origin_key].name);
 		var s = this.shape[origin_key].name.split(".");
 		var child_shape = ZilShape.load_shape(s[0], s[1]);
 		for(var child_key in child_shape.expanded_shape) {
@@ -199,7 +232,8 @@ ZilShape.prototype.set_position = function(x, y, z, value) {
 };
 
 ZilShape.prototype.get_position = function(x, y, z) {
-	return this.expanded_shape[ZilShape._key(x, y, z)];
+    var v = this.expanded_shape[ZilShape._key(x, y, z)];
+	return v ? v.value : null;
 };
 
 ZilShape.prototype.get_highest_empty_space = function(x, y, shape) {
@@ -396,10 +430,18 @@ ZilShape.prototype.rotate = function(dir) {
     for(var key in this.expanded_shape) {
         var value = this.expanded_shape[key];
         var pos = ZilShape._pos(key);
-        var new_key = dir > 0 ?
-            ZilShape._key(this.bounds.w - 1 - pos[1], pos[0], pos[2]) :
-            ZilShape._key(pos[1], this.bounds.h - 1 - pos[0], pos[2]);
-        new_shape[new_key] = value;
+        var nx, ny, nz;
+        if(dir > 0) {
+            nx = this.bounds.w - 1 - pos[1];
+            ny = pos[0];
+            nz = pos[2];
+        } else {
+            nx = pos[1];
+            ny = this.bounds.h - 1 - pos[0];
+            nz = pos[2];
+        }
+        var new_key = ZilShape._key(nx, ny, nz);
+        new_shape[new_key] = new ZilNode(nx, ny, nz, value.value);
     }
     this.expanded_shape = new_shape;
     this.invalidate();

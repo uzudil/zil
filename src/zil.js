@@ -10,6 +10,10 @@ var ZIL = {
 	fps_start: Date.now(),
 	XY_PLANE: new THREE.Plane(new THREE.Vector3(0, 0, 1), 1),
     show_grid: false,
+    move_to_index: 0,
+    move_to: null,
+    last_time: 0,
+    player_move_time: 0,
 
 	mouse_move: function(event) {
         // regular mouse movement
@@ -27,6 +31,23 @@ var ZIL = {
             ZIL.show_cursor_pos();
         }
 	},
+
+    mouse_up: function(event) {
+        var point = ZIL.mouse_to_world(event);
+        if(point) {
+            ZIL.move_to_index = 0;
+            var start_point = [ZIL.player.x, ZIL.player.y, ZIL.player.z - 1];
+
+            var ex = Math.round(ZIL.global_pos[0] + point.x);
+            var ey = Math.round(ZIL.global_pos[1] + point.y);
+            var end_point = [ex, ey, ZIL.shape.get_highest_empty_space(ex, ey, ZIL.player.shape) - 1];
+//            console.log("* will move to: ", end_point);
+            var t = Date.now();
+            ZIL.move_to = ZIL.shape.astar_search(start_point, end_point);
+//            console.log("\tpath: ", ZIL.move_to);
+//            console.log("\ttime:" + (Date.now() - t));
+        }
+    },
 
 	mouse_to_world: function(event) {
 		var mousex = (( (event.offsetX - ZIL.offset_x) / ZIL.canvas_size ) * 2 - 1);
@@ -99,13 +120,33 @@ var ZIL = {
 			ZIL.cursor[2] + ZIL.global_pos[2]].join(","));
 	},
 
-	move_cursor: function() {
+    // dx: millis since last render
+	game_step: function(dx) {
+        // cursor move
         ZIL.cursor[0] += ZIL.move[0];
         ZIL.cursor[1] += ZIL.move[1];
         ZIL.cursor[2] += ZIL.move[2];
         ZIL.move = [0, 0, 0];
         ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
         ZIL.show_cursor_pos();
+
+        if(ZIL.move_to) {
+            ZIL.player_move_time += dx;
+            if(ZIL.player_move_time > 100) {
+                ZIL.player_move_time = 0;
+
+                var node = ZIL.move_to[ZIL.move_to_index];
+//                console.log("Step " + ZIL.move_to_index + "/" + ZIL.move_to.length + ": " + node);
+                ZIL.player.move_to(ZIL.shape, node.x, node.y, node.z + 1);
+                ZIL.redraw_shape();
+
+                ZIL.move_to_index++;
+                if(ZIL.move_to_index >= ZIL.move_to.length) {
+                    ZIL.move_to_index = 0;
+                    ZIL.move_to = null;
+                }
+            }
+        }
 	},
 
 	redraw_shape: function() {
@@ -230,7 +271,6 @@ var ZIL = {
 
 		$("canvas").
 			bind("mousemove", ZIL.mouse_move).
-			bind("mousedown", ZIL.mouse_down).
 			bind("mouseup", ZIL.mouse_up);
 		document.body.oncontextmenu = function() { return false; };
 		document.body.onkeydown = ZIL.key_down;
@@ -240,6 +280,14 @@ var ZIL = {
         ZilShape.reset_cache();
 		ZIL.shape = ZilShape.load_shape(category_name, shape_name);
         ZIL.shape.build_shape(ZIL_UTIL.update_progress, function() {
+
+            var start_x = 14;
+            var start_y = 54;
+            ZIL.global_pos = [ start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0 ];
+
+            ZIL.player = new Player(start_x, start_y);
+            ZIL.player.move(ZIL.shape);
+
             ZIL.redraw_shape();
 		    ZIL.render();
         });
@@ -247,8 +295,10 @@ var ZIL = {
 
 	render: function() {
 		var now = Date.now();
+        var dx = now - ZIL.last_time;
+        ZIL.last_time = now;
 
-		ZIL.move_cursor();
+		ZIL.game_step(dx);
 
 		ZIL.renderer.render(ZIL.scene, ZIL.camera);
 
