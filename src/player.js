@@ -6,11 +6,15 @@ function Player(x, y) {
 }
 
 Player.prototype.move_to = function(map_shape, nx, ny, nz) {
-    map_shape.del_shape(this.x, this.y, this.z, this.shape);
+    this.remove(map_shape);
     this.x = nx;
     this.y = ny;
     this.z = nz;
     this.move(map_shape);
+};
+
+Player.prototype.remove = function(map_shape) {
+    map_shape.del_shape(this.x, this.y, this.z, this.shape);
 };
 
 Player.prototype.move = function(map_shape) {

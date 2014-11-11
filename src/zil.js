@@ -42,10 +42,19 @@ var ZIL = {
             var ey = Math.round(ZIL.global_pos[1] + point.y);
             var end_point = [ex, ey, ZIL.shape.get_highest_empty_space(ex, ey, ZIL.player.shape) - 1];
 //            console.log("* will move to: ", end_point);
-            var t = Date.now();
-            ZIL.move_to = ZIL.shape.astar_search(start_point, end_point);
-//            console.log("\tpath: ", ZIL.move_to);
+
+            // remove the player while we find the path
+            ZIL.player.remove(ZIL.shape);
+
+//            var t = Date.now();
+            var p = ZIL.shape.astar_search(start_point, end_point, ZIL.player.shape);
+
+            // reset the player after pathfinding
+            ZIL.player.move(ZIL.shape);
+
+//            console.log("\tpath: ", p);
 //            console.log("\ttime:" + (Date.now() - t));
+            if(p && p.length) ZIL.move_to = p;
         }
     },
 
@@ -132,7 +141,7 @@ var ZIL = {
 
         if(ZIL.move_to) {
             ZIL.player_move_time += dx;
-            if(ZIL.player_move_time > 100) {
+            if(ZIL.player_move_time > 25) {
                 ZIL.player_move_time = 0;
 
                 var node = ZIL.move_to[ZIL.move_to_index];

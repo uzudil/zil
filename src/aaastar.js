@@ -40,16 +40,17 @@ var astar = {
 
     /**
     * Perform an A* Search on a graph given a start and end node.
-    * @param {Graph} graph
+    * @param {ZilShape} the 'map' shape
     * @param {GridNode} start
     * @param {GridNode} end
+    * @param {ZilShape} shape being moved
     * @param {Object} [options]
     * @param {bool} [options.closest] Specifies whether to return the
                path to the closest node if the target is unreachable.
     * @param {Function} [options.heuristic] Heuristic function (see
     *          astar.heuristics).
     */
-    search: function(graph, start, end, options) {
+    search: function(graph, start, end, shape, options) {
         graph.astar_init();
 
         options = options || {};
@@ -81,7 +82,7 @@ var astar = {
             for (var i = 0, il = neighbors.length; i < il; ++i) {
                 var neighbor = neighbors[i];
 
-                if (neighbor.closed || graph.isWall(neighbor)) {
+                if (neighbor.closed || graph.isWall(neighbor, shape)) {
                     // Not a valid node to process, skip to next neighbor.
                     continue;
                 }
@@ -145,16 +146,24 @@ var astar = {
     }
 };
 
-ZilShape.prototype.isWall = function(node) {
-    var k = ZilShape._key(node.x, node.y, node.z + 1);
-    return this.expanded_shape[k] != null;
+ZilShape.prototype.isWall = function(node, shape) {
+    for(var x = 0; x < shape.bounds.w; x++) {
+        for(var y = 0; y < shape.bounds.h; y++) {
+            for(var z = 0; z < shape.bounds.d; z++) {
+                var k = ZilShape._key(node.x + x, node.y + y, node.z + 1 + z);
+                if(this.expanded_shape[k] != null) return true;
+            }
+        }
+    }
+    return false;
 };
 
-ZilShape.prototype.astar_search = function(start, end) {
+ZilShape.prototype.astar_search = function(start, end, shape) {
     var start_node = this.expanded_shape[ZilShape._key(start[0], start[1], start[2])];
     var end_node = this.expanded_shape[ZilShape._key(end[0], end[1], end[2])];
-    console.log("start_node=" + start_node + " end_node=" + end_node);
-    return astar.search(this, start_node, end_node);
+//    console.log("start_node=" + start_node + " end_node=" + end_node);
+    if(start_node == null || end_node == null) return [];
+    return astar.search(this, start_node, end_node, shape);
 };
 
 ZilShape.prototype.astar_init = function() {
