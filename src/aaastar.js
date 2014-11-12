@@ -147,8 +147,10 @@ var astar = {
 };
 
 ZilShape.prototype.isWall = function(node, shape) {
-    for(var x = 0; x < shape.bounds.w; x++) {
-        for(var y = 0; y < shape.bounds.h; y++) {
+    // test against a square base since the shape could be rotated either way
+    var size = Math.max(shape.bounds.w, shape.bounds.h);
+    for(var x = 0; x < size; x++) {
+        for(var y = 0; y < size; y++) {
             for(var z = 0; z < shape.bounds.d; z++) {
                 var k = ZilShape._key(node.x + x, node.y + y, node.z + 1 + z);
                 if(this.expanded_shape[k] != null) return true;

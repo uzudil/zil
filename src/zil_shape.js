@@ -180,9 +180,8 @@ ZilShape._pos = function(key) {
 	return $.map(key.split(","), function(x) { return parseInt(x, 10); });
 };
 
-ZilShape.prototype.del_shape = function(x, y, z, shape) {
+ZilShape.prototype.del_shape = function(x, y, z, child_shape) {
     // remove all child shape points
-    var child_shape = ZilShape.load_shape(shape.category, shape.name);
     for(var child_key in child_shape.expanded_shape) {
         var child_pos = ZilShape._pos(child_key);
         var new_key = ZilShape._key(
@@ -205,8 +204,9 @@ ZilShape.prototype.del_position = function(x, y, z) {
 		var origin_pos = ZilShape._pos(origin_key);
 		
 		// remove all child shape points
-		var s = this.shape[origin_key].name.split(".");
-		var child_shape = ZilShape.load_shape(s[0], s[1]);
+        var s_val = this.shape[origin_key];
+		var s = s_val.name.split(".");
+		var child_shape = ZilShape.load_shape(s[0], s[1], s_val.rot);
 		for(var child_key in child_shape.expanded_shape) {
 			var child_pos = ZilShape._pos(child_key);
 			var new_key = ZilShape._key(

@@ -3,6 +3,11 @@ var PI = 3.14159;
 var ZIL_UTIL = {
 };
 
+ZIL_UTIL.N = 0; // y smaller
+ZIL_UTIL.E = 1; // x smaller
+ZIL_UTIL.S = 2; // y bigger
+ZIL_UTIL.W = 3; // x bigger
+
 ZIL_UTIL.CHUNK_SIZE = 16;
 ZIL_UTIL.WIDTH = 100 * ZIL_UTIL.CHUNK_SIZE;
 ZIL_UTIL.HEIGHT = 100 * ZIL_UTIL.CHUNK_SIZE;
