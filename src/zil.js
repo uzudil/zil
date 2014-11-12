@@ -14,6 +14,7 @@ var ZIL = {
     move_to: null,
     last_time: 0,
     player_move_time: 0,
+    screen_pos_map: {},
 
 	mouse_move: function(event) {
         // regular mouse movement
@@ -73,18 +74,6 @@ var ZIL = {
 		}
 		return intersection;
 	},
-
-    world_to_screen: function(x, y, z) {
-        // converts 3D position to screen coords
-        var pos = new THREE.Vector3(x, y, z);
-        projScreenMat = new THREE.Matrix4();
-        projScreenMat.multiply( ZIL.camera.projectionMatrix, ZIL.camera.matrixWorldInverse);
-        projScreenMat.multiplyVector3(pos);
-        return {
-            x: (pos.x+1) * ZIL.canvas_size/2 + ZIL.canvas_offset.left,
-            y: (-pos.y+1) * ZIL.canvas_size/2 +ZIL.canvas_offset.top
-        };
-    },
 
 	cursor_moved: function() {
 		if(ZIL.last_cursor == null) {
@@ -161,10 +150,10 @@ var ZIL = {
                 ZIL.player.move_to(ZIL.shape, node.x, node.y, node.z + 1);
 
                 // re-center screen if near the edge
-                var screen_pos = ZIL.world_to_screen(ZIL.player.x - ZIL.global_pos[0], ZIL.player.y - ZIL.global_pos[1], 0);
-                if(screen_pos.x < 40 || screen_pos.y < 40 || screen_pos.x >= ZIL.canvas_size - 40 || screen_pos.y >= ZIL.canvas_size - 40) {
+                if(ZIL.is_near_edge_of_screen()) {
                     ZIL.global_pos[0] = ZIL.player.x - ZIL_UTIL.VIEW_WIDTH / 2;
                     ZIL.global_pos[1] = ZIL.player.y - ZIL_UTIL.VIEW_HEIGHT / 2;
+                    ZIL.screen_pos_map = {};
                 }
 
                 ZIL.redraw_shape();
@@ -177,6 +166,30 @@ var ZIL = {
             }
         }
 	},
+
+    is_near_edge_of_screen: function() {
+        var px = (((ZIL.player.x - ZIL.global_pos[0]) / 8)|0) * 8;
+        var py = (((ZIL.player.y - ZIL.global_pos[1]) / 8)|0) * 8;
+        var key = "" + px + "," + py;
+        var screen_pos = ZIL.screen_pos_map[key];
+        if(screen_pos == null) {
+            screen_pos = ZIL.world_to_screen(px, py, 0);
+            ZIL.screen_pos_map[key] = screen_pos;
+        }
+        return screen_pos.x < 40 || screen_pos.y < 40 || screen_pos.x >= ZIL.canvas_size - 40 || screen_pos.y >= ZIL.canvas_size - 40;
+    },
+
+    world_to_screen: function(x, y, z) {
+        // converts 3D position to screen coords
+        var pos = new THREE.Vector3(x, y, z);
+        projScreenMat = new THREE.Matrix4();
+        projScreenMat.multiplyMatrices( ZIL.camera.projectionMatrix, ZIL.camera.matrixWorldInverse);
+        pos.applyMatrix4(projScreenMat);
+        return {
+            x: (pos.x+1) * ZIL.canvas_size/2 + ZIL.canvas_offset.left,
+            y: (-pos.y+1) * ZIL.canvas_size/2 +ZIL.canvas_offset.top
+        };
+    },
 
 	redraw_shape: function() {
 		ZIL.shape.render_shape(ZIL.rendered_shape, ZIL.global_pos);
@@ -226,7 +239,7 @@ var ZIL = {
 
 		ZIL.init_light();
 
-        ZIL.load_shape("maps", "first");
+        ZIL.load_shape("maps", "battle");
 	},
 
 	init_light: function() {
@@ -311,8 +324,8 @@ var ZIL = {
 		ZIL.shape = ZilShape.load_shape(category_name, shape_name);
         ZIL.shape.build_shape(ZIL_UTIL.update_progress, function() {
 
-            var start_x = 14;
-            var start_y = 54;
+            var start_x = 56;
+            var start_y = 56;
             ZIL.global_pos = [ start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0 ];
 
             ZIL.player = new Player(start_x, start_y);

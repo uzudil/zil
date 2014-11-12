@@ -168,7 +168,7 @@ ZilShape.prototype.astar_search = function(start, end, shape) {
 
 ZilShape.prototype.astar_init = function() {
     var t = Date.now();
-    console.log(">>> Starting astar_init.");
+//    console.log(">>> Starting astar_init.");
     for(var k in this.expanded_shape) {
         var node = this.expanded_shape[k];
         node.f = 0;
@@ -178,7 +178,7 @@ ZilShape.prototype.astar_init = function() {
         node.closed = false;
         node.parent = null;
     }
-    console.log(">>> finished astar_init in " + (Date.now() - t));
+//    console.log(">>> finished astar_init in " + (Date.now() - t));
 };
 
 ZilShape.prototype.neighbors = function(node) {

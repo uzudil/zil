@@ -2,7 +2,7 @@ function Player(x, y) {
     this.x = x;
     this.y = y;
     this.z = null;
-    this.shape = ZilShape.load_shape("creatures", "player");
+    this.shape = ZilShape.load_shape("creatures", "player2");
 }
 
 Player.prototype.move_to = function(map_shape, nx, ny, nz) {
