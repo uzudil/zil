@@ -17,6 +17,8 @@ Player.prototype.move_to = function(map_shape, nx, ny, nz) {
     this.x = nx;
     this.y = ny;
     this.z = nz;
+
+    // todo: add smooth rotation here...
     if(this.x > this.last_x) this.set_shape(ZIL_UTIL.W);
     else if(this.x < this.last_x) this.set_shape(ZIL_UTIL.E);
     else if(this.y > this.last_y) this.set_shape(ZIL_UTIL.N);
