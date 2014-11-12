@@ -36,7 +36,6 @@ var ZIL = {
     mouse_up: function(event) {
         var point = ZIL.mouse_to_world(event);
         if(point) {
-            ZIL.move_to_index = 0;
             var start_point = [ZIL.player.x, ZIL.player.y, ZIL.player.z - 1];
 
             var ex = Math.round(ZIL.global_pos[0] + point.x);
@@ -55,7 +54,10 @@ var ZIL = {
 
 //            console.log("\tpath: ", p);
 //            console.log("\ttime:" + (Date.now() - t));
-            if(p && p.length) ZIL.move_to = p;
+            if(p && p.length) {
+                ZIL.move_to_index = 0;
+                ZIL.move_to = p;
+            }
         }
     },
 
