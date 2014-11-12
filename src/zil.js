@@ -74,6 +74,18 @@ var ZIL = {
 		return intersection;
 	},
 
+    world_to_screen: function(x, y, z) {
+        // converts 3D position to screen coords
+        var pos = new THREE.Vector3(x, y, z);
+        projScreenMat = new THREE.Matrix4();
+        projScreenMat.multiply( ZIL.camera.projectionMatrix, ZIL.camera.matrixWorldInverse);
+        projScreenMat.multiplyVector3(pos);
+        return {
+            x: (pos.x+1) * ZIL.canvas_size/2 + ZIL.canvas_offset.left,
+            y: (-pos.y+1) * ZIL.canvas_size/2 +ZIL.canvas_offset.top
+        };
+    },
+
 	cursor_moved: function() {
 		if(ZIL.last_cursor == null) {
 			ZIL.last_cursor = [0, 0, 0];
@@ -147,6 +159,14 @@ var ZIL = {
                 var node = ZIL.move_to[ZIL.move_to_index];
 //                console.log("Step " + ZIL.move_to_index + "/" + ZIL.move_to.length + ": " + node);
                 ZIL.player.move_to(ZIL.shape, node.x, node.y, node.z + 1);
+
+                // re-center screen if near the edge
+                var screen_pos = ZIL.world_to_screen(ZIL.player.x - ZIL.global_pos[0], ZIL.player.y - ZIL.global_pos[1], 0);
+                if(screen_pos.x < 40 || screen_pos.y < 40 || screen_pos.x >= ZIL.canvas_size - 40 || screen_pos.y >= ZIL.canvas_size - 40) {
+                    ZIL.global_pos[0] = ZIL.player.x - ZIL_UTIL.VIEW_WIDTH / 2;
+                    ZIL.global_pos[1] = ZIL.player.y - ZIL_UTIL.VIEW_HEIGHT / 2;
+                }
+
                 ZIL.redraw_shape();
 
                 ZIL.move_to_index++;
@@ -176,6 +196,7 @@ var ZIL = {
 		var size = Math.min(window.innerWidth, window.innerHeight);
 		ZIL.renderer.setSize( size, size );
 		ZIL.canvas_size = size;
+        ZIL.canvas_offset = $("canvas").offset();
 		document.body.appendChild( ZIL.renderer.domElement );
 		ZIL.offset_x = 0;
 		ZIL.offset_y = 0;
