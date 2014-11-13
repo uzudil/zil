@@ -320,7 +320,7 @@ var ZIL_BUILD = {
 		var z = ZIL_BUILD.global_pos[2] + ZIL_BUILD.cursor[2];
 		if(ZIL_BUILD.include_shape) {
 			ZIL_BUILD.shape.set_shape(x, y, z, ZIL_BUILD.include_shape, {
-                monster: ZIL_BUILD.include_monster.key
+                monster: ZIL_BUILD.include_monster ? ZIL_BUILD.include_monster.key : null
             });
 		} else {
 			if(force == null) {

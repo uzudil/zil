@@ -1,8 +1,11 @@
-var ZilNode = function(x, y, z, value) {
+var ZilNode = function(x, y, z, value, origin_x, origin_y, origin_z) {
     this.x = x;
     this.y = y;
     this.z = z;
     this.value = value;
+    this.origin_x = origin_x;
+    this.origin_y = origin_y;
+    this.origin_z = origin_z;
 };
 
 ZilNode.prototype.toString = function() {
@@ -106,21 +109,19 @@ ZilShape.prototype.expand_shape = function(key) {
             if(nz > this.depth) this.depth = nz;
 			var new_key = ZilShape._key(nx, ny, nz);
 			this.mark_chunk_updated(new_key);
-			this.expanded_shape[new_key] = new ZilNode(nx, ny, nz, child_value.value);
-			this.shape_pos[new_key] = key;
+			this.expanded_shape[new_key] = new ZilNode(nx, ny, nz, child_value.value, pos[0], pos[1], pos[2]);
 		}
 
 	} else {
 		this.mark_chunk_updated(key);
         var pos = ZilShape._pos(key);
-		this.expanded_shape[key] = new ZilNode(pos[0], pos[1], pos[2], value);
+		this.expanded_shape[key] = new ZilNode(pos[0], pos[1], pos[2], value, pos[0], pos[1], pos[2]);
 	}
 };
 
 ZilShape.prototype.expand_all = function() {
 	this.all_chunks_updated = true;
 	this.expanded_shape = {}; // what to draw
-	this.shape_pos = {}; // where are the child shapes
 	for(var key in this.shape) {
 		this.expand_shape(key);
 	}
@@ -200,7 +201,6 @@ ZilShape.prototype.del_shape = function(x, y, z, child_shape) {
             z + child_pos[2]);
         this.mark_chunk_updated(new_key);
         delete this.expanded_shape[new_key];
-        delete this.shape_pos[new_key];
     }
     var key = ZilShape._key(x, y, z);
     delete this.shape[key];
@@ -208,26 +208,13 @@ ZilShape.prototype.del_shape = function(x, y, z, child_shape) {
 
 ZilShape.prototype.del_position = function(x, y, z) {
 	var key = ZilShape._key(x, y, z);
-	if(key in this.shape_pos) {
-		// where the child shape was placed
-		var origin_key = this.shape_pos[key]; 
-		var origin_pos = ZilShape._pos(origin_key);
-		
-		// remove all child shape points
-        var s_val = this.shape[origin_key];
-		var s = s_val.name.split(".");
+    var p = this.expanded_shape[key];
+    var origin_key = ZilShape._key(p.origin_x, p.origin_y, p.origin_z);
+    var s_val = this.shape[origin_key];
+	if(isNaN(s_val)) {
+        var s = s_val.name.split(".");
 		var child_shape = ZilShape.load_shape(s[0], s[1], s_val.rot);
-		for(var child_key in child_shape.expanded_shape) {
-			var child_pos = ZilShape._pos(child_key);
-			var new_key = ZilShape._key(
-				origin_pos[0] + child_pos[0], 
-				origin_pos[1] + child_pos[1], 
-				origin_pos[2] + child_pos[2]);
-			this.mark_chunk_updated(new_key);
-			delete this.expanded_shape[new_key];
-			delete this.shape_pos[new_key];
-		}
-		delete this.shape[origin_key];
+        this.del_shape(p.origin_x, p.origin_y, p.origin_z, child_shape);
 	} else {
 		delete this.shape[key];
 		delete this.expanded_shape[key];
@@ -279,8 +266,6 @@ ZilShape.prototype.set_shape = function(x, y, z, child_shape, options) {
 ZilShape.prototype.clear_shape = function(parent_shape) {
 	this.shape = {};
 	this.expanded_shape = {};
-    this.shape_pos = {};
-
     for(var _chunk_key in this.chunks_in_memory) {
         var _chunk = this.chunks_in_memory[_chunk_key];
         if(_chunk.shape) {
@@ -369,8 +354,8 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 				cx = (gx / ZIL_UTIL.CHUNK_SIZE)|0;
 				cy = (gy / ZIL_UTIL.CHUNK_SIZE)|0;
 				cz = (gz / ZIL_UTIL.CHUNK_SIZE)|0;
-				chunk_key = [cx, cy, cz].join(",");				
-				
+				chunk_key = [cx, cy, cz].join(",");
+
 				// re-render the chunk if needed
 				chunk = this.chunks_in_memory[chunk_key];
                 if(!chunk) {
