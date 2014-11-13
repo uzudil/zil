@@ -14,7 +14,7 @@ ZilNode.prototype.getCost = function() {
 };
 
 
-var ZilShape = function(category, name, shape, width, height, depth, rotation) {
+var ZilShape = function(category, name, shape, width, height, depth, rotation, loading_delegate) {
 	this.category = category;
 	this.name = name;
 	this.shape = shape; // what to persist
@@ -24,6 +24,7 @@ var ZilShape = function(category, name, shape, width, height, depth, rotation) {
 	this.bounds = { w: 0, h: 0, d: 0 };
 	this.undo_shape = null;
     this.rotation = rotation ? rotation : 0;
+    this.loading_delegate = loading_delegate;
 	this.reset_shape();
     for(var i = 0; i < this.rotation; i++) this.rotate(1);
 };
@@ -77,13 +78,18 @@ ZilShape.prototype.mark_chunk_updated = function(key) {
 ZilShape.prototype.expand_shape = function(key) {
 	var value = this.shape[key];
 	if(isNaN(value)) {
-		var s = value.name.split(".");
-		var child_shape = ZilShape.load_shape(s[0], s[1], value.rot);
-
-		var pos = ZilShape._pos(key);
+        var pos = ZilShape._pos(key);
         if(pos[0] > this.width) this.width = pos[0];
         if(pos[1] > this.height) this.height = pos[1];
         if(pos[2] > this.depth) this.depth = pos[2];
+
+        if(this.loading_delegate) {
+            if(value.options && value.options.monster) {
+                this.loading_delegate.monster_loaded(value.options.monster, pos);
+            }
+        }
+		var s = value.name.split(".");
+		var child_shape = ZilShape.load_shape(s[0], s[1], value.rot);
 
 		for(var child_key in child_shape.expanded_shape) {
 			var child_value = child_shape.expanded_shape[child_key];
@@ -116,7 +122,7 @@ ZilShape.prototype.expand_all = function() {
 	}
 };
 	
-ZilShape.load_shape = function(category_name, shape_name, rotation) {
+ZilShape.load_shape = function(category_name, shape_name, rotation, loading_delegate) {
 	var name = category_name + "." + shape_name;
     if(rotation == null) rotation = 0;
     var cache_name = name + "." + rotation;
@@ -125,7 +131,7 @@ ZilShape.load_shape = function(category_name, shape_name, rotation) {
 		console.log("* Loading shape: " + cache_name);
 		var js = window.localStorage[name];
 		var shape = js ? JSON.parse(js) : { width: ZIL_UTIL.WIDTH, height: ZIL_UTIL.HEIGHT, depth: ZIL_UTIL.DEPTH, shape: {} };
-		shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth, rotation);
+		shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth, rotation, loading_delegate);
 		ZilShape.SHAPE_CACHE[cache_name] = shape_obj;
 	}
     shape_obj.invalidate();

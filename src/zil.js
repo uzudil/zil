@@ -36,21 +36,21 @@ var ZIL = {
     mouse_up: function(event) {
         var point = ZIL.mouse_to_world(event);
         if(point) {
-            var start_point = [ZIL.player.x, ZIL.player.y, ZIL.player.z - 1];
+            var start_point = [ZIL.player.mobile.x, ZIL.player.mobile.y, ZIL.player.mobile.z - 1];
 
             var ex = Math.round(ZIL.global_pos[0] + point.x);
             var ey = Math.round(ZIL.global_pos[1] + point.y);
-            var end_point = [ex, ey, ZIL.shape.get_highest_empty_space(ex, ey, ZIL.player.shape) - 1];
+            var end_point = [ex, ey, ZIL.shape.get_highest_empty_space(ex, ey, ZIL.player.mobile.shape) - 1];
 //            console.log("* will move to: ", end_point);
 
             // remove the player while we find the path
-            ZIL.player.remove(ZIL.shape);
+            ZIL.player.mobile.remove(ZIL.shape);
 
 //            var t = Date.now();
-            var p = ZIL.shape.astar_search(start_point, end_point, ZIL.player.shape);
+            var p = ZIL.shape.astar_search(start_point, end_point, ZIL.player.mobile.shape);
 
             // reset the player after pathfinding
-            ZIL.player.move(ZIL.shape);
+            ZIL.player.mobile.move(ZIL.shape);
 
 //            console.log("\tpath: ", p);
 //            console.log("\ttime:" + (Date.now() - t));
@@ -149,12 +149,12 @@ var ZIL = {
 
                 var node = ZIL.move_to[ZIL.move_to_index];
 //                console.log("Step " + ZIL.move_to_index + "/" + ZIL.move_to.length + ": " + node);
-                ZIL.player.move_to(ZIL.shape, node.x, node.y, node.z + 1);
+                ZIL.player.mobile.move_to(ZIL.shape, node.x, node.y, node.z + 1);
 
                 // re-center screen if near the edge
                 if(ZIL.is_near_edge_of_screen()) {
-                    ZIL.global_pos[0] = ZIL.player.x - ZIL_UTIL.VIEW_WIDTH / 2;
-                    ZIL.global_pos[1] = ZIL.player.y - ZIL_UTIL.VIEW_HEIGHT / 2;
+                    ZIL.global_pos[0] = ZIL.player.mobile.x - ZIL_UTIL.VIEW_WIDTH / 2;
+                    ZIL.global_pos[1] = ZIL.player.mobile.y - ZIL_UTIL.VIEW_HEIGHT / 2;
                     ZIL.screen_pos_map = {};
                 }
 
@@ -170,8 +170,8 @@ var ZIL = {
 	},
 
     is_near_edge_of_screen: function() {
-        var px = (((ZIL.player.x - ZIL.global_pos[0]) / 8)|0) * 8;
-        var py = (((ZIL.player.y - ZIL.global_pos[1]) / 8)|0) * 8;
+        var px = (((ZIL.player.mobile.x - ZIL.global_pos[0]) / 8)|0) * 8;
+        var py = (((ZIL.player.mobile.y - ZIL.global_pos[1]) / 8)|0) * 8;
         var key = "" + px + "," + py;
         var screen_pos = ZIL.screen_pos_map[key];
         if(screen_pos == null) {
@@ -323,7 +323,8 @@ var ZIL = {
 
 	load_shape: function(category_name, shape_name) {
         ZilShape.reset_cache();
-		ZIL.shape = ZilShape.load_shape(category_name, shape_name);
+        ZIL.creatures = [];
+		ZIL.shape = ZilShape.load_shape(category_name, shape_name, 0, this);
         ZIL.shape.build_shape(ZIL_UTIL.update_progress, function() {
 
             var start_x = 56;
@@ -331,12 +332,17 @@ var ZIL = {
             ZIL.global_pos = [ start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0 ];
 
             ZIL.player = new Player(start_x, start_y);
-            ZIL.player.move(ZIL.shape);
+            ZIL.player.mobile.move(ZIL.shape);
 
             ZIL.redraw_shape();
 		    ZIL.render();
         });
 	},
+
+    monster_loaded: function(monster_key, pos) {
+        console.log(">>> monster loaded at " + pos + ": " + monster_key);
+        ZIL.creatures.push(new Creature(MONSTERS[monster_key], pos));
+    },
 
 	render: function() {
 		var now = Date.now();
