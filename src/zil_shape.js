@@ -260,9 +260,9 @@ ZilShape.prototype.get_highest_empty_space_at_point = function(x, y) {
     return 0; // all free
 };
 
-ZilShape.prototype.set_shape = function(x, y, z, child_shape) {
+ZilShape.prototype.set_shape = function(x, y, z, child_shape, options) {
 	var key = ZilShape._key(x, y, z);
-	this.shape[key] = { name: child_shape.category + "." + child_shape.name, rot: child_shape.rotation };
+	this.shape[key] = { name: child_shape.category + "." + child_shape.name, rot: child_shape.rotation, options: options ? options : null };
 	this.expand_shape(key);
 };
 

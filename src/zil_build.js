@@ -11,6 +11,7 @@ var ZIL_BUILD = {
 	global_pos: [0, 0, 0],
 	include_shape: null,
 	include_shape_obj: null,
+    include_monster: null,
 	dragging: false,
 	last_mouse_x: null,
 	last_mouse_y: null,
@@ -215,6 +216,7 @@ var ZIL_BUILD = {
 				ZIL_BUILD.obj.remove(ZIL_BUILD.include_shape_obj);
 				ZIL_BUILD.include_shape_obj = null;
 				ZIL_BUILD.include_shape = null;
+                ZIL_BUILD.include_monster = null;
                 ZIL_BUILD.rotation = 0;
 				$("#include_message").fadeOut();
 			}
@@ -317,7 +319,9 @@ var ZIL_BUILD = {
 		var y = ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1];
 		var z = ZIL_BUILD.global_pos[2] + ZIL_BUILD.cursor[2];
 		if(ZIL_BUILD.include_shape) {
-			ZIL_BUILD.shape.set_shape(x, y, z, ZIL_BUILD.include_shape);
+			ZIL_BUILD.shape.set_shape(x, y, z, ZIL_BUILD.include_shape, {
+                monster: ZIL_BUILD.include_monster.key
+            });
 		} else {
 			if(force == null) {
 				if(ZIL_BUILD.shape.get_position(x, y, z) != null) {
@@ -494,6 +498,17 @@ var ZIL_BUILD = {
             window.localStorage["colors"] = JSON.stringify(colors);
         });
 
+        $("#monsters").empty();
+        for(var key in MONSTERS) {
+            $("#monsters").append("<option value=\"" + key + "\">" + MONSTERS[key].name + ":L" + MONSTERS[key].level + "</option>");
+        }
+        $("#load_monster").click(function(event) {
+            var key = $("#monsters").val();
+            if(key) ZIL_BUILD._include_monster(key);
+            $("#load_monster").blur();
+            return false;
+        });
+
 		// the shape name
 		$("#name").keyup(function (e) {
     		if (e.keyCode == 13) {
@@ -580,6 +595,12 @@ var ZIL_BUILD = {
             ZIL_BUILD._include_shape(ZIL_BUILD.include_shape.category, ZIL_BUILD.include_shape.name, ZIL_BUILD.rotation);
 
         }
+    },
+
+    _include_monster: function(monster_key) {
+        console.log("Including monster: " + MONSTERS[monster_key].name);
+        ZIL_BUILD.include_monster = MONSTERS[monster_key];
+        ZIL_BUILD._include_shape(ZIL_BUILD.include_monster.category, ZIL_BUILD.include_monster.shape, 0);
     },
 
     _include_shape: function(category, shape_name, rotation) {

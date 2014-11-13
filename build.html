@@ -76,6 +76,12 @@
                 <div><input class="color"> <button id="add_color">Add Color</button></div>
                 <div><label for="clear">New shape:</label><button id="clear">Clear</button></div>
 			</div>
+            <div class="group">
+                <label>Monsters:<br>
+                    <select id="monsters" size="10"></select>
+                </label>
+                <button id="load_monster">Load</button>
+            </div>
 			<div class="group">
 				<div>Cursor: <span id="cursor_pos"></span></div>
 				<div>Global: <span id="global_pos"></span></div>
@@ -138,6 +144,7 @@
 		</div>
 		<script src="lib/three.min.js"></script>
 		<script src="src/zil_util.js"></script>
+		<script src="src/monsters.js"></script>
 		<script src="src/block.js"></script>
 		<script src="src/chunk.js"></script>
 		<script src="src/zil_shape.js"></script>
