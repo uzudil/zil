@@ -15,6 +15,7 @@ var ZIL = {
     last_time: 0,
     player_move_time: 0,
     screen_pos_map: {},
+    creatures: [],
 
 	mouse_move: function(event) {
         // regular mouse movement
@@ -132,6 +133,19 @@ var ZIL = {
 			ZIL.cursor[2] + ZIL.global_pos[2]].join(","));
 	},
 
+    move_visible_creatures: function() {
+        for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH; x+=ZIL_UTIL.CHUNK_SIZE) {
+            for(var y = 0; y < ZIL_UTIL.VIEW_WIDTH; y+=ZIL_UTIL.CHUNK_SIZE) {
+                var cx = ((ZIL.global_pos[0] + x)/ZIL_UTIL.CHUNK_SIZE)|0;
+                var cy = ((ZIL.global_pos[1] + y)/ZIL_UTIL.CHUNK_SIZE)|0;
+                var creatures = Mobile.get_for_chunk(cx, cy);
+                for(var i = 0; creatures && i < creatures.length; i++) {
+                    creatures[i].mobile.random_move(ZIL.shape);
+                }
+            }
+        }
+    },
+
     // dx: millis since last render
 	game_step: function(dx) {
         // cursor move
@@ -157,6 +171,8 @@ var ZIL = {
                     ZIL.global_pos[1] = ZIL.player.mobile.y - ZIL_UTIL.VIEW_HEIGHT / 2;
                     ZIL.screen_pos_map = {};
                 }
+
+                ZIL.move_visible_creatures();
 
                 ZIL.redraw_shape();
 
@@ -323,6 +339,7 @@ var ZIL = {
 
 	load_shape: function(category_name, shape_name) {
         ZilShape.reset_cache();
+        Mobile.CHUNK_MAP = {};
         ZIL.creatures = [];
 		ZIL.shape = ZilShape.load_shape(category_name, shape_name, 0, this);
         ZIL.shape.build_shape(ZIL_UTIL.update_progress, function() {
@@ -339,9 +356,11 @@ var ZIL = {
         });
 	},
 
-    monster_loaded: function(monster_key, pos) {
+    load_monster: function(monster_key, pos) {
         console.log(">>> monster loaded at " + pos + ": " + monster_key);
-        ZIL.creatures.push(new Creature(MONSTERS[monster_key], pos));
+        var creature = new Creature(MONSTERS[monster_key], pos);
+        ZIL.creatures.push(creature);
+        return creature.mobile.shape;
     },
 
 	render: function() {

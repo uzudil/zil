@@ -83,13 +83,17 @@ ZilShape.prototype.expand_shape = function(key) {
         if(pos[1] > this.height) this.height = pos[1];
         if(pos[2] > this.depth) this.depth = pos[2];
 
+        var child_shape = null;
         if(this.loading_delegate) {
             if(value.options && value.options.monster) {
-                this.loading_delegate.monster_loaded(value.options.monster, pos);
+                child_shape = this.loading_delegate.load_monster(value.options.monster, pos);
             }
         }
-		var s = value.name.split(".");
-		var child_shape = ZilShape.load_shape(s[0], s[1], value.rot);
+
+        if(child_shape == null) {
+            var s = value.name.split(".");
+            child_shape = ZilShape.load_shape(s[0], s[1], value.rot);
+        }
 
 		for(var child_key in child_shape.expanded_shape) {
 			var child_value = child_shape.expanded_shape[child_key];
