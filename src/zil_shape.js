@@ -425,20 +425,7 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 };
 
 ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk) {
-	for(var xx = 0; xx < ZIL_UTIL.CHUNK_SIZE; xx++) {
-		for(var yy = 0; yy < ZIL_UTIL.CHUNK_SIZE; yy++) {
-			for(var zz = 0; zz < ZIL_UTIL.CHUNK_SIZE; zz++) {
-				var block = chunk.blocks[xx][yy][zz];
-				var color = this.get_position(cx * ZIL_UTIL.CHUNK_SIZE + xx, cy * ZIL_UTIL.CHUNK_SIZE + yy, cz * ZIL_UTIL.CHUNK_SIZE + zz);
-				if(color == null) {
-					block.active = false;
-				} else {
-					block.active = true;
-					block.color = color;
-				}
-			}
-		}
-	}
+    chunk.set_pos(cx * ZIL_UTIL.CHUNK_SIZE, cy * ZIL_UTIL.CHUNK_SIZE, cz * ZIL_UTIL.CHUNK_SIZE, this.expanded_shape);
 	chunk.render(); // force refresh
 };
 
