@@ -153,7 +153,7 @@ ZilShape.prototype.isWall = function(node, shape) {
         for(var y = 0; y < size; y++) {
             for(var z = 0; z < shape.bounds.d; z++) {
                 var k = ZilShape._key(node.x + x, node.y + y, node.z + 1 + z);
-                if(this.expanded_shape[k] != null) return true;
+                if(this.expanded_shape[k] && this.expanded_shape[k].active) return true;
             }
         }
     }
@@ -163,8 +163,8 @@ ZilShape.prototype.isWall = function(node, shape) {
 ZilShape.prototype.astar_search = function(start, end, shape) {
     var start_node = this.expanded_shape[ZilShape._key(start[0], start[1], start[2])];
     var end_node = this.expanded_shape[ZilShape._key(end[0], end[1], end[2])];
-//    console.log("start_node=" + start_node + " end_node=" + end_node);
-    if(start_node == null || end_node == null) return [];
+    console.log("start_node=" + start_node + " end_node=" + end_node);
+    if(!(start_node && start_node.active && end_node && end_node.active)) return [];
     return astar.search(this, start_node, end_node, shape);
 };
 
@@ -173,12 +173,14 @@ ZilShape.prototype.astar_init = function() {
 //    console.log(">>> Starting astar_init.");
     for(var k in this.expanded_shape) {
         var node = this.expanded_shape[k];
-        node.f = 0;
-        node.g = 0;
-        node.h = 0;
-        node.visited = false;
-        node.closed = false;
-        node.parent = null;
+        if(node.active) {
+            node.f = 0;
+            node.g = 0;
+            node.h = 0;
+            node.visited = false;
+            node.closed = false;
+            node.parent = null;
+        }
     }
 //    console.log(">>> finished astar_init in " + (Date.now() - t));
 };
@@ -191,7 +193,7 @@ ZilShape.prototype.neighbors = function(node) {
             for(var dz = -1; dz <= 1; dz++) {
                 if(!(dx == 0 && dy == 0 && dz == 0)) {
                     var k = ZilShape._key(node.x + dx, node.y + dy, node.z + dz);
-                    if(grid[k] != null) ret.push(grid[k]);
+                    if(grid[k] != null && grid[k].active) ret.push(grid[k]);
                 }
             }
         }

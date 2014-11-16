@@ -90,9 +90,9 @@ Mobile.prototype.random_move = function(map_shape) {
         }
 
         // can we step there?
-        this.remove(map_shape);
+        this.set_active(map_shape, false);
         var nz = map_shape.get_highest_empty_space(nx, ny, this.shape);
-        this.move(map_shape);
+        this.set_active(map_shape, true);
 
         // if possible go there
         if(Math.abs(nz - this.z) <= 1) {
@@ -100,4 +100,8 @@ Mobile.prototype.random_move = function(map_shape) {
             break;
         }
     }
+};
+
+Mobile.prototype.set_active = function(map_shape, active) {
+    map_shape.set_active(this.x, this.y, this.z, this.shape, active);
 };

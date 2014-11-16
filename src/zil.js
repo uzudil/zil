@@ -45,13 +45,13 @@ var ZIL = {
 //            console.log("* will move to: ", end_point);
 
             // remove the player while we find the path
-            ZIL.player.mobile.remove(ZIL.shape);
+            ZIL.player.mobile.set_active(ZIL.shape, false);
 
 //            var t = Date.now();
             var p = ZIL.shape.astar_search(start_point, end_point, ZIL.player.mobile.shape);
 
             // reset the player after pathfinding
-            ZIL.player.mobile.move(ZIL.shape);
+            ZIL.player.mobile.set_active(ZIL.shape, true);
 
 //            console.log("\tpath: ", p);
 //            console.log("\ttime:" + (Date.now() - t));
