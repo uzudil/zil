@@ -163,7 +163,7 @@ ZilShape.prototype.isWall = function(node, shape) {
 ZilShape.prototype.astar_search = function(start, end, shape) {
     var start_node = this.expanded_shape[ZilShape._key(start[0], start[1], start[2])];
     var end_node = this.expanded_shape[ZilShape._key(end[0], end[1], end[2])];
-    console.log("start_node=" + start_node + " end_node=" + end_node);
+//    console.log("start_node=" + start_node + " end_node=" + end_node);
     if(!(start_node && start_node.active && end_node && end_node.active)) return [];
     return astar.search(this, start_node, end_node, shape);
 };
