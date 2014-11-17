@@ -8,8 +8,10 @@ function Mobile(x, y, z, category, shape, parent) {
     for(var i = 0; i < 4; i++) {
         this.shapes.push(ZilShape.load_shape(category, shape, i));
     }
+    this.placed = false;
     this.last_x = x;
     this.last_y = y;
+    this.last_z = z;
     this.shape_index = 2;
     this.shape = this.shapes[this.shape_index];
     this._set_chunk_pos(true);
@@ -43,7 +45,7 @@ Mobile.get_for_chunk = function(chunk_x, chunk_y) {
 };
 
 Mobile.prototype.move_to = function(map_shape, nx, ny, nz) {
-    this.remove(map_shape);
+    this.set_active(map_shape, false);
     this.x = nx;
     this.y = ny;
     this.z = nz;
@@ -54,9 +56,10 @@ Mobile.prototype.move_to = function(map_shape, nx, ny, nz) {
     else if(this.x < this.last_x) this.set_shape(ZIL_UTIL.E);
     else if(this.y > this.last_y) this.set_shape(ZIL_UTIL.N);
     else if(this.y < this.last_y) this.set_shape(ZIL_UTIL.S);
+    this.move(map_shape);
     this.last_x = this.x;
     this.last_y = this.y;
-    this.move(map_shape);
+    this.last_z = this.z;
 };
 
 Mobile.prototype.set_shape = function(index) {
@@ -65,12 +68,17 @@ Mobile.prototype.set_shape = function(index) {
 };
 
 Mobile.prototype.remove = function(map_shape) {
-    map_shape.del_shape(this.x, this.y, this.z, this.shape);
+    map_shape.set_active(this.x, this.y, this.z, this.shape, false);
 };
 
 Mobile.prototype.move = function(map_shape) {
     if(this.z == null) this.z = map_shape.get_highest_empty_space(this.x, this.y, this.shape);
-    map_shape.set_shape(this.x, this.y, this.z, this.shape);
+    if(this.placed) {
+        map_shape.move_to(this.x, this.y, this.z, this.shape);
+    } else {
+        map_shape.set_shape(this.x, this.y, this.z, this.shape);
+        this.placed = true;
+    }
 };
 
 Mobile.prototype.random_move = function(map_shape) {
