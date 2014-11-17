@@ -25,7 +25,17 @@ ZilNode.prototype.getCost = function() {
 var ZilShape = function(category, name, shape, width, height, depth, rotation, loading_delegate) {
 	this.category = category;
 	this.name = name;
-	this.shape = shape; // what to persist
+    var _shape = {};
+    for(var key in shape) {
+        var value = shape[key];
+        if(isNaN(key)) {
+            // old type key
+            var pos = $.map(key.split(","), function(x) { return parseInt(x, 10); });
+            key = ZilShape._key(pos[0], pos[1], pos[2]);
+        }
+        _shape[key] = value;
+    }
+	this.shape = _shape; // what to persist
 	this.width = width;
 	this.height = height;
 	this.depth = depth;
@@ -198,11 +208,16 @@ ZilShape.prototype.calculate_bounds = function() {
 };
 
 ZilShape._key = function(x, y, z) {
-	return [x, y, z].join(",");
+	return x * 512 * 512 + y * 512 + z;
 };
 
 ZilShape._pos = function(key) {
-	return $.map(key.split(","), function(x) { return parseInt(x, 10); });
+    var k = key;
+    var x = (k / (512 * 512)) | 0;
+    k -= x * 512 * 512;
+    var y = (k / 512) | 0;
+    k -= y * 512;
+    return [x, y, k];
 };
 
 ZilShape.prototype.del_shape = function(x, y, z, child_shape) {
