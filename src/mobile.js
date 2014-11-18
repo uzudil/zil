@@ -69,8 +69,10 @@ Mobile.prototype.set_shape = function(index) {
     this.shape_index = index;
     this.shape = this.shapes[this.shape_index];
 
-    // todo: fix this (re-add shape?)
-//    this.shape_obj = this.shape_objects[this.shape_index];
+    var parent = this.shape_obj.parent;
+    if(parent) parent.remove(this.shape_obj);
+    this.shape_obj = this.shape_objects[this.shape_index];
+    if(parent) parent.add(this.shape_obj);
 };
 
 Mobile.prototype.move = function(gx, gy, gz) {
