@@ -5,15 +5,19 @@ function Mobile(x, y, z, category, shape, parent) {
     this.z = z;
     this.parent = parent;
     this.shapes = [];
+    this.shape_objects = [];
     for(var i = 0; i < 4; i++) {
-        this.shapes.push(ZilShape.load_shape(category, shape, i));
+        var s = ZilShape.load_shape(category, shape, i);
+        s.build_shape_inline();
+        this.shapes.push(s);
+        this.shape_objects.push(s.render_shape());
     }
-    this.placed = false;
     this.last_x = x;
     this.last_y = y;
     this.last_z = z;
     this.shape_index = 2;
     this.shape = this.shapes[this.shape_index];
+    this.shape_obj = this.shape_objects[this.shape_index];
     this._set_chunk_pos(true);
 }
 
@@ -44,8 +48,7 @@ Mobile.get_for_chunk = function(chunk_x, chunk_y) {
     return Mobile.CHUNK_MAP["" + chunk_x + "," + chunk_y];
 };
 
-Mobile.prototype.move_to = function(map_shape, nx, ny, nz) {
-    this.set_active(map_shape, false);
+Mobile.prototype.move_to = function(nx, ny, nz, gx, gy, gz) {
     this.x = nx;
     this.y = ny;
     this.z = nz;
@@ -56,7 +59,7 @@ Mobile.prototype.move_to = function(map_shape, nx, ny, nz) {
     else if(this.x < this.last_x) this.set_shape(ZIL_UTIL.E);
     else if(this.y > this.last_y) this.set_shape(ZIL_UTIL.N);
     else if(this.y < this.last_y) this.set_shape(ZIL_UTIL.S);
-    this.move(map_shape);
+    this.move(gx, gy, gz);
     this.last_x = this.x;
     this.last_y = this.y;
     this.last_z = this.z;
@@ -65,23 +68,16 @@ Mobile.prototype.move_to = function(map_shape, nx, ny, nz) {
 Mobile.prototype.set_shape = function(index) {
     this.shape_index = index;
     this.shape = this.shapes[this.shape_index];
+
+    // todo: fix this (re-add shape?)
+//    this.shape_obj = this.shape_objects[this.shape_index];
 };
 
-Mobile.prototype.remove = function(map_shape) {
-    map_shape.set_active(this.x, this.y, this.z, this.shape, false);
+Mobile.prototype.move = function(gx, gy, gz) {
+    this.shape_obj.position.set(this.x - gx, this.y - gy, this.z - gz);
 };
 
-Mobile.prototype.move = function(map_shape) {
-    if(this.z == null) this.z = map_shape.get_highest_empty_space(this.x, this.y, this.shape);
-    if(this.placed) {
-        map_shape.move_to(this.x, this.y, this.z, this.shape);
-    } else {
-        map_shape.set_shape(this.x, this.y, this.z, this.shape);
-        this.placed = true;
-    }
-};
-
-Mobile.prototype.random_move = function(map_shape) {
+Mobile.prototype.random_move = function(map_shape, gx, gy, gz) {
     // in 5 tries,
     for(var attempt = 0; attempt < 5; attempt++) {
 
@@ -98,18 +94,12 @@ Mobile.prototype.random_move = function(map_shape) {
         }
 
         // can we step there?
-        this.set_active(map_shape, false);
         var nz = map_shape.get_highest_empty_space(nx, ny, this.shape);
-        this.set_active(map_shape, true);
 
         // if possible go there
         if(Math.abs(nz - this.z) <= 1) {
-            this.move_to(map_shape, nx, ny, nz);
+            this.move_to(nx, ny, nz, gx, gy, gz);
             break;
         }
     }
-};
-
-Mobile.prototype.set_active = function(map_shape, active) {
-    map_shape.set_active(this.x, this.y, this.z, this.shape, active);
 };

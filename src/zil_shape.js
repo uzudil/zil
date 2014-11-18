@@ -106,6 +106,8 @@ ZilShape.prototype.expand_shape = function(key) {
         if(this.loading_delegate) {
             if(value.options && value.options.monster) {
                 child_shape = this.loading_delegate.load_monster(value.options.monster, pos);
+                // don't include mobile shapes
+                if(child_shape == null) return;
             }
         }
 
@@ -192,11 +194,16 @@ ZilShape.prototype.calculate_bounds = function() {
 		if(max_y == null || pos[1] > max_y) max_y = pos[1];
 		if(max_z == null || pos[2] > max_z) max_z = pos[2];
 	}
+
+    // todo: fix duplication
 	this.bounds = {
 		w: max_x - min_x + 1,
 		h: max_y - min_y + 1,
 		d: max_z - min_z + 1
 	};
+    this.width = this.bounds.w;
+    this.height = this.bounds.h;
+    this.depth = this.bounds.d;
 
 	// reposition the shape to the origin
 	var new_shape = {};
@@ -378,6 +385,10 @@ ZilShape.prototype._build_shape_done = function(complete_fx) {
 
 ZilShape.prototype.build_shape = function(progress_fx, complete_fx) {
     this._build_shape(0, 0, 0, progress_fx, complete_fx);
+};
+
+ZilShape.prototype.build_shape_inline = function() {
+    this._build_shape(0, 0, 0, function(percent) {}, function() {});
 };
 
 ZilShape.prototype.render_shape = function(parent_shape, position_offset) {

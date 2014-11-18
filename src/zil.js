@@ -15,7 +15,8 @@ var ZIL = {
     last_time: 0,
     player_move_time: 0,
     screen_pos_map: {},
-    creatures: [],
+    creatures_map: {},
+    shown_creatures: {},
 
 	mouse_move: function(event) {
         // regular mouse movement
@@ -42,19 +43,12 @@ var ZIL = {
             var ex = Math.round(ZIL.global_pos[0] + point.x);
             var ey = Math.round(ZIL.global_pos[1] + point.y);
             var end_point = [ex, ey, ZIL.shape.get_highest_empty_space(ex, ey, ZIL.player.mobile.shape) - 1];
-//            console.log("* will move to: ", end_point);
-
-            // remove the player while we find the path
-            ZIL.player.mobile.set_active(ZIL.shape, false);
 
 //            var t = Date.now();
             var p = ZIL.shape.astar_search(start_point, end_point, ZIL.player.mobile.shape);
-
-            // reset the player after pathfinding
-            ZIL.player.mobile.set_active(ZIL.shape, true);
-
 //            console.log("\tpath: ", p);
 //            console.log("\ttime:" + (Date.now() - t));
+
             if(p && p.length) {
                 ZIL.move_to_index = 0;
                 ZIL.move_to = p;
@@ -134,16 +128,36 @@ var ZIL = {
 	},
 
     move_visible_creatures: function() {
+        var drawn_creatures = {};
         for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH; x+=ZIL_UTIL.CHUNK_SIZE) {
             for(var y = 0; y < ZIL_UTIL.VIEW_WIDTH; y+=ZIL_UTIL.CHUNK_SIZE) {
                 var cx = ((ZIL.global_pos[0] + x)/ZIL_UTIL.CHUNK_SIZE)|0;
                 var cy = ((ZIL.global_pos[1] + y)/ZIL_UTIL.CHUNK_SIZE)|0;
                 var creatures = Mobile.get_for_chunk(cx, cy);
                 for(var i = 0; creatures && i < creatures.length; i++) {
-                    creatures[i].mobile.random_move(ZIL.shape);
+                    var c = creatures[i];
+
+                    // if not yet added, add creature
+                    if(ZIL.shown_creatures[c.id] == null) {
+                        ZIL.rendered_shape.add(c.mobile.shape_obj);
+                        ZIL.shown_creatures[c.id] = true;
+                    }
+
+                    drawn_creatures[c.id] = true;
+                    c.mobile.random_move(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
                 }
             }
         }
+
+        // remove not-shown creatures
+        var remove_ids = [];
+        for(var creature_id in ZIL.shown_creatures) {
+            if(drawn_creatures[creature_id] == null) {
+                ZIL.rendered_shape.remove(ZIL.creatures_map[creature_id].mobile.shape_obj);
+                remove_ids.push(creature_id);
+            }
+        }
+        for(var i = 0; i < remove_ids.length; i++) delete ZIL.shown_creatures[remove_ids[i]];
     },
 
     // dx: millis since last render
@@ -163,7 +177,7 @@ var ZIL = {
 
                 var node = ZIL.move_to[ZIL.move_to_index];
 //                console.log("Step " + ZIL.move_to_index + "/" + ZIL.move_to.length + ": " + node);
-                ZIL.player.mobile.move_to(ZIL.shape, node.x, node.y, node.z + 1);
+                ZIL.player.mobile.move_to(node.x, node.y, node.z + 1, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
 
                 // re-center screen if near the edge
                 if(ZIL.is_near_edge_of_screen()) {
@@ -211,8 +225,8 @@ var ZIL = {
 
 	redraw_shape: function() {
 		ZIL.shape.render_shape(ZIL.rendered_shape, ZIL.global_pos);
-		$("#chunks_info").html("shown: " + Object.keys(ZIL.shape.chunks_on_screen).length +
-			" in memory: " + Object.keys(ZIL.shape.chunks_in_memory).length);
+//		$("#chunks_info").html("shown: " + Object.keys(ZIL.shape.chunks_on_screen).length +
+//			" in memory: " + Object.keys(ZIL.shape.chunks_in_memory).length);
 	},
 
 	start_game: function() {
@@ -349,7 +363,11 @@ var ZIL = {
             ZIL.global_pos = [ start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0 ];
 
             ZIL.player = new Player(start_x, start_y);
-            ZIL.player.mobile.move(ZIL.shape);
+            ZIL.player.mobile.z = ZIL.shape.get_highest_empty_space(start_x, start_y, ZIL.player.mobile.shape);
+            ZIL.rendered_shape.add(ZIL.player.mobile.shape_obj);
+            ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
+
+            ZIL.move_visible_creatures();
 
             ZIL.redraw_shape();
 		    ZIL.render();
@@ -357,10 +375,9 @@ var ZIL = {
 	},
 
     load_monster: function(monster_key, pos) {
-        console.log(">>> monster loaded at " + pos + ": " + monster_key);
-        var creature = new Creature(MONSTERS[monster_key], pos);
-        ZIL.creatures.push(creature);
-        return creature.mobile.shape;
+        var creature = new Creature(MONSTERS[monster_key], pos, Object.keys(ZIL.creatures_map).length);
+        ZIL.creatures_map[creature.id] = creature;
+        return null;
     },
 
 	render: function() {
