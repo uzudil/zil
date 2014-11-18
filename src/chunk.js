@@ -10,13 +10,10 @@ Chunk.prototype.set_pos = function(x, y, z, blocks) {
     this.blocks = blocks;
     this.shape = null;
 };
-Chunk.NOT_ACTIVE = {
-    active: false
-};
 
 Chunk.prototype.get_block = function(x, y, z) {
     var k = ZilShape._key(x + this.x, y + this.y, z + this.z);
-    return this.blocks[k] || Chunk.NOT_ACTIVE;
+    return this.blocks[k];
 };
 
 Chunk.get_face_geometry = function() {
@@ -62,7 +59,7 @@ Chunk.prototype.render = function() {
 			for(var z = 0; z < ZIL_UTIL.CHUNK_SIZE; z++) {
 
 				var block = this.get_block(x, y, z);
-				if(block.active) {
+				if(block) {
 					var material = Chunk.get_material(block.value);
                     // keep the minimum number of materials
                     var material_index = material_index_map[block.value];
@@ -74,7 +71,7 @@ Chunk.prototype.render = function() {
 
 					// south
                     var faces = [];
-					if(y == ZIL_UTIL.CHUNK_SIZE - 1 || !this.get_block(x, y + 1, z).active) {
+					if(y == ZIL_UTIL.CHUNK_SIZE - 1 || !this.get_block(x, y + 1, z)) {
 						var child_shape = new THREE.Mesh( Chunk.FACE, material );
 						child_shape.position.x = x;
 						child_shape.position.y = y + 0.5;
@@ -84,7 +81,7 @@ Chunk.prototype.render = function() {
 					}
 
 					// east
-					if(x == ZIL_UTIL.CHUNK_SIZE - 1 || !this.get_block(x + 1, y, z).active) {
+					if(x == ZIL_UTIL.CHUNK_SIZE - 1 || !this.get_block(x + 1, y, z)) {
 						var child_shape = new THREE.Mesh( Chunk.FACE, material );
 						child_shape.position.x = x + 0.5;
 						child_shape.position.y = y;
@@ -94,7 +91,7 @@ Chunk.prototype.render = function() {
 					}
 
 					// top
-					if(!this.get_block(x, y, z + 1).active) {
+					if(!this.get_block(x, y, z + 1)) {
 						var child_shape = new THREE.Mesh( Chunk.FACE, material );
 						child_shape.position.x = x;
 						child_shape.position.y = y;
