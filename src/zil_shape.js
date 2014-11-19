@@ -267,6 +267,10 @@ ZilShape.prototype.get_position = function(x, y, z) {
 	return v ? v.value : null;
 };
 
+ZilShape.prototype.get_node = function(x, y, z) {
+    return this.expanded_shape[ZilShape._key(x, y, z)];
+};
+
 ZilShape.prototype.get_highest_empty_space = function(x, y, shape) {
     var max_z = 0;
     var w = 1;

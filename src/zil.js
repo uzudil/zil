@@ -10,10 +10,7 @@ var ZIL = {
 	fps_start: Date.now(),
 	XY_PLANE: new THREE.Plane(new THREE.Vector3(0, 0, 1), 1),
     show_grid: false,
-    move_to_index: 0,
-    move_to: null,
     last_time: 0,
-    player_move_time: 0,
     screen_pos_map: {},
     creatures_map: {},
     shown_creatures: {},
@@ -38,21 +35,10 @@ var ZIL = {
     mouse_up: function(event) {
         var point = ZIL.mouse_to_world(event);
         if(point) {
-            var start_point = [ZIL.player.mobile.x, ZIL.player.mobile.y, ZIL.player.mobile.z - 1];
-
-            var ex = Math.round(ZIL.global_pos[0] + point.x);
-            var ey = Math.round(ZIL.global_pos[1] + point.y);
-            var end_point = [ex, ey, ZIL.shape.get_highest_empty_space(ex, ey, ZIL.player.mobile.shape) - 1];
-
-//            var t = Date.now();
-            var p = ZIL.shape.astar_search(start_point, end_point, ZIL.player.mobile.shape);
-//            console.log("\tpath: ", p);
-//            console.log("\ttime:" + (Date.now() - t));
-
-            if(p && p.length) {
-                ZIL.move_to_index = 0;
-                ZIL.move_to = p;
-            }
+            ZIL.player.mobile.plan_move_to(
+                ZIL.shape,
+                Math.round(ZIL.global_pos[0] + point.x),
+                Math.round(ZIL.global_pos[1] + point.y));
         }
     },
 
@@ -91,19 +77,7 @@ var ZIL = {
 		if(event.target != document.body) return true;
 
         // move the cursor
-        if(event.which == 37) { // W
-            ZIL.global_pos[0] += 1;
-            ZIL.redraw_shape();
-        } else if(event.which == 39) { // E
-            ZIL.global_pos[0] -= 1;
-            ZIL.redraw_shape();
-        } else if(event.which == 38) { // N
-            ZIL.global_pos[1] -= 1;
-            ZIL.redraw_shape();
-        } else if(event.which == 40) { // S
-            ZIL.global_pos[1] += 1;
-            ZIL.redraw_shape();
-        } else if(event.which == 32) {
+        if(event.which == 32) {
             ZIL.show_grid = ZIL.show_grid ? false : true;
             if(ZIL.show_grid) {
                 ZIL.inner.add( ZIL.coord );
@@ -127,24 +101,26 @@ var ZIL = {
 			ZIL.cursor[2] + ZIL.global_pos[2]].join(","));
 	},
 
-    move_visible_creatures: function() {
+    move_visible_creatures: function(delta_time) {
         var drawn_creatures = {};
         for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH; x+=ZIL_UTIL.CHUNK_SIZE) {
             for(var y = 0; y < ZIL_UTIL.VIEW_WIDTH; y+=ZIL_UTIL.CHUNK_SIZE) {
                 var cx = ((ZIL.global_pos[0] + x)/ZIL_UTIL.CHUNK_SIZE)|0;
                 var cy = ((ZIL.global_pos[1] + y)/ZIL_UTIL.CHUNK_SIZE)|0;
                 var creatures = Mobile.get_for_chunk(cx, cy);
-                for(var i = 0; creatures && i < creatures.length; i++) {
-                    var c = creatures[i];
+                if(creatures.length > 0) {
+                    for (var idx = 0; idx < creatures.length; idx++) {
+                        var c = creatures[idx];
 
-                    // if not yet added, add creature
-                    if(ZIL.shown_creatures[c.id] == null) {
-                        ZIL.rendered_shape.add(c.mobile.shape_obj);
-                        ZIL.shown_creatures[c.id] = true;
+                        // if not yet added, add creature
+                        if (ZIL.shown_creatures[c.id] == null) {
+                            ZIL.rendered_shape.add(c.mobile.shape_obj);
+                            ZIL.shown_creatures[c.id] = true;
+                        }
+
+                        drawn_creatures[c.id] = true;
+                        c.mobile.creature_move(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time);
                     }
-
-                    drawn_creatures[c.id] = true;
-                    c.mobile.random_move(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
                 }
             }
         }
@@ -160,8 +136,8 @@ var ZIL = {
         for(var i = 0; i < remove_ids.length; i++) delete ZIL.shown_creatures[remove_ids[i]];
     },
 
-    // dx: millis since last render
-	game_step: function(dx) {
+    // delta_time: millis since last render
+	game_step: function(delta_time) {
         // cursor move
         ZIL.cursor[0] += ZIL.move[0];
         ZIL.cursor[1] += ZIL.move[1];
@@ -170,32 +146,17 @@ var ZIL = {
         ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
         ZIL.show_cursor_pos();
 
-        if(ZIL.move_to) {
-            ZIL.player_move_time += dx;
-            if(ZIL.player_move_time > 25) {
-                ZIL.player_move_time = 0;
-
-                var node = ZIL.move_to[ZIL.move_to_index];
-//                console.log("Step " + ZIL.move_to_index + "/" + ZIL.move_to.length + ": " + node);
-                ZIL.player.mobile.move_to(node.x, node.y, node.z + 1, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
-
-                // re-center screen if near the edge
-                if(ZIL.is_near_edge_of_screen()) {
-                    ZIL.global_pos[0] = ZIL.player.mobile.x - ZIL_UTIL.VIEW_WIDTH / 2;
-                    ZIL.global_pos[1] = ZIL.player.mobile.y - ZIL_UTIL.VIEW_HEIGHT / 2;
-                    ZIL.screen_pos_map = {};
-                }
-
-                ZIL.move_visible_creatures();
-
-                ZIL.redraw_shape();
-
-                ZIL.move_to_index++;
-                if(ZIL.move_to_index >= ZIL.move_to.length) {
-                    ZIL.move_to_index = 0;
-                    ZIL.move_to = null;
-                }
+        if(ZIL.player.mobile.move_step(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
+            // re-center screen if near the edge
+            if(ZIL.is_near_edge_of_screen()) {
+                ZIL.global_pos[0] = ZIL.player.mobile.x - ZIL_UTIL.VIEW_WIDTH / 2;
+                ZIL.global_pos[1] = ZIL.player.mobile.y - ZIL_UTIL.VIEW_HEIGHT / 2;
+                ZIL.screen_pos_map = {};
             }
+
+            ZIL.move_visible_creatures(delta_time);
+
+            ZIL.redraw_shape();
         }
 	},
 
@@ -367,7 +328,7 @@ var ZIL = {
             ZIL.rendered_shape.add(ZIL.player.mobile.shape_obj);
             ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
 
-            ZIL.move_visible_creatures();
+            ZIL.move_visible_creatures(1000);
 
             ZIL.redraw_shape();
 		    ZIL.render();
@@ -382,10 +343,10 @@ var ZIL = {
 
 	render: function() {
 		var now = Date.now();
-        var dx = now - ZIL.last_time;
+        var delta_time = now - ZIL.last_time;
         ZIL.last_time = now;
 
-		ZIL.game_step(dx);
+		ZIL.game_step(delta_time);
 
 		ZIL.renderer.render(ZIL.scene, ZIL.camera);
 

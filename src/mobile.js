@@ -3,6 +3,10 @@ function Mobile(x, y, z, category, shape, parent) {
     this.x = x;
     this.y = y;
     this.z = z;
+    this.move_time = 0;
+    this.move_path_index = 0;
+    this.move_path = null;
+    this.sleep_turns = null;
     this.parent = parent;
     this.shapes = [];
     this.shape_objects = [];
@@ -21,10 +25,14 @@ function Mobile(x, y, z, category, shape, parent) {
     this._set_chunk_pos(true);
 }
 
+Mobile.prototype.to_string = function() {
+    return this.x + "," + this.y + "," + this.z;
+};
+
 Mobile.CHUNK_MAP = {};
 
 Mobile.prototype._set_chunk_pos = function(force) {
-    if(this.parent) {
+    if(this.parent.ai_move) {
         // remove the previous pos
         var last_key = "" + ((this.last_x / ZIL_UTIL.CHUNK_SIZE) | 0) + "," + ((this.last_y / ZIL_UTIL.CHUNK_SIZE) | 0);
         var key = "" + ((this.x / ZIL_UTIL.CHUNK_SIZE) | 0) + "," + ((this.y / ZIL_UTIL.CHUNK_SIZE) | 0);
@@ -44,8 +52,9 @@ Mobile.prototype._set_chunk_pos = function(force) {
     }
 };
 
+Mobile.EMPTY_LIST = [];
 Mobile.get_for_chunk = function(chunk_x, chunk_y) {
-    return Mobile.CHUNK_MAP["" + chunk_x + "," + chunk_y];
+    return Mobile.CHUNK_MAP["" + chunk_x + "," + chunk_y] || Mobile.EMPTY_LIST;
 };
 
 Mobile.prototype.move_to = function(nx, ny, nz, gx, gy, gz) {
@@ -79,29 +88,91 @@ Mobile.prototype.move = function(gx, gy, gz) {
     this.shape_obj.position.set(this.x - gx, this.y - gy, this.z - gz);
 };
 
-Mobile.prototype.random_move = function(map_shape, gx, gy, gz) {
-    // in 5 tries,
-    for(var attempt = 0; attempt < 5; attempt++) {
+Mobile.prototype.creature_move = function(map_shape, gx, gy, gz, delta_time) {
+    // plan the move
+    if(this.move_path == null && this.sleep_turns == null) {
+        var dir = (Math.random() * 5)|0;
+        var dx = this.x;
+        var dy = this.y;
+        var dz = this.z;
+        var dist = (Math.random() * 48)|0;
 
-        var nx = this.x;
-        var ny = this.y;
-
-        // pick a direction
-        var d = (Math.random() * 4)|0;
-        switch(d) {
-            case 0: nx--; break;
-            case 1: nx++; break;
-            case 2: ny--; break;
-            case 3: ny++; break;
+        if(dir > ZIL_UTIL.W) {
+            this.move_path = null;
+            this.move_path_index = 0;
+            this.sleep_turns = dist;
+        } else {
+            this.move_path = [];
+            this.move_path_index = 0;
+            this.sleep_turns = null;
+            for (var i = 0; i < dist; i++) {
+                switch(dir) {
+                    case ZIL_UTIL.N: dy--; break;
+                    case ZIL_UTIL.E: dx++; break;
+                    case ZIL_UTIL.S: dy++; break;
+                    case ZIL_UTIL.W: dx--; break;
+                }
+                var pz = dz;
+                dz = map_shape.get_highest_empty_space(dx, dy, this.shape) - 1;
+                var node = map_shape.get_node(dx, dy, dz);
+                if(node == null || Math.abs(dz - pz) > 1) break;
+                this.move_path.push(node);
+            }
+            if(this.move_path.length == 0) this.move_path = null;
         }
+//        console.log(">>> creature " + this.parent.id + " sleep_turns=" + this.sleep_turns  + " move_path=", this.move_path);
+    }
 
-        // can we step there?
-        var nz = map_shape.get_highest_empty_space(nx, ny, this.shape);
+    // step on path
+    this.move_step(gx, gy, gz, delta_time);
+};
 
-        // if possible go there
-        if(Math.abs(nz - this.z) <= 1) {
-            this.move_to(nx, ny, nz, gx, gy, gz);
-            break;
+Mobile.prototype.plan_move_to = function(map_shape, x, y, z) {
+    var start_point = [this.x, this.y, this.z - 1];
+    if(z == null) z = map_shape.get_highest_empty_space(x, y, this.shape) - 1;
+    var end_point = [x, y, z];
+
+    var p = map_shape.astar_search(start_point, end_point, this.shape);
+
+    if(p && p.length) {
+        this.move_path_index = 0;
+        this.move_path = p;
+        this.sleep_turns = null;
+    }
+};
+
+/**
+ * Move this mobile one step on the path.
+ * @param gx global x
+ * @param gy global y
+ * @param gz global z
+ * @param delta_time time since last frame (millis)
+ * @returns {boolean}
+ */
+Mobile.prototype.move_step = function(gx, gy, gz, delta_time) {
+    if(this.move_path || this.sleep_turns != null) {
+        this.move_time += delta_time;
+        if(this.move_time > this.parent.speed) {
+            this.move_time = 0;
+
+            // sleep
+            if(this.sleep_turns != null) {
+                this.move_to(this.x, this.y, this.z, gx, gy, gz);
+                if(this.sleep_turns-- <= 0) this.sleep_turns = null;
+                return;
+            }
+
+            var node = this.move_path[this.move_path_index];
+            this.move_to(node.x, node.y, node.z + 1, gx, gy, gz);
+
+            this.move_path_index++;
+            if(this.move_path_index >= this.move_path.length) {
+                this.move_path_index = 0;
+                this.move_path = null;
+            }
+
+            return true;
         }
     }
+    return false;
 };
