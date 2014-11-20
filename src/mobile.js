@@ -3,6 +3,8 @@ function Mobile(x, y, z, category, shape, parent) {
     this.x = x;
     this.y = y;
     this.z = z;
+    this.target = null;
+    this.target_action = null;
     this.move_time = 0;
     this.move_path_index = 0;
     this.move_path = null;
@@ -32,23 +34,21 @@ Mobile.prototype.to_string = function() {
 Mobile.CHUNK_MAP = {};
 
 Mobile.prototype._set_chunk_pos = function(force) {
-    if(this.parent.ai_move) {
-        // remove the previous pos
-        var last_key = "" + ((this.last_x / ZIL_UTIL.CHUNK_SIZE) | 0) + "," + ((this.last_y / ZIL_UTIL.CHUNK_SIZE) | 0);
-        var key = "" + ((this.x / ZIL_UTIL.CHUNK_SIZE) | 0) + "," + ((this.y / ZIL_UTIL.CHUNK_SIZE) | 0);
+    // remove the previous pos
+    var last_key = "" + ((this.last_x / ZIL_UTIL.CHUNK_SIZE) | 0) + "," + ((this.last_y / ZIL_UTIL.CHUNK_SIZE) | 0);
+    var key = "" + ((this.x / ZIL_UTIL.CHUNK_SIZE) | 0) + "," + ((this.y / ZIL_UTIL.CHUNK_SIZE) | 0);
 
-        if (force || last_key != key) {
-            if (Mobile.CHUNK_MAP[last_key]) {
-                var idx = Mobile.CHUNK_MAP[last_key].indexOf(this.parent);
-                if (idx >= 0) Mobile.CHUNK_MAP[last_key].splice(idx, 1);
-            }
-
-            // add new pos
-            if (Mobile.CHUNK_MAP[key] == null) {
-                Mobile.CHUNK_MAP[key] = [];
-            }
-            Mobile.CHUNK_MAP[key].push(this.parent);
+    if (force || last_key != key) {
+        if (Mobile.CHUNK_MAP[last_key]) {
+            var idx = Mobile.CHUNK_MAP[last_key].indexOf(this.parent);
+            if (idx >= 0) Mobile.CHUNK_MAP[last_key].splice(idx, 1);
         }
+
+        // add new pos
+        if (Mobile.CHUNK_MAP[key] == null) {
+            Mobile.CHUNK_MAP[key] = [];
+        }
+        Mobile.CHUNK_MAP[key].push(this.parent);
     }
 };
 
@@ -88,8 +88,7 @@ Mobile.prototype.move = function(gx, gy, gz) {
     this.shape_obj.position.set(this.x - gx, this.y - gy, this.z - gz);
 };
 
-Mobile.prototype.creature_move = function(map_shape, gx, gy, gz, delta_time) {
-    // plan the move
+Mobile.prototype.creature_move_plan = function(map_shape) {
     if(this.move_path == null && this.sleep_turns == null) {
         var dir = (Math.random() * 5)|0;
         var dx = this.x;
@@ -122,9 +121,6 @@ Mobile.prototype.creature_move = function(map_shape, gx, gy, gz, delta_time) {
         }
 //        console.log(">>> creature " + this.parent.id + " sleep_turns=" + this.sleep_turns  + " move_path=", this.move_path);
     }
-
-    // step on path
-    this.move_step(gx, gy, gz, delta_time);
 };
 
 Mobile.prototype.plan_move_to = function(map_shape, x, y, z) {
@@ -143,25 +139,36 @@ Mobile.prototype.plan_move_to = function(map_shape, x, y, z) {
 
 /**
  * Move this mobile one step on the path.
+ * @param map_shape the map
  * @param gx global x
  * @param gy global y
  * @param gz global z
  * @param delta_time time since last frame (millis)
  * @returns {boolean}
  */
-Mobile.prototype.move_step = function(gx, gy, gz, delta_time) {
-    if(this.move_path || this.sleep_turns != null) {
-        this.move_time += delta_time;
-        if(this.move_time > this.parent.speed) {
-            this.move_time = 0;
+Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
-            // sleep
-            if(this.sleep_turns != null) {
-                this.move_to(this.x, this.y, this.z, gx, gy, gz);
-                if(this.sleep_turns-- <= 0) this.sleep_turns = null;
-                return;
-            }
+    if(this.parent.ai_move) {
+        this.creature_move_plan(map_shape);
+    }
 
+    this.move_time += delta_time;
+    if(this.move_time >  (ZIL.in_combat ? 150 : this.parent.speed)) {
+        this.move_time = 0;
+
+        // look for enemies
+        if(this.parent.ai_move) {
+            this.look_for_target();
+        }
+
+        // sleep
+        if(this.sleep_turns != null) {
+            this.move_to(this.x, this.y, this.z, gx, gy, gz);
+            if(this.sleep_turns-- <= 0) this.sleep_turns = null;
+            return true;
+        }
+
+        if(this.move_path) {
             var node = this.move_path[this.move_path_index];
             this.move_to(node.x, node.y, node.z + 1, gx, gy, gz);
 
@@ -170,9 +177,50 @@ Mobile.prototype.move_step = function(gx, gy, gz, delta_time) {
                 this.move_path_index = 0;
                 this.move_path = null;
             }
-
             return true;
         }
     }
     return false;
+};
+
+Mobile.prototype.look_for_target = function() {
+    if (this.parent.target_action) return;
+
+    this.find_target();
+    if (this.parent.target_action == null) return;
+
+    console.log(">>> " + this.parent.id + " targeted " + this.parent.target.id + " for action " + this.parent.target_action);
+    if(this.parent.target_action == "attack") {
+        ZIL.start_combat();
+    }
+};
+
+Mobile.prototype.find_target = function() {
+    var cx = (this.x / ZIL_UTIL.CHUNK_SIZE)|0;
+    var cy = (this.y / ZIL_UTIL.CHUNK_SIZE)|0;
+    for(var dx = -2; dx <= 2; dx++) {
+        for(var dy = -2; dy <= 2; dy++) {
+            var creatures = Mobile.get_for_chunk(cx + dx, cy + dy);
+            for(var i = 0; i < creatures.length; i++) {
+                var c = creatures[i];
+
+                // help friends if needed/can (this can be self)
+
+                // attack foes
+                if(c.alignment != this.parent.alignment) {
+                    if(50 < Math.random() * 100) {
+                        this.parent.target = c;
+                        this.parent.target_action = "attack";
+                        return;
+                    }
+                }
+            }
+        }
+    }
+};
+
+Mobile.prototype.reset_move = function() {
+    this.move_path = null;
+    this.move_path_index = 0;
+    this.sleep_turns = null;
 };

@@ -14,6 +14,10 @@ var ZIL = {
     screen_pos_map: {},
     creatures_map: {},
     shown_creatures: {},
+    in_combat: false,
+    combat_creature: null,
+    combat_creatures: null,
+    combat_creature_index: 0,
 
 	mouse_move: function(event) {
         // regular mouse movement
@@ -111,15 +115,17 @@ var ZIL = {
                 if(creatures.length > 0) {
                     for (var idx = 0; idx < creatures.length; idx++) {
                         var c = creatures[idx];
+                        if(c.ai_move) {
 
-                        // if not yet added, add creature
-                        if (ZIL.shown_creatures[c.id] == null) {
-                            ZIL.rendered_shape.add(c.mobile.shape_obj);
-                            ZIL.shown_creatures[c.id] = true;
+                            // if not yet added, add creature
+                            if (ZIL.shown_creatures[c.id] == null) {
+                                ZIL.rendered_shape.add(c.mobile.shape_obj);
+                                ZIL.shown_creatures[c.id] = true;
+                            }
+
+                            drawn_creatures[c.id] = true;
+                            c.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time);
                         }
-
-                        drawn_creatures[c.id] = true;
-                        c.mobile.creature_move(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time);
                     }
                 }
             }
@@ -136,8 +142,7 @@ var ZIL = {
         for(var i = 0; i < remove_ids.length; i++) delete ZIL.shown_creatures[remove_ids[i]];
     },
 
-    // delta_time: millis since last render
-	game_step: function(delta_time) {
+    show_cursor: function() {
         // cursor move
         ZIL.cursor[0] += ZIL.move[0];
         ZIL.cursor[1] += ZIL.move[1];
@@ -145,20 +150,110 @@ var ZIL = {
         ZIL.move = [0, 0, 0];
         ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
         ZIL.show_cursor_pos();
+    },
 
-        if(ZIL.player.mobile.move_step(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
-            // re-center screen if near the edge
-            if(ZIL.is_near_edge_of_screen()) {
-                ZIL.global_pos[0] = ZIL.player.mobile.x - ZIL_UTIL.VIEW_WIDTH / 2;
-                ZIL.global_pos[1] = ZIL.player.mobile.y - ZIL_UTIL.VIEW_HEIGHT / 2;
-                ZIL.screen_pos_map = {};
+    // delta_time: millis since last render
+	game_step: function(delta_time) {
+        ZIL.show_cursor();
+
+        if(ZIL.in_combat) {
+            ZIL.combat_step(delta_time);
+        } else {
+            if (ZIL.player.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
+                ZIL.recenter_screen();
+                ZIL.move_visible_creatures(delta_time);
             }
-
-            ZIL.move_visible_creatures(delta_time);
-
-            ZIL.redraw_shape();
         }
 	},
+
+    combat_step: function(delta_time) {
+        // init combat or select next creature
+        if(ZIL.combat_creature == null) {
+            ZIL.init_combat_turn();
+        } else if(ZIL.combat_creature.ap <= 0) {
+            ZIL.next_combat_creature();
+        }
+
+        // combat is over
+        if(ZIL.combat_creature == null) {
+            console.log(">>> combat DONE.");
+            ZIL.in_combat = false;
+            return;
+        }
+
+        // combat move
+        if(ZIL.combat_creature.ap > 0) {
+            if(ZIL.combat_creature.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
+                ZIL.combat_creature.ap--;
+                if(!ZIL.combat_creature.ai_move) {
+                    ZIL.recenter_screen();
+                }
+            }
+
+            $("#combatant").html(ZIL.combat_creature.to_string());
+        }
+    },
+
+    init_combat_turn: function() {
+        // sort by initiative
+        ZIL.combat_creature_index = 0;
+        ZIL.combat_creatures = $.map(Object.keys(ZIL.shown_creatures), function(id) {
+            return ZIL.creatures_map[id];
+        });
+        ZIL.combat_creatures.push(ZIL.player);
+        if(ZIL.combat_creatures.length > 0) {
+            ZIL.combat_creatures.sort(function(a, b) {
+                return a.initiative - b.initiative;
+            });
+        }
+        ZIL.init_combat_creature();
+    },
+
+    next_combat_creature: function() {
+        // select next live combatant
+        while(true) {
+            ZIL.combat_creature_index++;
+            if(ZIL.combat_creature_index >= ZIL.combat_creatures.length) {
+                ZIL.combat_creature_index = 0;
+            }
+            if(ZIL.combat_creatures[ZIL.combat_creature_index].hp == 0) {
+                if(!ZIL.combat_creatures[ZIL.combat_creature_index].ai_move) {
+                    // game over: player killed
+                    ZIL.combat_creatures = [];
+                    ZIL.combat_creature_index = 0;
+                    break;
+                } else {
+                    ZIL.combat_creatures.splice(ZIL.combat_creature_index, 1);
+                    ZIL.combat_creature_index--;
+                }
+            } else {
+                break;
+            }
+        }
+        ZIL.init_combat_creature();
+    },
+
+    init_combat_creature: function() {
+        if(ZIL.combat_creatures.length > 1) {
+            ZIL.combat_creature = ZIL.combat_creatures[ZIL.combat_creature_index];
+            ZIL.combat_creature.ap = ZIL.combat_creature.max_ap;
+            if(!ZIL.combat_creature.ai_move) ZIL.combat_creature.mobile.reset_move();
+            $("#combatant").html(ZIL.combat_creature.to_string());
+        } else {
+            ZIL.combat_creature = null;
+            $("#combatant").empty();
+        }
+    },
+
+    recenter_screen: function() {
+        // re-center screen if near the edge
+        if (ZIL.is_near_edge_of_screen()) {
+            ZIL.global_pos[0] = ZIL.player.mobile.x - ZIL_UTIL.VIEW_WIDTH / 2;
+            ZIL.global_pos[1] = ZIL.player.mobile.y - ZIL_UTIL.VIEW_HEIGHT / 2;
+            ZIL.screen_pos_map = {};
+            ZIL.redraw_shape();
+        }
+    },
 
     is_near_edge_of_screen: function() {
         var px = (((ZIL.player.mobile.x - ZIL.global_pos[0]) / 8)|0) * 8;
@@ -186,8 +281,10 @@ var ZIL = {
 
 	redraw_shape: function() {
 		ZIL.shape.render_shape(ZIL.rendered_shape, ZIL.global_pos);
-//		$("#chunks_info").html("shown: " + Object.keys(ZIL.shape.chunks_on_screen).length +
-//			" in memory: " + Object.keys(ZIL.shape.chunks_in_memory).length);
+        ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
+        for(var creature_id in ZIL.shown_creatures) {
+            ZIL.creatures_map[creature_id].mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
+        }
 	},
 
 	start_game: function() {
@@ -341,6 +438,11 @@ var ZIL = {
         return null;
     },
 
+    start_combat: function() {
+        if(!ZIL.in_combat) console.log(">>> COMBAT start");
+        ZIL.in_combat = true;
+    },
+
 	render: function() {
 		var now = Date.now();
         var delta_time = now - ZIL.last_time;
@@ -358,7 +460,7 @@ var ZIL = {
 			ZIL.fps_counter = 0;
 			ZIL.fps_start = now;
 		}
-		requestAnimationFrame(ZIL.render);
-//		setTimeout(ZIL.render, 50); // reduce fan noise
+//		requestAnimationFrame(ZIL.render);
+		setTimeout(ZIL.render, 50); // reduce fan noise
 	}
 };
