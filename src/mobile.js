@@ -3,13 +3,22 @@ function Mobile(x, y, z, category, shape, parent) {
     this.x = x;
     this.y = y;
     this.z = z;
-    this.target = null;
-    this.target_action = null;
     this.move_time = 0;
     this.move_path_index = 0;
     this.move_path = null;
     this.sleep_turns = null;
     this.parent = parent;
+
+    this.ai_move = false;
+    this.speed = 20;
+    this.alignment = "good";
+    this.initiative = 1;
+    this.ap = 0;
+    this.max_ap = 10;
+    this.hp = 25;
+    this.target = null;
+    this.target_action = null;
+
     this.shapes = [];
     this.shape_objects = [];
     for(var i = 0; i < 4; i++) {
@@ -27,8 +36,10 @@ function Mobile(x, y, z, category, shape, parent) {
     this._set_chunk_pos(true);
 }
 
-Mobile.prototype.to_string = function() {
-    return this.x + "," + this.y + "," + this.z;
+Mobile.prototype.contains_point = function(x, y, z) {
+    return ZIL_UTIL.contains(x, this.x, this.x + this.shape.width) &&
+        ZIL_UTIL.contains(y, this.y, this.y + this.shape.height) &&
+        ZIL_UTIL.contains(z, this.z, this.z + this.shape.depth);
 };
 
 Mobile.CHUNK_MAP = {};
@@ -148,16 +159,16 @@ Mobile.prototype.plan_move_to = function(map_shape, x, y, z) {
  */
 Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
-    if(this.parent.ai_move) {
+    if(this.ai_move) {
         this.creature_move_plan(map_shape);
     }
 
     this.move_time += delta_time;
-    if(this.move_time >  (ZIL.in_combat ? 150 : this.parent.speed)) {
+    if(this.move_time >  (ZIL.in_combat ? 150 : this.speed)) {
         this.move_time = 0;
 
         // look for enemies
-        if(this.parent.ai_move) {
+        if(this.ai_move) {
             this.look_for_target();
         }
 
@@ -184,13 +195,12 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 };
 
 Mobile.prototype.look_for_target = function() {
-    if (this.parent.target_action) return;
+    if (this.target_action) return;
 
     this.find_target();
-    if (this.parent.target_action == null) return;
+    if (this.target_action == null) return;
 
-    console.log(">>> " + this.parent.id + " targeted " + this.parent.target.id + " for action " + this.parent.target_action);
-    if(this.parent.target_action == "attack") {
+    if(this.target_action == "attack") {
         ZIL.start_combat();
     }
 };
@@ -207,10 +217,9 @@ Mobile.prototype.find_target = function() {
                 // help friends if needed/can (this can be self)
 
                 // attack foes
-                if(c.alignment != this.parent.alignment) {
+                if(c.mobile.alignment != this.alignment) {
                     if(50 < Math.random() * 100) {
-                        this.parent.target = c;
-                        this.parent.target_action = "attack";
+                        this.set_target(c);
                         return;
                     }
                 }
@@ -223,4 +232,18 @@ Mobile.prototype.reset_move = function() {
     this.move_path = null;
     this.move_path_index = 0;
     this.sleep_turns = null;
+};
+
+Mobile.prototype.set_target = function(target_creature) {
+    this.target = target_creature;
+    this.target_action = "attack";
+    console.log(this.get_name() + " targets " + target_creature.mobile.get_name() + " for " + this.target_action + ".");
+};
+
+Mobile.prototype.get_name = function() {
+    return this.monster ? this.monster.name + "-" + this.parent.id : "player";
+};
+
+Mobile.prototype.to_string = function() {
+    return this.get_name() + " ap=" + this.ap + " hp=" + this.hp;
 };

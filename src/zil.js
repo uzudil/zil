@@ -37,13 +37,26 @@ var ZIL = {
 	},
 
     mouse_up: function(event) {
-        var point = ZIL.mouse_to_world(event);
-        if(point) {
-            ZIL.player.mobile.plan_move_to(
-                ZIL.shape,
-                Math.round(ZIL.global_pos[0] + point.x),
-                Math.round(ZIL.global_pos[1] + point.y));
+        var x = ZIL.global_pos[0] + ZIL.cursor[0];
+        var y = ZIL.global_pos[1] + ZIL.cursor[1];
+        var z = ZIL.cursor[2];
+
+        var target_creature = ZIL.get_creature_at(x, y, z);
+        if(target_creature && target_creature.mobile.alignment != ZIL.player.mobile.alignment) {
+            ZIL.player.mobile.set_target(target_creature);
         }
+
+        ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
+    },
+
+    get_creature_at: function(x, y, z) {
+        var cx = (x / ZIL_UTIL.CHUNK_SIZE)|0;
+        var cy = (y / ZIL_UTIL.CHUNK_SIZE)|0;
+        var creatures = Mobile.get_for_chunk(cx, cy);
+        for(var i = 0; i < creatures.length; i++) {
+            if(creatures[i].mobile.contains_point(x, y, z)) return creatures[i];
+        }
+        return null;
     },
 
 	mouse_to_world: function(event) {
@@ -52,14 +65,11 @@ var ZIL = {
 		// console.log("" + mousex + "," + mousey);
 		var vector = new THREE.Vector3( mousex, mousey, 1 );
 		var ray_caster = ZIL.projector.pickingRay(vector, ZIL.camera);
-		var intersection = ray_caster.ray.intersectPlane(ZIL.XY_PLANE);
-		if(intersection) {
-			if(intersection.x < 0) intersection.x = 0;
-			if(intersection.x >= ZIL_UTIL.VIEW_WIDTH) intersection.x = ZIL_UTIL.VIEW_WIDTH - 1;
-			if(intersection.y < 0) intersection.y = 0;
-			if(intersection.y >= ZIL_UTIL.VIEW_HEIGHT) intersection.y = ZIL_UTIL.VIEW_HEIGHT - 1;
-		}
-		return intersection;
+        var intersection = ray_caster.intersectObjects(ZIL.rendered_shape.children);
+        if(intersection.length > 0) {
+            return intersection[0].point;
+        }
+		return null;
 	},
 
 	cursor_moved: function() {
@@ -115,7 +125,7 @@ var ZIL = {
                 if(creatures.length > 0) {
                     for (var idx = 0; idx < creatures.length; idx++) {
                         var c = creatures[idx];
-                        if(c.ai_move) {
+                        if(c.mobile.ai_move) {
 
                             // if not yet added, add creature
                             if (ZIL.shown_creatures[c.id] == null) {
@@ -170,7 +180,7 @@ var ZIL = {
         // init combat or select next creature
         if(ZIL.combat_creature == null) {
             ZIL.init_combat_turn();
-        } else if(ZIL.combat_creature.ap <= 0) {
+        } else if(ZIL.combat_creature.mobile.ap <= 0) {
             ZIL.next_combat_creature();
         }
 
@@ -178,19 +188,20 @@ var ZIL = {
         if(ZIL.combat_creature == null) {
             console.log(">>> combat DONE.");
             ZIL.in_combat = false;
+            ZIL.center_screen_at(ZIL.player.mobile.x, ZIL.player.mobile.y);
             return;
         }
 
         // combat move
-        if(ZIL.combat_creature.ap > 0) {
+        if(ZIL.combat_creature.mobile.ap > 0) {
             if(ZIL.combat_creature.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
-                ZIL.combat_creature.ap--;
-                if(!ZIL.combat_creature.ai_move) {
+                ZIL.combat_creature.mobile.ap--;
+                if(!ZIL.combat_creature.mobile.ai_move) {
                     ZIL.recenter_screen();
                 }
             }
 
-            $("#combatant").html(ZIL.combat_creature.to_string());
+            $("#combatant").html(ZIL.combat_creature.mobile.to_string());
         }
     },
 
@@ -203,7 +214,7 @@ var ZIL = {
         ZIL.combat_creatures.push(ZIL.player);
         if(ZIL.combat_creatures.length > 0) {
             ZIL.combat_creatures.sort(function(a, b) {
-                return a.initiative - b.initiative;
+                return a.mobile.initiative - b.mobile.initiative;
             });
         }
         ZIL.init_combat_creature();
@@ -216,8 +227,8 @@ var ZIL = {
             if(ZIL.combat_creature_index >= ZIL.combat_creatures.length) {
                 ZIL.combat_creature_index = 0;
             }
-            if(ZIL.combat_creatures[ZIL.combat_creature_index].hp == 0) {
-                if(!ZIL.combat_creatures[ZIL.combat_creature_index].ai_move) {
+            if(ZIL.combat_creatures[ZIL.combat_creature_index].mobile.hp == 0) {
+                if(!ZIL.combat_creatures[ZIL.combat_creature_index].mobile.ai_move) {
                     // game over: player killed
                     ZIL.combat_creatures = [];
                     ZIL.combat_creature_index = 0;
@@ -236,9 +247,10 @@ var ZIL = {
     init_combat_creature: function() {
         if(ZIL.combat_creatures.length > 1) {
             ZIL.combat_creature = ZIL.combat_creatures[ZIL.combat_creature_index];
-            ZIL.combat_creature.ap = ZIL.combat_creature.max_ap;
-            if(!ZIL.combat_creature.ai_move) ZIL.combat_creature.mobile.reset_move();
-            $("#combatant").html(ZIL.combat_creature.to_string());
+            ZIL.combat_creature.mobile.ap = ZIL.combat_creature.mobile.max_ap;
+            if(!ZIL.combat_creature.mobile.ai_move) ZIL.combat_creature.mobile.reset_move();
+            $("#combatant").html(ZIL.combat_creature.mobile.to_string());
+            ZIL.center_screen_at(ZIL.combat_creature.mobile.x, ZIL.combat_creature.mobile.y);
         } else {
             ZIL.combat_creature = null;
             $("#combatant").empty();
@@ -248,11 +260,15 @@ var ZIL = {
     recenter_screen: function() {
         // re-center screen if near the edge
         if (ZIL.is_near_edge_of_screen()) {
-            ZIL.global_pos[0] = ZIL.player.mobile.x - ZIL_UTIL.VIEW_WIDTH / 2;
-            ZIL.global_pos[1] = ZIL.player.mobile.y - ZIL_UTIL.VIEW_HEIGHT / 2;
-            ZIL.screen_pos_map = {};
-            ZIL.redraw_shape();
+            ZIL.center_screen_at(ZIL.player.mobile.x, ZIL.player.mobile.y);
         }
+    },
+
+    center_screen_at: function(x, y) {
+        ZIL.global_pos[0] = x - ZIL_UTIL.VIEW_WIDTH / 2;
+        ZIL.global_pos[1] = y - ZIL_UTIL.VIEW_HEIGHT / 2;
+        ZIL.screen_pos_map = {};
+        ZIL.redraw_shape();
     },
 
     is_near_edge_of_screen: function() {

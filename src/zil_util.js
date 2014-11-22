@@ -30,6 +30,10 @@ ZIL_UTIL.palette = [
 	0xD01F3C
 ];
 
+ZIL_UTIL.contains = function(x, a, b) {
+    return x >= a && x < b;
+};
+
 ZIL_UTIL.clear_node = function(node) {
 	while(node.children && node.children.length != 0) {
 		node.remove(node.children[0]);
