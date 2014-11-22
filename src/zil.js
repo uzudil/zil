@@ -19,9 +19,17 @@ var ZIL = {
     combat_creatures: null,
     combat_creature_index: 0,
     selected_creature: null,
+    combat_selected_creature: null,
+    combat_action_click_count: 0,
+    combat_plan_x: 0,
+    combat_plan_y: 0,
+    combat_plan_z: 0,
 
 	mouse_move: function(event) {
-        if(ZIL.selected_creature) ZIL.selected_creature.mobile.set_selected(false);
+        if(ZIL.selected_creature) {
+            ZIL.selected_creature.mobile.set_selected(false);
+            ZIL.selected_creature = null;
+        }
 
         var point = ZIL.mouse_to_world(event);
         if(point) {
@@ -36,11 +44,12 @@ var ZIL = {
             ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
             ZIL.show_cursor_pos();
 
+            // a creature?
             var x = ZIL.global_pos[0] + ZIL.cursor[0];
             var y = ZIL.global_pos[1] + ZIL.cursor[1];
             var z = ZIL.cursor[2];
             var target_creature = ZIL.get_creature_at(x, y, z);
-            if(target_creature) {
+            if (target_creature) {
                 target_creature.mobile.set_selected(true);
                 ZIL.selected_creature = target_creature;
             }
@@ -52,12 +61,43 @@ var ZIL = {
         var y = ZIL.global_pos[1] + ZIL.cursor[1];
         var z = ZIL.cursor[2];
 
-        var target_creature = ZIL.selected_creature;
-        if(target_creature && target_creature.mobile.alignment != ZIL.player.mobile.alignment) {
-            ZIL.player.mobile.set_target(target_creature);
-        }
+        if(ZIL.in_combat) {
+            ZIL.combat_selected_creature = ZIL.get_creature_at(x, y, z);
+            console.log("click=" + ZIL.combat_action_click_count +
+                " selected=" + (ZIL.combat_selected_creature ? ZIL.combat_selected_creature.mobile.get_name() : "") +
+                " target=" + (ZIL.player.mobile.target ? ZIL.player.mobile.target.mobile.get_name() : "") +
+                " pos=" + x + "," + y + "," + z +
+                " changed=" + ZIL.combat_selection_changed(x, y, z));
 
-        ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
+            if(ZIL.combat_action_click_count == 0 || ZIL.combat_selection_changed(x, y, z)) {
+                console.log(">>> A");
+                ZIL.combat_action_selection();
+            } else {
+                console.log(">>> B");
+                ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
+                ZIL.combat_selected_creature = null;
+            }
+            ZIL.combat_action_click_count++;
+            ZIL.combat_plan_x = x;
+            ZIL.combat_plan_y = y;
+            ZIL.combat_plan_z = z;
+        } else {
+            // mark location and move
+            ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
+        }
+    },
+
+    combat_selection_changed: function(x, y, z) {
+        return ZIL.combat_plan_x != x ||
+            ZIL.combat_plan_y != y ||
+            ZIL.combat_plan_z != z ||
+            ZIL.combat_selected_creature != ZIL.player.mobile.target;
+    },
+
+    combat_action_selection: function() {
+        ZIL.combat_action_click_count = 0;
+        ZIL.player.mobile.set_target(ZIL.combat_selected_creature);
+        // mark target location on ground
     },
 
     get_creature_at: function(x, y, z) {
@@ -259,7 +299,10 @@ var ZIL = {
         if(ZIL.combat_creatures.length > 1) {
             ZIL.combat_creature = ZIL.combat_creatures[ZIL.combat_creature_index];
             ZIL.combat_creature.mobile.ap = ZIL.combat_creature.mobile.max_ap;
-            if(!ZIL.combat_creature.mobile.ai_move) ZIL.combat_creature.mobile.reset_move();
+            if(!ZIL.combat_creature.mobile.ai_move) {
+                ZIL.combat_creature.mobile.reset_move();
+                ZIL.combat_action_click_count = 0;
+            }
             $("#combatant").html(ZIL.combat_creature.mobile.to_string());
             ZIL.center_screen_at(ZIL.combat_creature.mobile.x, ZIL.combat_creature.mobile.y);
         } else {

@@ -267,12 +267,20 @@ Mobile.prototype.reset_move = function() {
     this.move_path = null;
     this.move_path_index = 0;
     this.sleep_turns = null;
+    this.target = null;
+    this.target_action = null;
 };
 
 Mobile.prototype.set_target = function(target_creature) {
-    this.target = target_creature;
-    this.target_action = "attack";
-    console.log(this.get_name() + " targets " + target_creature.mobile.get_name() + " for " + this.target_action + ".");
+    if(target_creature) {
+        this.target = target_creature;
+        this.target_action = "attack";
+        console.log(this.get_name() + " targets " + target_creature.mobile.get_name() + " for " + this.target_action + ".");
+    } else {
+        this.target = null;
+        this.target_action = null;
+        console.log(this.get_name() + " clears target.");
+    }
 };
 
 Mobile.prototype.get_name = function() {
