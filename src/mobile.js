@@ -18,14 +18,18 @@ function Mobile(x, y, z, category, shape, parent) {
     this.hp = 25;
     this.target = null;
     this.target_action = null;
+    this.selected = false;
 
     this.shapes = [];
     this.shape_objects = [];
+    this.outline_objects = [];
     for(var i = 0; i < 4; i++) {
         var s = ZilShape.load_shape(category, shape, i);
         s.build_shape_inline();
         this.shapes.push(s);
-        this.shape_objects.push(s.render_shape());
+        var obj3d = s.render_shape();
+        this.outline_objects.push(this.make_glow(obj3d));
+        this.shape_objects.push(obj3d);
     }
     this.last_x = x;
     this.last_y = y;
@@ -33,13 +37,33 @@ function Mobile(x, y, z, category, shape, parent) {
     this.shape_index = 2;
     this.shape = this.shapes[this.shape_index];
     this.shape_obj = this.shape_objects[this.shape_index];
+    this.outline_obj = this.outline_objects[this.shape_index];
     this._set_chunk_pos(true);
 }
 
-Mobile.prototype.contains_point = function(x, y, z) {
-    return ZIL_UTIL.contains(x, this.x, this.x + this.shape.width) &&
-        ZIL_UTIL.contains(y, this.y, this.y + this.shape.height) &&
-        ZIL_UTIL.contains(z, this.z, this.z + this.shape.depth);
+Mobile.prototype.make_glow = function(obj3d) {
+    var outline_obj = null;
+    for(var i = 0; i < obj3d.children.length; i++) {
+        var mesh = obj3d.children[i];
+        if(mesh.geometry.faces.length > 0) {
+            var glowMesh = new THREEx.GeometricGlowMesh(mesh);
+//	        mesh.add(glowMesh.object3d);
+            outline_obj = glowMesh.object3d;
+
+            var insideUniforms	= glowMesh.insideMesh.material.uniforms;
+            insideUniforms.glowColor.value.set('hotpink');
+            insideUniforms.coeficient.value = 0.6;
+            insideUniforms.power.value = 0.6;
+        }
+    }
+    return outline_obj;
+};
+
+Mobile.prototype.contains_point = function(x, y, z, buffer) {
+    if(buffer == null) buffer = 0;
+    return ZIL_UTIL.contains(x, this.x - buffer, this.x + this.shape.width + buffer) &&
+        ZIL_UTIL.contains(y, this.y - buffer, this.y + this.shape.height + buffer) &&
+        ZIL_UTIL.contains(z, this.z - buffer, this.z + this.shape.depth + buffer);
 };
 
 Mobile.CHUNK_MAP = {};
@@ -85,6 +109,11 @@ Mobile.prototype.move_to = function(nx, ny, nz, gx, gy, gz) {
     this.last_z = this.z;
 };
 
+Mobile.prototype.set_selected = function(selected) {
+    this.selected = selected;
+    this.set_shape(this.shape_index);
+};
+
 Mobile.prototype.set_shape = function(index) {
     this.shape_index = index;
     this.shape = this.shapes[this.shape_index];
@@ -93,6 +122,12 @@ Mobile.prototype.set_shape = function(index) {
     if(parent) parent.remove(this.shape_obj);
     this.shape_obj = this.shape_objects[this.shape_index];
     if(parent) parent.add(this.shape_obj);
+
+    this.shape_obj.remove(this.outline_obj);
+    this.outline_obj = this.outline_objects[this.shape_index];
+    if(this.selected) {
+        this.shape_obj.add(this.outline_obj);
+    }
 };
 
 Mobile.prototype.move = function(gx, gy, gz) {

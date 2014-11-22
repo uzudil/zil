@@ -18,9 +18,11 @@ var ZIL = {
     combat_creature: null,
     combat_creatures: null,
     combat_creature_index: 0,
+    selected_creature: null,
 
 	mouse_move: function(event) {
-        // regular mouse movement
+        if(ZIL.selected_creature) ZIL.selected_creature.mobile.set_selected(false);
+
         var point = ZIL.mouse_to_world(event);
         if(point) {
             ZIL.cursor[0] = Math.round(point.x);
@@ -33,6 +35,15 @@ var ZIL = {
 
             ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
             ZIL.show_cursor_pos();
+
+            var x = ZIL.global_pos[0] + ZIL.cursor[0];
+            var y = ZIL.global_pos[1] + ZIL.cursor[1];
+            var z = ZIL.cursor[2];
+            var target_creature = ZIL.get_creature_at(x, y, z);
+            if(target_creature) {
+                target_creature.mobile.set_selected(true);
+                ZIL.selected_creature = target_creature;
+            }
         }
 	},
 
@@ -41,7 +52,7 @@ var ZIL = {
         var y = ZIL.global_pos[1] + ZIL.cursor[1];
         var z = ZIL.cursor[2];
 
-        var target_creature = ZIL.get_creature_at(x, y, z);
+        var target_creature = ZIL.selected_creature;
         if(target_creature && target_creature.mobile.alignment != ZIL.player.mobile.alignment) {
             ZIL.player.mobile.set_target(target_creature);
         }
@@ -54,7 +65,7 @@ var ZIL = {
         var cy = (y / ZIL_UTIL.CHUNK_SIZE)|0;
         var creatures = Mobile.get_for_chunk(cx, cy);
         for(var i = 0; i < creatures.length; i++) {
-            if(creatures[i].mobile.contains_point(x, y, z)) return creatures[i];
+            if(creatures[i].mobile.contains_point(x, y, z, 4)) return creatures[i];
         }
         return null;
     },
