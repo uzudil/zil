@@ -310,6 +310,8 @@ var ZIL = {
         // combat move
         if(ZIL.combat_creature.mobile.ap > 0 && (ZIL.combat_creature != ZIL.player || ZIL.combat_action_click_count > 1)) {
 
+            ZIL.recenter_screen(ZIL.combat_creature.mobile.x, ZIL.combat_creature.mobile.y);
+
             if(ZIL.combat_creature.mobile.target &&
                 !ZIL.combat_creature.mobile.is_attacking() &&
                 ZIL_UTIL.get_shape_distance(ZIL.combat_creature, ZIL.combat_creature.mobile.target) <= 4) {
@@ -390,7 +392,7 @@ var ZIL = {
                 ZIL.combat_creature.mobile.reset_move();
             }
             $("#combatant").html(ZIL.combat_creature.mobile.to_string());
-            ZIL.center_screen_at(ZIL.combat_creature.mobile.x, ZIL.combat_creature.mobile.y);
+            ZIL.recenter_screen(ZIL.combat_creature.mobile.x, ZIL.combat_creature.mobile.y);
         } else {
             ZIL.combat_creature = null;
             $("#combatant").empty();
@@ -401,11 +403,15 @@ var ZIL = {
     recenter_screen: function(x, y) {
         // re-center screen if near the edge
         if (ZIL.is_near_edge_of_screen(x, y)) {
-            ZIL.center_screen_at(ZIL.player.mobile.x, ZIL.player.mobile.y);
+            ZIL.center_screen_at(x, y);
         }
     },
 
     center_screen_at: function(x, y) {
+        if(x == null) {
+            x = ZIL.player.mobile.x;
+            y = ZIL.player.mobile.y;
+        }
         ZIL.global_pos[0] = x - ZIL_UTIL.VIEW_WIDTH / 2;
         ZIL.global_pos[1] = y - ZIL_UTIL.VIEW_HEIGHT / 2;
         ZIL.screen_pos_map = {};
