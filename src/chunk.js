@@ -35,6 +35,16 @@ Chunk.get_face_geometry = function() {
 };
 Chunk.FACE = Chunk.get_face_geometry();
 
+
+Chunk.get_box_geometry = function() {
+    var geometry = new THREE.BoxGeometry(1, 1, 1);
+    for(var i = 0; i < geometry.faces.length; i++) {
+        geometry.faces[i].materialIndex = 0;
+    }
+    return geometry;
+};
+Chunk.BOX = Chunk.get_box_geometry();
+
 Chunk.COLORS = {};
 Chunk.get_material = function(color) {
 	var material = Chunk.COLORS[color];
@@ -45,7 +55,7 @@ Chunk.get_material = function(color) {
 	return material;
 };
 
-Chunk.prototype.render = function() {
+Chunk.prototype.render = function(use_boxes) {
 //	console.log("* Rendering chunk " + this.name);
 
     if(this.geo) this.geo.dispose();
@@ -69,43 +79,60 @@ Chunk.prototype.render = function() {
                         material_index_map[block.value] = material_index;
                     }
 
-					// south
-                    var faces = [];
-					if(y == ZIL_UTIL.CHUNK_SIZE - 1 || !this.get_block(x, y + 1, z)) {
-						var child_shape = new THREE.Mesh( Chunk.FACE, material );
-						child_shape.position.x = x;
-						child_shape.position.y = y + 0.5;
-						child_shape.position.z = z;
-						child_shape.rotation.x = PI / 2;
-                        faces.push(child_shape);
-					}
+                    if(use_boxes) {
 
-					// east
-					if(x == ZIL_UTIL.CHUNK_SIZE - 1 || !this.get_block(x + 1, y, z)) {
-						var child_shape = new THREE.Mesh( Chunk.FACE, material );
-						child_shape.position.x = x + 0.5;
-						child_shape.position.y = y;
-						child_shape.position.z = z;
-						child_shape.rotation.y = -PI / 2;
-                        faces.push(child_shape);
-					}
+                        var child_shape = new THREE.Mesh(Chunk.BOX, material);
+                        child_shape.position.x = x;
+                        child_shape.position.y = y;
+                        child_shape.position.z = z;
 
-					// top
-					if(!this.get_block(x, y, z + 1)) {
-						var child_shape = new THREE.Mesh( Chunk.FACE, material );
-						child_shape.position.x = x;
-						child_shape.position.y = y;
-						child_shape.position.z = z + 0.5;
-						child_shape.rotation.x = -PI;
-                        faces.push(child_shape);
-					}
-
-                    // build a single geometry for fast rendering
-                    if(faces.length > 0) {
+                        // build a single geometry for fast rendering
                         empty = false;
-                        for(var i = 0; i < faces.length; i++) {
-                            faces[i].updateMatrix();
-                            this.geo.merge(faces[i].geometry, faces[i].matrix, material_index);
+                        child_shape.updateMatrix();
+                        this.geo.merge(child_shape.geometry, child_shape.matrix, material_index);
+                        this.geo.mergeVertices();
+
+                    } else {
+
+                        // south
+                        var faces = [];
+                        if (y == ZIL_UTIL.CHUNK_SIZE - 1 || !this.get_block(x, y + 1, z)) {
+                            var child_shape = new THREE.Mesh(Chunk.FACE, material);
+                            child_shape.position.x = x;
+                            child_shape.position.y = y + 0.5;
+                            child_shape.position.z = z;
+                            child_shape.rotation.x = PI / 2;
+                            faces.push(child_shape);
+                        }
+
+                        // east
+                        if (x == ZIL_UTIL.CHUNK_SIZE - 1 || !this.get_block(x + 1, y, z)) {
+                            var child_shape = new THREE.Mesh(Chunk.FACE, material);
+                            child_shape.position.x = x + 0.5;
+                            child_shape.position.y = y;
+                            child_shape.position.z = z;
+                            child_shape.rotation.y = -PI / 2;
+                            faces.push(child_shape);
+                        }
+
+                        // top
+                        if (!this.get_block(x, y, z + 1)) {
+                            var child_shape = new THREE.Mesh(Chunk.FACE, material);
+                            child_shape.position.x = x;
+                            child_shape.position.y = y;
+                            child_shape.position.z = z + 0.5;
+                            child_shape.rotation.x = -PI;
+                            faces.push(child_shape);
+                        }
+
+                        // build a single geometry for fast rendering
+                        if (faces.length > 0) {
+                            empty = false;
+                            for (var i = 0; i < faces.length; i++) {
+                                faces[i].updateMatrix();
+                                this.geo.merge(faces[i].geometry, faces[i].matrix, material_index);
+//                                this.geo.mergeVertices(); // too slow
+                            }
                         }
                     }
 				}

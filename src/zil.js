@@ -65,6 +65,11 @@ var ZIL = {
         if(ZIL.in_combat) {
             if(ZIL.combat_creature == ZIL.player) {
                 ZIL.combat_selected_creature = ZIL.get_creature_at(x, y, z);
+                if(ZIL.combat_selected_creature) {
+                    x = ZIL.combat_selected_creature.mobile.x;
+                    y = ZIL.combat_selected_creature.mobile.y;
+                    z = ZIL.combat_selected_creature.mobile.z;
+                }
                 console.log("click=" + ZIL.combat_action_click_count +
                     " selected=" + (ZIL.combat_selected_creature ? ZIL.combat_selected_creature.mobile.get_name() : "") +
                     " target=" + (ZIL.player.mobile.target ? ZIL.player.mobile.target.mobile.get_name() : "") +
@@ -73,10 +78,29 @@ var ZIL = {
 
                 if (ZIL.combat_action_click_count == 0 || ZIL.combat_selection_changed(x, y, z)) {
                     console.log(">>> A");
-                    ZIL.combat_action_selection(x, y);
+                    // plan the move
+                    ZIL.combat_action_click_count = 0;
+                    ZIL.player.mobile.set_target(ZIL.combat_selected_creature);
+                    if(ZIL.combat_selected_creature) {
+                        ZIL.player.mobile.plan_move_to(ZIL.shape, ZIL.combat_selected_creature.mobile.x, ZIL.combat_selected_creature.mobile.y, z - 1);
+                    } else {
+                        ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
+                    }
+                    if(ZIL.player.mobile.move_path != null && ZIL.player.mobile.move_path.length > 0) {
+                        if(ZIL.combat_selected_creature) {
+                            ZIL.show_ground_target(
+                                ZIL.combat_selected_creature.mobile.x,
+                                ZIL.combat_selected_creature.mobile.y);
+                        } else {
+                            ZIL.show_ground_target(x, y);
+                        }
+                    } else {
+                        // can't move there
+                        console.log("Can't move there.");
+                        ZIL.combat_action_click_count = 0;
+                    }
                 } else {
                     console.log(">>> B");
-                    ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
                     ZIL.combat_selected_creature = null;
                 }
                 ZIL.combat_action_click_count++;
@@ -96,18 +120,6 @@ var ZIL = {
             ZIL.combat_plan_y != y ||
             ZIL.combat_plan_z != z ||
             ZIL.combat_selected_creature != ZIL.player.mobile.target;
-    },
-
-    combat_action_selection: function(x, y) {
-        ZIL.combat_action_click_count = 0;
-        ZIL.player.mobile.set_target(ZIL.combat_selected_creature);
-        if(ZIL.combat_selected_creature) {
-            ZIL.show_ground_target(
-                ZIL.combat_selected_creature.mobile.x - 2,
-                ZIL.combat_selected_creature.mobile.y - 2);
-        } else {
-            ZIL.show_ground_target(x, y);
-        }
     },
 
     clear_ground_target: function() {
@@ -184,12 +196,16 @@ var ZIL = {
 		if(event.target != document.body) return true;
 
         // move the cursor
-        if(event.which == 32) {
+        if(event.which == 65) {
+            ZIL.player.mobile.start_attack();
+        } else if(event.which == 32) {
             ZIL.show_grid = ZIL.show_grid ? false : true;
             if(ZIL.show_grid) {
                 ZIL.inner.add( ZIL.coord );
+                ZIL.inner.add( ZIL.obj );
             } else {
                 ZIL.inner.remove( ZIL.coord );
+                ZIL.inner.remove( ZIL.obj );
             }
         }
 
@@ -259,12 +275,17 @@ var ZIL = {
 	game_step: function(delta_time) {
         ZIL.show_cursor();
 
-        if(ZIL.in_combat) {
+        if (ZIL.in_combat) {
             ZIL.combat_step(delta_time);
         } else {
-            if (ZIL.player.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
-                ZIL.recenter_screen();
-                ZIL.move_visible_creatures(delta_time);
+            if (ZIL.player.mobile.is_attacking()) {
+                // debug attack animation
+                ZIL.player.mobile.attack(delta_time);
+            } else {
+                if (ZIL.player.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
+                    ZIL.recenter_screen();
+                    ZIL.move_visible_creatures(delta_time);
+                }
             }
         }
 	},
@@ -287,15 +308,38 @@ var ZIL = {
         }
 
         // combat move
-        if(ZIL.combat_creature.mobile.ap > 0) {
-            if(ZIL.combat_creature.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
-                ZIL.combat_creature.mobile.ap--;
-                if(!ZIL.combat_creature.mobile.ai_move) {
-                    ZIL.recenter_screen();
+        if(ZIL.combat_creature.mobile.ap > 0 && (ZIL.combat_creature != ZIL.player || ZIL.combat_action_click_count > 1)) {
+
+            if(ZIL.combat_creature.mobile.target &&
+                !ZIL.combat_creature.mobile.is_attacking() &&
+                ZIL_UTIL.get_shape_distance(ZIL.combat_creature, ZIL.combat_creature.mobile.target) <= 4) {
+                ZIL.combat_creature.mobile.start_attack();
+            }
+
+            if(ZIL.combat_creature.mobile.is_attacking()) {
+                if(ZIL.combat_creature.mobile.attack(delta_time)) {
+                    // attack done: turn is up
+                    ZIL.combat_ap_dec(ZIL.combat_creature.mobile.ap);
+                }
+            } else {
+                if (ZIL.combat_creature.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
+                    // a step taken
+                    ZIL.combat_ap_dec(1);
                 }
             }
 
             $("#combatant").html(ZIL.combat_creature.mobile.to_string());
+        }
+
+        if(ZIL.combat_creature.mobile.ap == 0 && ZIL.combat_creature == ZIL.player) {
+            ZIL.combat_action_click_count = 0;
+        }
+    },
+
+    combat_ap_dec: function(ap_delta) {
+        ZIL.combat_creature.mobile.ap -= ap_delta;
+        if (!ZIL.combat_creature.mobile.ai_move) {
+            ZIL.recenter_screen();
         }
     },
 
@@ -344,7 +388,6 @@ var ZIL = {
             ZIL.combat_creature.mobile.ap = ZIL.combat_creature.mobile.max_ap;
             if(!ZIL.combat_creature.mobile.ai_move) {
                 ZIL.combat_creature.mobile.reset_move();
-                ZIL.combat_action_click_count = 0;
             }
             $("#combatant").html(ZIL.combat_creature.mobile.to_string());
             ZIL.center_screen_at(ZIL.combat_creature.mobile.x, ZIL.combat_creature.mobile.y);
@@ -355,9 +398,9 @@ var ZIL = {
         ZIL.clear_ground_target();
     },
 
-    recenter_screen: function() {
+    recenter_screen: function(x, y) {
         // re-center screen if near the edge
-        if (ZIL.is_near_edge_of_screen()) {
+        if (ZIL.is_near_edge_of_screen(x, y)) {
             ZIL.center_screen_at(ZIL.player.mobile.x, ZIL.player.mobile.y);
         }
     },
@@ -369,9 +412,13 @@ var ZIL = {
         ZIL.redraw_shape();
     },
 
-    is_near_edge_of_screen: function() {
-        var px = (((ZIL.player.mobile.x - ZIL.global_pos[0]) / 8)|0) * 8;
-        var py = (((ZIL.player.mobile.y - ZIL.global_pos[1]) / 8)|0) * 8;
+    is_near_edge_of_screen: function(x, y) {
+        if(x == null) {
+            x = ZIL.player.mobile.x;
+            y = ZIL.player.mobile.y;
+        }
+        var px = (((x - ZIL.global_pos[0]) / 8)|0) * 8;
+        var py = (((y - ZIL.global_pos[1]) / 8)|0) * 8;
         var key = "" + px + "," + py;
         var screen_pos = ZIL.screen_pos_map[key];
         if(screen_pos == null) {
@@ -438,7 +485,7 @@ var ZIL = {
 		ZIL.inner.add( ZIL.rendered_shape );
 
 		ZIL.obj = new THREE.Object3D();
-		ZIL.inner.add( ZIL.obj );
+//		ZIL.inner.add( ZIL.obj );
 		ZIL.init_cursor();
 
 		ZIL.init_light();

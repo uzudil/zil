@@ -30,6 +30,38 @@ ZIL_UTIL.palette = [
 	0xD01F3C
 ];
 
+ZIL_UTIL.angle_to_radians = function(angle) {
+    return angle / 180.0 * PI;
+};
+
+ZIL_UTIL.get_distance = function(ax, ay, bx, by) {
+    return Math.sqrt(((ax - bx) * (ax - bx)) + ((ay - by) * (ay - by)));
+};
+
+ZIL_UTIL.get_shape_distance = function(creature_a, creature_b) {
+    var ax = creature_a.mobile.x;
+    var ay = creature_a.mobile.y;
+    var bx = creature_b.mobile.x;
+    var by = creature_b.mobile.y;
+    var asize = Math.max(creature_a.mobile.shape.width, creature_a.mobile.shape.height) / 2;
+    var bsize = Math.max(creature_b.mobile.shape.width, creature_b.mobile.shape.height) / 2;
+    if(ax < bx) {
+        ax += asize;
+        bx -= bsize;
+    } else {
+        ax -= asize;
+        bx += bsize;
+    }
+    if(ay < by) {
+        ay += asize;
+        by -= bsize;
+    } else {
+        ay -= asize;
+        by += bsize;
+    }
+    return ZIL_UTIL.get_distance(ax, ay, bx, by);
+};
+
 ZIL_UTIL.contains = function(x, a, b) {
     return x >= a && x < b;
 };

@@ -21,9 +21,10 @@ ZilNode.prototype.getCost = function() {
 };
 
 
-var ZilShape = function(category, name, shape, width, height, depth, rotation, loading_delegate) {
+var ZilShape = function(category, name, shape, width, height, depth, rotation, loading_delegate, use_boxes) {
 	this.category = category;
 	this.name = name;
+    this.use_boxes = use_boxes;
     var _shape = {};
     for(var key in shape) {
         var value = shape[key];
@@ -45,6 +46,10 @@ var ZilShape = function(category, name, shape, width, height, depth, rotation, l
     this.expanded_shape = {}; // what to draw
 	this.reset_shape();
     for(var i = 0; i < this.rotation; i++) this.rotate(1);
+};
+
+ZilShape.prototype.get_rotation = function() {
+    return this.rotation * PI/2;
 };
 
 ZilShape.SHAPE_CACHE = {};
@@ -145,7 +150,7 @@ ZilShape.prototype.expand_all = function() {
 	}
 };
 	
-ZilShape.load_shape = function(category_name, shape_name, rotation, loading_delegate) {
+ZilShape.load_shape = function(category_name, shape_name, rotation, loading_delegate, use_boxes) {
 	var name = category_name + "." + shape_name;
     if(rotation == null) rotation = 0;
     var cache_name = name + "." + rotation;
@@ -154,7 +159,7 @@ ZilShape.load_shape = function(category_name, shape_name, rotation, loading_dele
 		console.log("* Loading shape: " + cache_name);
 		var js = window.localStorage[name];
 		var shape = js ? JSON.parse(js) : { width: ZIL_UTIL.WIDTH, height: ZIL_UTIL.HEIGHT, depth: ZIL_UTIL.DEPTH, shape: {} };
-		shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth, rotation, loading_delegate);
+		shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth, rotation, loading_delegate, use_boxes);
 		ZilShape.SHAPE_CACHE[cache_name] = shape_obj;
 	}
     shape_obj.invalidate();
@@ -437,7 +442,7 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 
 ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk) {
     chunk.set_pos(cx * ZIL_UTIL.CHUNK_SIZE, cy * ZIL_UTIL.CHUNK_SIZE, cz * ZIL_UTIL.CHUNK_SIZE, this.expanded_shape);
-	chunk.render(); // force refresh
+	chunk.render(this.use_boxes); // force refresh
 };
 
 ZilShape.prototype.rotate = function(dir) {

@@ -19,12 +19,15 @@ function Mobile(x, y, z, category, shape, parent) {
     this.target = null;
     this.target_action = null;
     this.selected = false;
+    this.attack_angle = 0;
+    this.attack_dir = null;
+    this.attack_phase = null;
 
     this.shapes = [];
     this.shape_objects = [];
     this.outline_objects = [];
     for(var i = 0; i < 4; i++) {
-        var s = ZilShape.load_shape(category, shape, i);
+        var s = ZilShape.load_shape(category, shape, i, null, true);
         s.build_shape_inline();
         this.shapes.push(s);
         var obj3d = s.render_shape();
@@ -52,8 +55,13 @@ Mobile.prototype.make_glow = function(obj3d) {
 
             var insideUniforms	= glowMesh.insideMesh.material.uniforms;
             insideUniforms.glowColor.value.set('hotpink');
-            insideUniforms.coeficient.value = 0.6;
-            insideUniforms.power.value = 0.6;
+            insideUniforms.coeficient.value = 1.1;
+            insideUniforms.power.value = 1.4;
+
+            var outsideUniforms	= glowMesh.outsideMesh.material.uniforms;
+            outsideUniforms.glowColor.value.set('hotpink');
+            outsideUniforms.coeficient.value = 0.1;
+            outsideUniforms.power.value = 1.2;
         }
     }
     return outline_obj;
@@ -199,7 +207,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
     }
 
     this.move_time += delta_time;
-    if(this.move_time >  (ZIL.in_combat ? 150 : this.speed)) {
+    if(this.move_time >  (ZIL.in_combat ? 50 : this.speed)) {
         this.move_time = 0;
 
         // look for enemies
@@ -227,6 +235,56 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
         }
     }
     return false;
+};
+
+Mobile.prototype.is_attacking = function() {
+    return this.attack_phase != null;
+};
+
+Mobile.prototype.start_attack = function() {
+    this.attack_angle = 0;
+    this.attack_dir = 1;
+    this.attack_phase = 0;
+};
+
+Mobile.prototype.attack = function(delta_time) {
+    if(this.is_attacking()) {
+
+        // face the enemy
+        if(this.target) {
+            var x2 = this.target.mobile.x;
+            var y2 = this.target.mobile.y;
+            var zrot = Math.atan2(y2 - this.y, x2 - this.x);
+            this.shape_obj.rotation.z = zrot - this.shape.get_rotation() - PI/2;
+        }
+
+        if(this.attack_dir) {
+            this.attack_angle += delta_time * 0.4 * this.attack_dir;
+            if (this.attack_dir == 1) {
+                if (this.attack_angle >= 45) {
+                    this.attack_dir = -1;
+                }
+            } else if (this.attack_dir == -1) {
+                if (this.attack_angle <= 0) {
+                    this.attack_angle = 0;
+                    // end of attack animation
+                    this.attack_dir = null;
+                }
+            }
+            this.shape_obj.children[0].rotation.y = ZIL_UTIL.angle_to_radians(this.attack_angle);
+        } else {
+            // last part: wait some time, run encounter and end attack
+            this.attack_phase += delta_time;
+            if(this.attack_phase >= 500) {
+                // run the encounter
+
+                // end of attack
+                this.attack_phase = null;
+                this.shape_obj.rotation.z = 0;
+            }
+        }
+    }
+    return !this.is_attacking();
 };
 
 Mobile.prototype.look_for_target = function() {
