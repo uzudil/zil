@@ -39,27 +39,13 @@ ZIL_UTIL.get_distance = function(ax, ay, bx, by) {
 };
 
 ZIL_UTIL.get_shape_distance = function(creature_a, creature_b) {
-    var ax = creature_a.mobile.x;
-    var ay = creature_a.mobile.y;
-    var bx = creature_b.mobile.x;
-    var by = creature_b.mobile.y;
-    var asize = Math.max(creature_a.mobile.shape.width, creature_a.mobile.shape.height) / 2;
-    var bsize = Math.max(creature_b.mobile.shape.width, creature_b.mobile.shape.height) / 2;
-    if(ax < bx) {
-        ax += asize;
-        bx -= bsize;
-    } else {
-        ax -= asize;
-        bx += bsize;
-    }
-    if(ay < by) {
-        ay += asize;
-        by -= bsize;
-    } else {
-        ay -= asize;
-        by += bsize;
-    }
-    return ZIL_UTIL.get_distance(ax, ay, bx, by);
+    var asize = (Math.max(creature_a.mobile.shape.width, creature_a.mobile.shape.height) / 2)|0;
+    var bsize = (Math.max(creature_b.mobile.shape.width, creature_b.mobile.shape.height) / 2)|0;
+    var ax = creature_a.mobile.x + asize;
+    var ay = creature_a.mobile.y + asize;
+    var bx = creature_b.mobile.x + bsize;
+    var by = creature_b.mobile.y + bsize;
+    return ZIL_UTIL.get_distance(ax, ay, bx, by) - (asize + bsize);
 };
 
 ZIL_UTIL.contains = function(x, a, b) {
