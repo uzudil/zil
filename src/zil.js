@@ -97,6 +97,7 @@ var ZIL = {
                         // can't move there
                         console.log("Can't move there.");
                         ZIL.combat_action_click_count = 0;
+                        ZIL.clear_ground_target();
                     }
                 } else {
                     ZIL.combat_selected_creature = null;
@@ -112,6 +113,7 @@ var ZIL = {
             ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
             if(ZIL.player.mobile.move_path == null || ZIL.player.mobile.move_path.length == 0) {
                 console.log("Can't move there.");
+                ZIL.clear_ground_target();
             }
         }
     },
@@ -286,6 +288,9 @@ var ZIL = {
                 if (ZIL.player.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
                     ZIL.recenter_screen();
                     ZIL.move_visible_creatures(delta_time);
+                    if(!ZIL.player.mobile.is_moving() || ZIL.player.mobile.move_path_index >= 8) {
+                        ZIL.clear_ground_target();
+                    }
                 }
             }
         }
@@ -328,6 +333,9 @@ var ZIL = {
                 if (ZIL.combat_creature.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
                     // a step taken
                     ZIL.combat_ap_dec(1);
+                    if(!ZIL.player.mobile.is_moving()) {
+                        ZIL.clear_ground_target();
+                    }
                 }
             }
 
@@ -416,6 +424,7 @@ var ZIL = {
         ZIL.global_pos[0] = x - ZIL_UTIL.VIEW_WIDTH / 2;
         ZIL.global_pos[1] = y - ZIL_UTIL.VIEW_HEIGHT / 2;
         ZIL.screen_pos_map = {};
+        ZIL.clear_ground_target();
         ZIL.redraw_shape();
     },
 

@@ -275,6 +275,11 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
     return false;
 };
 
+Mobile.prototype.is_moving = function() {
+    return ZIL.player.mobile.move_path != null &&
+        ZIL.player.mobile.move_path.length > 0;
+};
+
 Mobile.prototype.is_attacking = function() {
     return this.attack_phase != null;
 };
