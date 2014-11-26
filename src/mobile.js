@@ -171,34 +171,54 @@ Mobile.prototype.move = function(gx, gy, gz) {
 
 Mobile.prototype.creature_move_plan = function(map_shape) {
     if(this.move_path == null && this.sleep_turns == null) {
-        var dir = (Math.random() * 5)|0;
-        var dx = this.x;
-        var dy = this.y;
-        var dz = this.z;
-        var dist = (Math.random() * 48)|0;
 
-        if(dir > ZIL_UTIL.W) {
-            this.move_path = null;
-            this.move_path_index = 0;
-            this.sleep_turns = dist;
-        } else {
-            this.move_path = [];
-            this.move_path_index = 0;
-            this.sleep_turns = null;
-            for (var i = 0; i < dist; i++) {
-                switch(dir) {
-                    case ZIL_UTIL.N: dy--; break;
-                    case ZIL_UTIL.E: dx++; break;
-                    case ZIL_UTIL.S: dy++; break;
-                    case ZIL_UTIL.W: dx--; break;
-                }
-                var pz = dz;
-                dz = map_shape.get_highest_empty_space(dx, dy, this.shape) - 1;
-                var node = map_shape.get_node(dx, dy, dz);
-                if(node == null || Math.abs(dz - pz) > 1) break;
-                this.move_path.push(node);
+        if(this.target) {
+            this.plan_move_to(map_shape, this.target.mobile.x, this.target.mobile.y, this.target.mobile.z - 1);
+            console.log(">>> creature " + this.get_name() + " planned move to " + this.target.mobile.get_name() + " success?:", this.is_moving());
+            if(!this.is_moving()) {
+                console.log("\tcan't move there... abandoning target.");
+                // can't move there, forget the target
+                this.target = null;
+                this.target_action = null;
             }
-            if(this.move_path.length == 0) this.move_path = null;
+        } else {
+            var dir = (Math.random() * 5) | 0;
+            var dx = this.x;
+            var dy = this.y;
+            var dz = this.z;
+            var dist = (Math.random() * 48) | 0;
+
+            if (dir > ZIL_UTIL.W) {
+                this.move_path = null;
+                this.move_path_index = 0;
+                this.sleep_turns = dist;
+            } else {
+                this.move_path = [];
+                this.move_path_index = 0;
+                this.sleep_turns = null;
+                for (var i = 0; i < dist; i++) {
+                    switch (dir) {
+                        case ZIL_UTIL.N:
+                            dy--;
+                            break;
+                        case ZIL_UTIL.E:
+                            dx++;
+                            break;
+                        case ZIL_UTIL.S:
+                            dy++;
+                            break;
+                        case ZIL_UTIL.W:
+                            dx--;
+                            break;
+                    }
+                    var pz = dz;
+                    dz = map_shape.get_highest_empty_space(dx, dy, this.shape) - 1;
+                    var node = map_shape.get_node(dx, dy, dz);
+                    if (node == null || Math.abs(dz - pz) > 1) break;
+                    this.move_path.push(node);
+                }
+                if (this.move_path.length == 0) this.move_path = null;
+            }
         }
 //        console.log(">>> creature " + this.parent.id + " sleep_turns=" + this.sleep_turns  + " move_path=", this.move_path);
     }
