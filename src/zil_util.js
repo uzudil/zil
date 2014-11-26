@@ -30,6 +30,25 @@ ZIL_UTIL.palette = [
 	0xD01F3C
 ];
 
+ZIL_UTIL.make_square_face = function(size) {
+    var n = size / 2;
+
+    var geometry = new THREE.Geometry();
+    geometry.vertices.push( new THREE.Vector3( -n, -n, 0 ) );
+    geometry.vertices.push( new THREE.Vector3( -n,  n, 0 ) );
+    geometry.vertices.push( new THREE.Vector3(  n,  n, 0 ) );
+    geometry.vertices.push( new THREE.Vector3(  n, -n, 0 ) );
+
+    geometry.faces.push( new THREE.Face3( 0, 1, 2 ) ); // counter-clockwise winding order
+    geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
+
+    // geometry.computeCentroids();
+    geometry.computeFaceNormals();
+    geometry.computeVertexNormals();
+
+    return geometry;
+};
+
 ZIL_UTIL.angle_to_radians = function(angle) {
     return angle / 180.0 * PI;
 };

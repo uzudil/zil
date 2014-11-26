@@ -16,24 +16,7 @@ Chunk.prototype.get_block = function(x, y, z) {
     return this.blocks[k];
 };
 
-Chunk.get_face_geometry = function() {
-	var geometry = new THREE.Geometry();
-
-	geometry.vertices.push( new THREE.Vector3( -0.5, -0.5, 0 ) );
-	geometry.vertices.push( new THREE.Vector3( -0.5,  0.5, 0 ) );
-	geometry.vertices.push( new THREE.Vector3(  0.5,  0.5, 0 ) );
-	geometry.vertices.push( new THREE.Vector3(  0.5, -0.5, 0 ) );
-
-	geometry.faces.push( new THREE.Face3( 0, 1, 2 ) ); // counter-clockwise winding order
-	geometry.faces.push( new THREE.Face3( 0, 2, 3 ) );
-
-	// geometry.computeCentroids();
-	geometry.computeFaceNormals();
-	geometry.computeVertexNormals();
-
-	return geometry;
-};
-Chunk.FACE = Chunk.get_face_geometry();
+Chunk.FACE = ZIL_UTIL.make_square_face(1);
 
 
 Chunk.get_box_geometry = function() {

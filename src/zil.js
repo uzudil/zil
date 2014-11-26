@@ -95,9 +95,7 @@ var ZIL = {
                         }
                     } else {
                         // can't move there
-                        console.log("Can't move there.");
-                        ZIL.combat_action_click_count = 0;
-                        ZIL.clear_ground_target();
+                        ZIL.show_forbidden();
                     }
                 } else {
                     ZIL.combat_selected_creature = null;
@@ -112,10 +110,19 @@ var ZIL = {
             ZIL.show_ground_target(x, y);
             ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
             if(ZIL.player.mobile.move_path == null || ZIL.player.mobile.move_path.length == 0) {
-                console.log("Can't move there.");
-                ZIL.clear_ground_target();
+                ZIL.show_forbidden();
             }
         }
+    },
+
+    show_forbidden: function() {
+        console.log("Can't move there.");
+        ZIL.combat_action_click_count = 0;
+        ZIL.clear_ground_target();
+        $("body").css("cursor", "not-allowed");
+        setTimeout(function() {
+            $("body").css("cursor", "default");
+        }, 1000);
     },
 
     combat_selection_changed: function(x, y, z) {

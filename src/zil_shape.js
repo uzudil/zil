@@ -277,13 +277,17 @@ ZilShape.prototype.get_node = function(x, y, z) {
 };
 
 ZilShape.prototype.get_highest_empty_space = function(x, y, shape) {
-    var max_z = 0;
     var w = 1;
     var h = 1;
-    if(shape) {
+    if (shape) {
         w = shape.bounds.w;
         h = shape.bounds.h;
     }
+    return this.get_highest_empty_space_for_rect(x, y, w, h);
+};
+
+ZilShape.prototype.get_highest_empty_space_for_rect = function(x, y, w, h) {
+    var max_z = 0;
     for(var xx = 0; xx < w; xx++) {
         for (var yy = 0; yy < h; yy++) {
             var z = this.get_highest_empty_space_at_point(x + xx, y + yy);
