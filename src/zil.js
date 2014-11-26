@@ -77,7 +77,6 @@ var ZIL = {
                     " changed=" + ZIL.combat_selection_changed(x, y, z));
 
                 if (ZIL.combat_action_click_count == 0 || ZIL.combat_selection_changed(x, y, z)) {
-                    console.log(">>> A");
                     // plan the move
                     ZIL.combat_action_click_count = 0;
                     ZIL.player.mobile.set_target(ZIL.combat_selected_creature);
@@ -100,7 +99,6 @@ var ZIL = {
                         ZIL.combat_action_click_count = 0;
                     }
                 } else {
-                    console.log(">>> B");
                     ZIL.combat_selected_creature = null;
                 }
                 ZIL.combat_action_click_count++;
@@ -112,6 +110,9 @@ var ZIL = {
             // mark location and move
             ZIL.show_ground_target(x, y);
             ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
+            if(ZIL.player.mobile.move_path == null || ZIL.player.mobile.move_path.length == 0) {
+                console.log("Can't move there.");
+            }
         }
     },
 

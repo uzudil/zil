@@ -69,8 +69,9 @@ Mobile.prototype.make_glow = function(obj3d) {
 
 Mobile.prototype.contains_point = function(x, y, z, buffer) {
     if(buffer == null) buffer = 0;
-    return ZIL_UTIL.contains(x, this.x - buffer, this.x + this.shape.width + buffer) &&
-        ZIL_UTIL.contains(y, this.y - buffer, this.y + this.shape.height + buffer) &&
+    var size = Math.max(this.shape.width, this.shape.height);
+    return ZIL_UTIL.contains(x, this.x - buffer, this.x + size + buffer) &&
+        ZIL_UTIL.contains(y, this.y - buffer, this.y + size + buffer) &&
         ZIL_UTIL.contains(z, this.z - buffer, this.z + this.shape.depth + buffer);
 };
 
@@ -98,6 +99,32 @@ Mobile.prototype._set_chunk_pos = function(force) {
 Mobile.EMPTY_LIST = [];
 Mobile.get_for_chunk = function(chunk_x, chunk_y) {
     return Mobile.CHUNK_MAP["" + chunk_x + "," + chunk_y] || Mobile.EMPTY_LIST;
+};
+
+Mobile.prototype.creature_blocked_at = function(x, y, z) {
+    if (this.contains_point(x, y, z)) return null; // self won't block
+
+    var cx = (x/ZIL_UTIL.CHUNK_SIZE)|0;
+    var cy = (y/ZIL_UTIL.CHUNK_SIZE)|0;
+    var c = Mobile.get_for_chunk(cx, cy);
+    for(var i = 0; i < c.length; i++) {
+        // not blocked by self or target
+        if(c[i].mobile.contains_point(x, y, z) && c[i] != this.parent && c[i] != this.target) return c[i];
+    }
+    return null;
+};
+
+Mobile.prototype.creature_blocked = function(nx, ny, nz) {
+    var size = Math.max(this.shape.width, this.shape.height);
+    for(var x = 0; x < size; x++) {
+        for (var y = 0; y < size; y++) {
+            for (var z = 0; z < this.shape.depth; z++) {
+                var c = this.creature_blocked_at(nx + x, ny + y, nz + 1 + z);
+                if (c) return c;
+            }
+        }
+    }
+    return null;
 };
 
 Mobile.prototype.move_to = function(nx, ny, nz, gx, gy, gz) {
@@ -182,7 +209,7 @@ Mobile.prototype.plan_move_to = function(map_shape, x, y, z) {
     if(z == null) z = map_shape.get_highest_empty_space(x, y, this.shape) - 1;
     var end_point = [x, y, z];
 
-    var p = map_shape.astar_search(start_point, end_point, this.shape);
+    var p = map_shape.astar_search(start_point, end_point, this.parent);
 
     if(p && p.length) {
         this.move_path_index = 0;
@@ -224,6 +251,17 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
         if(this.move_path) {
             var node = this.move_path[this.move_path_index];
+
+            // blocked by another creature? Just wait (this won't happen during combat)
+            var c = this.creature_blocked(node.x, node.y, node.z);
+            if (c) {
+//                console.log("waiting in move: " + this.get_name() + " vs " + c.mobile.get_name());
+                // end move
+                this.move_path_index = 0;
+                this.move_path = null;
+                return true;
+            }
+
             this.move_to(node.x, node.y, node.z + 1, gx, gy, gz);
 
             this.move_path_index++;

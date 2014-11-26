@@ -43,14 +43,14 @@ var astar = {
     * @param {ZilShape} the 'map' shape
     * @param {GridNode} start
     * @param {GridNode} end
-    * @param {ZilShape} shape being moved
+    * @param {ZilShape} creature moving
     * @param {Object} [options]
     * @param {bool} [options.closest] Specifies whether to return the
                path to the closest node if the target is unreachable.
     * @param {Function} [options.heuristic] Heuristic function (see
     *          astar.heuristics).
     */
-    search: function(graph, start, end, shape, options) {
+    search: function(graph, start, end, creature, options) {
         graph.astar_init();
 
         options = options || {};
@@ -64,7 +64,10 @@ var astar = {
 
         openHeap.push(start);
 
+        var start_time = Date.now();
         while(openHeap.size() > 0) {
+            // timeout?
+            if(Date.now() - start_time > 300) return [];
 
             // Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
             var currentNode = openHeap.pop();
@@ -82,7 +85,7 @@ var astar = {
             for (var i = 0, il = neighbors.length; i < il; ++i) {
                 var neighbor = neighbors[i];
 
-                if (neighbor.closed || graph.isWall(neighbor, shape)) {
+                if (neighbor.closed || graph.isWall(neighbor, creature)) {
                     // Not a valid node to process, skip to next neighbor.
                     continue;
                 }
@@ -146,26 +149,35 @@ var astar = {
     }
 };
 
-ZilShape.prototype.isWall = function(node, shape) {
+ZilShape.prototype.isWall = function(node, creature) {
     // test against a square base since the shape could be rotated either way
-    var size = Math.max(shape.bounds.w, shape.bounds.h);
+    var size = Math.max(creature.mobile.shape.bounds.w, creature.mobile.shape.bounds.h);
     for(var x = 0; x < size; x++) {
         for(var y = 0; y < size; y++) {
-            for(var z = 0; z < shape.bounds.d; z++) {
+            for(var z = 0; z < creature.mobile.shape.bounds.d; z++) {
                 var k = ZilShape._key(node.x + x, node.y + y, node.z + 1 + z);
                 if(this.expanded_shape[k]) return true;
+
+                var px = node.x + x;
+                var py = node.y + y;
+                var pz = node.z + 1 + z;
+                var c = creature.mobile.creature_blocked_at(px, py, pz);
+                if(c) {
+//                    console.log("planner: " + creature.mobile.get_name() + " blocked by: " + c.mobile.get_name() + " at " + px + "," + py + "," + pz);
+                    return true;
+                }
             }
         }
     }
     return false;
 };
 
-ZilShape.prototype.astar_search = function(start, end, shape) {
+ZilShape.prototype.astar_search = function(start, end, creature) {
     var start_node = this.expanded_shape[ZilShape._key(start[0], start[1], start[2])];
     var end_node = this.expanded_shape[ZilShape._key(end[0], end[1], end[2])];
 //    console.log("start_node=" + start_node + " end_node=" + end_node);
     if(!(start_node && end_node)) return [];
-    return astar.search(this, start_node, end_node, shape);
+    return astar.search(this, start_node, end_node, creature);
 };
 
 ZilShape.prototype.astar_init = function() {
