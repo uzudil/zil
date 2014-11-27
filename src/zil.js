@@ -52,6 +52,15 @@ var ZIL = {
             if (target_creature && target_creature.mobile.is_alive()) {
                 target_creature.mobile.set_selected(true);
                 ZIL.selected_creature = target_creature;
+
+                var position = THREEx.ObjCoord.cssPosition(target_creature.mobile.shape_obj, ZIL.camera, ZIL.renderer);
+                var el = $("#creature_id");
+                el.css({
+                    left: (position.x - el[0].offsetWidth /2)+'px',
+                    top: (position.y - el[0].offsetHeight/2 - target_creature.mobile.shape.depth * 10)+'px'
+                }).text(target_creature.mobile.get_name()).show();
+            } else {
+                $("#creature_id").hide();
             }
         }
 	},
@@ -423,6 +432,7 @@ var ZIL = {
         ZIL.global_pos[1] = y - ZIL_UTIL.VIEW_HEIGHT / 2;
         ZIL.screen_pos_map = {};
         ZIL.clear_ground_target();
+        $("#creature_id").hide();
         ZIL.redraw_shape();
     },
 

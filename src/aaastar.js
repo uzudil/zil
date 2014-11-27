@@ -67,7 +67,7 @@ var astar = {
         var start_time = Date.now();
         while(openHeap.size() > 0) {
             // timeout?
-            if(Date.now() - start_time > 300) return [];
+            if(Date.now() - start_time > 500) return [];
 
             // Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
             var currentNode = openHeap.pop();
