@@ -142,3 +142,7 @@ ZIL_UTIL.bind = function(callerObj, method) {
 	f['_caller'] = callerObj;
 	return f;
 };
+
+ZIL_UTIL.rand_int = function(a, b) {
+    return Math.round(a + Math.random() * (b - a));
+};

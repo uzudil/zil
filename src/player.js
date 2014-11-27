@@ -7,5 +7,23 @@ function Player(x, y) {
     this.mobile.initiative = 1;
     this.mobile.ap = 0;
     this.mobile.max_ap = 10;
-    this.mobile.hp = 25;
+    this.mobile.level = 5;
+    this.mobile.exp = Math.pow(2, this.mobile.level) * 100;
+    this.mobile.hp = 80;
 }
+
+Player.prototype.get_atk = function() {
+    return ZIL_UTIL.rand_int(0, this.mobile.level * 6);
+};
+
+Player.prototype.get_def = function() {
+    return ZIL_UTIL.rand_int(0, this.mobile.level * 6);
+};
+
+Player.prototype.set_level_from_exp = function() {
+    this.mobile.level = Math.max(1, Math.round(Math.log2(this.mobile.exp / 100)));
+};
+
+Player.prototype.get_range = function() {
+    return 4;
+};

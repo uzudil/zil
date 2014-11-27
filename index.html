@@ -13,10 +13,24 @@
                 border:3px solid #666;
             }
             .group { position: fixed; z-index: 1000; right: 0; top: 0; }
+            #level_up {
+                display: none;
+                color: yellow;
+                font-size: 100px;
+                text-align: center;
+                position: fixed;
+                top: 50%;
+                z-index: 1000;
+                width: 100%;
+                text-transform: uppercase;
+                font-weight: bold;
+                text-shadow: 0 0 50px yellow;
+            }
 		</style>
 	</head>
 	<body>
         <script type="text/javascript" src="lib/jquery-2.0.3.min.js"></script>
+        <script type="text/javascript" src="lib/underscore-min.js"></script>
 		<script src="lib/three.min.js"></script>
 
         <script src='lib/threex.geometricglow/threex.dilategeometry.js'></script>
@@ -40,6 +54,8 @@
             <div>Combatant: <span id="combatant"></span></div>
             <div>FPS: <span id="fps"></span></div>
         </div>
+
+        <div id="level_up">Level Up!</div>
 
         <canvas id="view"></canvas>
 

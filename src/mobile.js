@@ -22,6 +22,9 @@ function Mobile(x, y, z, category, shape, parent) {
     this.attack_angle = 0;
     this.attack_dir = null;
     this.attack_phase = null;
+    this.level = 1;
+    this.exp = 0;
+    this.remove_me = false;
 
     this.shapes = [];
     this.shape_objects = [];
@@ -174,9 +177,9 @@ Mobile.prototype.creature_move_plan = function(map_shape) {
 
         if(this.target) {
             this.plan_move_to(map_shape, this.target.mobile.x, this.target.mobile.y, this.target.mobile.z - 1);
-            console.log(">>> creature " + this.get_name() + " planned move to " + this.target.mobile.get_name() + " success?:", this.is_moving());
+//            console.log(">>> creature " + this.get_name() + " planned move to " + this.target.mobile.get_name() + " success?:", this.is_moving());
             if(!this.is_moving()) {
-                console.log("\tcan't move there... abandoning target.");
+//                console.log("\tcan't move there... abandoning target.");
                 // can't move there, forget the target
                 this.target = null;
                 this.target_action = null;
@@ -249,7 +252,7 @@ Mobile.prototype.plan_move_to = function(map_shape, x, y, z) {
  */
 Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
-    if(this.ai_move) {
+    if(this.ai_move && this.is_alive()) {
         this.creature_move_plan(map_shape);
     }
 
@@ -257,8 +260,19 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
     if(this.move_time >  (ZIL.in_combat ? 50 : this.speed)) {
         this.move_time = 0;
 
+        if(!this.is_alive()) {
+            if(this.shape_obj.children[0].rotation.y < PI / 2) {
+                this.shape_obj.children[0].rotation.y += delta_time * 0.01;
+            } else if(this.shape_obj.children[0].position.z > -1) {
+                this.shape_obj.children[0].position.z -= delta_time * 0.05;
+            } else {
+                this.remove_me = true;
+            }
+            return true;
+        }
+
         // look for enemies
-        if(this.ai_move) {
+        if(this.ai_move && this.is_alive()) {
             this.look_for_target();
         }
 
@@ -295,6 +309,10 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
     return false;
 };
 
+Mobile.prototype.is_alive = function() {
+    return this.hp > 0;
+};
+
 Mobile.prototype.is_moving = function() {
     return ZIL.player.mobile.move_path != null &&
         ZIL.player.mobile.move_path.length > 0;
@@ -311,7 +329,7 @@ Mobile.prototype.start_attack = function() {
 };
 
 Mobile.prototype.attack = function(delta_time) {
-    if(this.is_attacking()) {
+    if(this.is_attacking() && this.is_alive()) {
 
         // face the enemy
         if(this.target) {
@@ -339,7 +357,7 @@ Mobile.prototype.attack = function(delta_time) {
             // last part: wait some time, run encounter and end attack
             this.attack_phase += delta_time;
             if(this.attack_phase >= 500) {
-                // run the encounter
+                this.attack_roll();
 
                 // end of attack
                 this.attack_phase = null;
@@ -348,6 +366,58 @@ Mobile.prototype.attack = function(delta_time) {
         }
     }
     return !this.is_attacking();
+};
+
+Mobile.prototype.is_target_dying = function() {
+    return this.target && !this.target.mobile.is_alive() && !this.target.mobile.remove_me;
+};
+
+Mobile.prototype.is_target_in_range = function() {
+    return this.target && ZIL_UTIL.get_shape_distance(this.parent, this.target) <= this.parent.get_range();
+};
+
+Mobile.prototype.attack_roll = function() {
+    // run the encounter
+    var a = this.parent.get_atk();
+    var d = this.target.get_def();
+    var damage = Math.max(a - d, 0);
+    if(isNaN(damage)) debugger;
+
+    this.target.mobile.hp -= damage;
+    console.log("+++ " + this.target.mobile.get_name() + " takes " + damage + "(a:" + a + "/d:" + d + ") points of damage. (remaining hp=" + this.target.mobile.hp +  ")");
+
+    if(damage > 0) {
+        // animate damage
+
+
+
+        if (this.target.mobile.hp <= 0) {
+
+            // experience gain
+            if(!this.ai_move) {
+                var old_level = this.level;
+                this.exp += Math.max(this.target.mobile.level - this.level, 1) * 50;
+                this.parent.set_level_from_exp();
+                if(this.level > old_level) {
+                    $("#level_up").show();
+                    setTimeout(function() {
+                        $("#level_up").hide();
+                    }, 2000);
+                }
+            }
+
+            // won't need this anymore
+            this.shape_obj.remove(this.outline_obj);
+
+            // target death
+            if(this.target.mobile.ai_move) {
+                console.log(this.target.mobile.get_name() + " dies.");
+            } else {
+                // player death
+                alert("Player dies.");
+            }
+        }
+    }
 };
 
 Mobile.prototype.look_for_target = function() {
@@ -396,11 +466,11 @@ Mobile.prototype.set_target = function(target_creature) {
     if(target_creature) {
         this.target = target_creature;
         this.target_action = "attack";
-        console.log(this.get_name() + " targets " + target_creature.mobile.get_name() + " for " + this.target_action + ".");
+//        console.log(this.get_name() + " targets " + target_creature.mobile.get_name() + " for " + this.target_action + ".");
     } else {
         this.target = null;
         this.target_action = null;
-        console.log(this.get_name() + " clears target.");
+//        console.log(this.get_name() + " clears target.");
     }
 };
 

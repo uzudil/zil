@@ -9,5 +9,22 @@ function Creature(monster, pos, id) {
     this.mobile.ap = 0;
     this.mobile.max_ap = 10;
     this.mobile.hp = 10;
+    this.mobile.level = monster.level;
+    this.mobile.exp = 0;
 }
 
+Creature.prototype.get_atk = function() {
+    return ZIL_UTIL.rand_int(0, this.mobile.level * 4);
+};
+
+Creature.prototype.get_def = function() {
+    return ZIL_UTIL.rand_int(0, this.mobile.level * 4);
+};
+
+Creature.prototype.set_level_from_exp = function() {
+    this.mobile.level = this.monster.level;
+};
+
+Creature.prototype.get_range = function() {
+    return 4;
+};
