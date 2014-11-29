@@ -32,6 +32,7 @@ var ZIL = {
             ZIL.selected_creature = null;
         }
 
+        $(".creature_description").remove();
         var point = ZIL.mouse_to_world(event);
         if(point) {
             ZIL.cursor[0] = Math.round(point.x);
@@ -53,14 +54,8 @@ var ZIL = {
                 target_creature.mobile.set_selected(true);
                 ZIL.selected_creature = target_creature;
 
-                var position = THREEx.ObjCoord.cssPosition(target_creature.mobile.shape_obj, ZIL.camera, ZIL.renderer);
-                var el = $("#creature_id");
-                el.css({
-                    left: (position.x - el[0].offsetWidth /2)+'px',
-                    top: (position.y - el[0].offsetHeight/2 - target_creature.mobile.shape.depth * 10)+'px'
-                }).text(target_creature.mobile.get_name()).show();
-            } else {
-                $("#creature_id").hide();
+                // tooltip
+                target_creature.mobile.show_above(target_creature.mobile.get_name(), "creature_description");
             }
         }
 	},
@@ -115,6 +110,7 @@ var ZIL = {
                 ZIL.show_forbidden();
             }
         }
+        return false;
     },
 
     show_forbidden: function() {
@@ -267,6 +263,7 @@ var ZIL = {
         for(var creature_id in ZIL.shown_creatures) {
             if(drawn_creatures[creature_id] == null) {
                 ZIL.rendered_shape.remove(ZIL.creatures_map[creature_id].mobile.shape_obj);
+                ZIL.creatures_map[creature_id].mobile.remove_divs();
                 remove_ids.push(creature_id);
             }
         }
@@ -303,6 +300,8 @@ var ZIL = {
                 }
             }
         }
+
+        Mobile.move_damage_divs(delta_time);
 	},
 
     combat_step: function(delta_time) {
@@ -432,7 +431,6 @@ var ZIL = {
         ZIL.global_pos[1] = y - ZIL_UTIL.VIEW_HEIGHT / 2;
         ZIL.screen_pos_map = {};
         ZIL.clear_ground_target();
-        $("#creature_id").hide();
         ZIL.redraw_shape();
     },
 
@@ -470,7 +468,14 @@ var ZIL = {
         for(var creature_id in ZIL.shown_creatures) {
             ZIL.creatures_map[creature_id].mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
         }
+        Mobile.reposition_all_divs(ZIL.get_shown_creatures(true));
 	},
+
+    get_shown_creatures: function(include_player) {
+        var c = $.map(Object.keys(ZIL.shown_creatures), function(id) { return ZIL.creatures_map[id]; });
+        if(include_player) c.push(ZIL.player);
+        return c;
+    },
 
 	start_game: function() {
         ZIL_UTIL.VIEW_WIDTH *= 3;

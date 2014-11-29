@@ -17,6 +17,8 @@ ZIL_UTIL.VIEW_HEIGHT = 4 * ZIL_UTIL.CHUNK_SIZE;
 ZIL_UTIL.VIEW_DEPTH = 2 * ZIL_UTIL.CHUNK_SIZE;
 ZIL_UTIL.CAM_ZOOM = 1.4;
 ZIL_UTIL.ORIGIN = [0, 0, 0];
+ZIL_UTIL.DAMAGE_LIFE = 2300;
+ZIL_UTIL.DAMAGE_SPEED = 20;
 
 	// colors from: http://timtrott.co.uk/web-20-color-palette/
 ZIL_UTIL.palette = [

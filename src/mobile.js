@@ -145,6 +145,8 @@ Mobile.prototype.move_to = function(nx, ny, nz, gx, gy, gz) {
     this.last_x = this.x;
     this.last_y = this.y;
     this.last_z = this.z;
+
+    this.reposition_divs();
 };
 
 Mobile.prototype.set_selected = function(selected) {
@@ -376,22 +378,101 @@ Mobile.prototype.is_target_in_range = function() {
     return this.target && ZIL_UTIL.get_shape_distance(this.parent, this.target) <= this.parent.get_range();
 };
 
+Mobile.divs = {};
+Mobile.prototype.show_above = function(content, css_class) {
+    $("body").append("<div class='" + css_class + "'>" + content + "</div>");
+    var el = $("div:last");
+    this.position_above(el);
+    if(Mobile.divs[this.parent.id] == null) {
+        Mobile.divs[this.parent.id] = [el];
+    } else {
+        Mobile.divs[this.parent.id].push(el);
+    }
+};
+
+Mobile.reposition_all_divs = function(creatures) {
+    for(var i = 0; i  < creatures.length; i++) {
+        creatures[i].mobile.reposition_divs();
+    }
+};
+
+Mobile.prototype.reposition_divs = function() {
+    var divs = Mobile.divs[this.parent.id];
+    for(var i = 0; divs && i < divs.length; i++) {
+        this.position_above(divs[i]);
+    }
+};
+
+Mobile.prototype.remove_divs = function() {
+    Mobile._remove_divs(this.parent.id);
+};
+
+Mobile._remove_divs = function(creature_id) {
+    var divs = Mobile.divs[creature_id];
+    for(var i = 0; divs && i < divs.length; i++) {
+        divs[i].remove();
+    }
+    delete Mobile.divs[creature_id];
+};
+
+Mobile.prototype.position_above = function(div) {
+    var position = THREEx.ObjCoord.cssPosition(this.shape_obj, ZIL.camera, ZIL.renderer);
+    position.y -= this.shape.depth * 10;
+    div.css({
+        left: (position.x - div[0].offsetWidth /2)+'px',
+        top: (position.y - div[0].offsetHeight/2)+'px'
+    });
+};
+
+Mobile.move_damage_divs = function(delta_time) {
+    var now = Date.now();
+    for(var creature_id in Mobile.divs) {
+        var divs = Mobile.divs[creature_id];
+        for(var i = 0; i < divs.length; i++) {
+            var div = divs[i];
+            if(div.hasClass("damage")) {
+                var start = div.attr("start_time");
+                if(start) {
+                    start = parseInt(start, 10);
+                } else {
+                    start = now;
+                    div.attr("start_time", start);
+                }
+
+                var life = now - start;
+                if(life > ZIL_UTIL.DAMAGE_LIFE) {
+                    div.remove();
+                    divs.splice(i, 1);
+                    i--;
+                } else {
+                    var y = parseInt(div.css("marginTop").replace(/[^-\d\.]/g, ''), 10);
+                    y -= delta_time / ZIL_UTIL.DAMAGE_SPEED;
+                    div.css({
+                        "marginTop": y + "px",
+                        "opacity":  (ZIL_UTIL.DAMAGE_LIFE - life) / ZIL_UTIL.DAMAGE_LIFE
+                    });
+                }
+            }
+        }
+        if(divs.length == 0) delete Mobile.divs[creature_id];
+    }
+};
+
 Mobile.prototype.attack_roll = function() {
     // run the encounter
     var a = this.parent.get_atk();
     var d = this.target.get_def();
     var damage = Math.max(a - d, 0);
-    if(isNaN(damage)) debugger;
 
     this.target.mobile.hp -= damage;
     console.log("+++ " + this.target.mobile.get_name() + " takes " + damage + "(a:" + a + "/d:" + d + ") points of damage. (remaining hp=" + this.target.mobile.hp +  ")");
 
     if(damage > 0) {
         // animate damage
+        this.target.mobile.show_above(damage, "damage");
 
-
-
-        if (this.target.mobile.hp <= 0) {
+        // target dead?
+        if (!this.target.mobile.is_alive()) {
 
             // experience gain
             if(!this.ai_move) {
