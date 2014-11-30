@@ -43,8 +43,9 @@ var ZIL = {
         }
 
         $(".creature_description").remove();
-        var point = ZIL.mouse_to_world(event);
-        if(point) {
+        var intersection = ZIL.mouse_to_world(event);
+        if(intersection) {
+            var point = intersection.point;
             ZIL.cursor[0] = Math.round(point.x);
             ZIL.cursor[1] = Math.round(point.y);
 
@@ -57,15 +58,15 @@ var ZIL = {
             ZIL.show_cursor_pos();
 
             // a creature?
-            var x = ZIL.global_pos[0] + ZIL.cursor[0];
-            var y = ZIL.global_pos[1] + ZIL.cursor[1];
-            var target_creature = ZIL.get_creature_at(x, y, Math.round(point.z));
-            if (target_creature && target_creature.mobile.is_alive() && ZIL.is_waiting_for_player()) {
-                target_creature.mobile.set_selected(true);
-                ZIL.selected_creature = target_creature;
+            if(intersection.object && intersection.object.userData && intersection.object.userData.creature) {
+                var target_creature = intersection.object.userData.creature;
+                if (target_creature && target_creature.mobile.is_alive() && ZIL.is_waiting_for_player()) {
+                    target_creature.mobile.set_selected(true);
+                    ZIL.selected_creature = target_creature;
 
-                // tooltip
-                target_creature.mobile.show_above(target_creature.mobile.get_name(), "creature_description");
+                    // tooltip
+                    target_creature.mobile.show_above(target_creature.mobile.get_name(), "creature_description");
+                }
             }
         }
 	},
@@ -81,7 +82,7 @@ var ZIL = {
 
         if(ZIL.in_combat) {
             if(ZIL.combat_creature == ZIL.player) {
-                ZIL.combat_selected_creature = ZIL.get_creature_at(x, y, z);
+                ZIL.combat_selected_creature = ZIL.selected_creature;
                 if(ZIL.combat_selected_creature) {
                     x = ZIL.combat_selected_creature.mobile.x;
                     y = ZIL.combat_selected_creature.mobile.y;
@@ -176,25 +177,21 @@ var ZIL = {
         ZIL.rendered_shape.add(ZIL.ground_marker);
     },
 
-    get_creature_at: function(x, y, z) {
-        var cx = (x / ZIL_UTIL.CHUNK_SIZE)|0;
-        var cy = (y / ZIL_UTIL.CHUNK_SIZE)|0;
-        var creatures = Mobile.get_for_chunk(cx, cy);
-        for(var i = 0; i < creatures.length; i++) {
-            if(creatures[i].mobile.contains_point(x, y, z, 4)) return creatures[i];
-        }
-        return null;
-    },
-
 	mouse_to_world: function(event) {
 		var mousex = (( (event.offsetX - ZIL.offset_x) / ZIL.canvas_size ) * 2 - 1);
 		var mousey = (-( (event.offsetY - ZIL.offset_y) / ZIL.canvas_size ) * 2 + 1);
 		// console.log("" + mousex + "," + mousey);
 		var vector = new THREE.Vector3( mousex, mousey, 1 );
 		var ray_caster = ZIL.projector.pickingRay(vector, ZIL.camera);
-        var intersection = ray_caster.intersectObjects(ZIL.rendered_shape.children);
+        var intersection = ray_caster.intersectObjects(ZIL.rendered_shape.children, true);
         if(intersection.length > 0) {
-            return intersection[0].point;
+            // not sure why this is necessary...
+            intersection[0].point.z = (intersection[0].point.z + 0.5) / 2;
+//            console.log("intersection=", intersection[0]);
+//            if(intersection[0].point.z > 2)
+//            console.log("mouse=" + mousex.toFixed(2) + "," + mousey.toFixed(2) +
+//                " intersections=", $.map(intersection, function(x) { return [x.point.x.toFixed(2), x.point.y.toFixed(2), x.point.z.toFixed(2)]; }));
+            return intersection[0];
         }
 		return null;
 	},
@@ -329,8 +326,10 @@ var ZIL = {
             }
             $("body").css("cursor", "not-allowed");
         } else {
-            $("body").css("cursor", "default");
-            ZIL.mouse_position_event(); // reselect creature under mouse
+            if($("body").css("cursor") == "not-allowed") {
+                $("body").css("cursor", "default");
+                ZIL.mouse_position_event(); // reselect creature under mouse
+            }
         }
 
         // init combat or select next creature

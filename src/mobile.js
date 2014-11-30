@@ -36,6 +36,12 @@ function Mobile(x, y, z, category, shape, parent) {
         var obj3d = s.render_shape();
         this.outline_objects.push(this.make_glow(obj3d));
         this.shape_objects.push(obj3d);
+
+        // store the creature ref. in the userdata (used for mouseover lookup)
+        obj3d.userData.creature = this.parent;
+        for(var t = 0; t < obj3d.children.length; t++) {
+            obj3d.children[t].userData.creature = this.parent;
+        }
     }
     this.last_x = x;
     this.last_y = y;
