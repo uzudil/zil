@@ -25,9 +25,19 @@ var ZIL = {
     combat_plan_y: 0,
     combat_plan_z: 0,
     ground_marker: null,
+    last_mouse_event: null,
 
 	mouse_move: function(event) {
-        if(ZIL.selected_creature) {
+        ZIL.mouse_position_event(event);
+    },
+
+    mouse_position_event: function(event) {
+        if(event == null) event = ZIL.last_mouse_event;
+        if(event == null) return;
+
+        ZIL.last_mouse_event = event;
+
+        if (ZIL.selected_creature) {
             ZIL.selected_creature.mobile.set_selected(false);
             ZIL.selected_creature = null;
         }
@@ -50,7 +60,7 @@ var ZIL = {
             var x = ZIL.global_pos[0] + ZIL.cursor[0];
             var y = ZIL.global_pos[1] + ZIL.cursor[1];
             var target_creature = ZIL.get_creature_at(x, y, Math.round(point.z));
-            if (target_creature && target_creature.mobile.is_alive()) {
+            if (target_creature && target_creature.mobile.is_alive() && ZIL.is_waiting_for_player()) {
                 target_creature.mobile.set_selected(true);
                 ZIL.selected_creature = target_creature;
 
@@ -59,6 +69,10 @@ var ZIL = {
             }
         }
 	},
+
+    is_waiting_for_player: function() {
+        return !ZIL.in_combat || (ZIL.combat_creature == ZIL.player && ZIL.combat_action_click_count < 2);
+    },
 
     mouse_up: function(event) {
         var x = ZIL.global_pos[0] + ZIL.cursor[0];
@@ -305,6 +319,20 @@ var ZIL = {
 	},
 
     combat_step: function(delta_time) {
+
+        // hide creature selection
+        if(!ZIL.is_waiting_for_player()) {
+            if(ZIL.selected_creature) {
+                ZIL.selected_creature.mobile.set_selected(false);
+                $(".creature_description").remove();
+                ZIL.selected_creature = null;
+            }
+            $("body").css("cursor", "not-allowed");
+        } else {
+            $("body").css("cursor", "default");
+            ZIL.mouse_position_event(); // reselect creature under mouse
+        }
+
         // init combat or select next creature
         if(ZIL.combat_creature == null) {
             ZIL.init_combat_turn();
@@ -322,6 +350,8 @@ var ZIL = {
             ZIL.in_combat = false;
             ZIL.center_screen_at(ZIL.player.mobile.x, ZIL.player.mobile.y);
             ZIL.clear_ground_target();
+            $("body").css("cursor", "default");
+            ZIL.mouse_position_event(); // reselect creature under mouse
             return;
         }
 
