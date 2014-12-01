@@ -58,9 +58,9 @@ var ZIL = {
             ZIL.show_cursor_pos();
 
             // a creature?
-            if(intersection.object && intersection.object.userData && intersection.object.userData.creature) {
+            if(intersection.object && intersection.object.userData) {
                 var target_creature = intersection.object.userData.creature;
-                if (target_creature && target_creature.mobile.is_alive() && ZIL.is_waiting_for_player()) {
+                if (target_creature && target_creature != ZIL.player && target_creature.mobile.is_alive() && ZIL.is_waiting_for_player()) {
                     target_creature.mobile.set_selected(true);
                     ZIL.selected_creature = target_creature;
 
@@ -103,11 +103,22 @@ var ZIL = {
                         y = ZIL.combat_selected_creature.mobile.y;
                     }
                     ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
-                    if(ZIL.player.mobile.is_moving() || ZIL.player.mobile.is_target_in_range()) {
+                    var in_range = ZIL.player.mobile.is_target_in_range();
+                    if(ZIL.player.mobile.is_moving() || in_range) {
                         ZIL.show_ground_target(x, y);
+
+                        var message;
+                        if(in_range || ZIL.player.mobile.is_target_in_range_on_path()) {
+                            message = "Attack! AP: 0"
+                        } else {
+                            var ap = ZIL.player.mobile.ap - ZIL.player.mobile.move_path.length;
+                            message = "AP: <span class='" + (ap >= 0 ? "ap_cost_ok" : "ap_cost_error") + "'>" + ap + "/" + ZIL.player.mobile.max_ap + "</span>";
+                        }
+                        ZIL.player.mobile.show_above(message, "player_plan");
                     } else {
                         // can't move there
                         ZIL.show_forbidden();
+                        ZIL.player.mobile.remove_divs("player_plan");
                     }
                 } else {
                     ZIL.combat_selected_creature = null;
@@ -349,6 +360,7 @@ var ZIL = {
             ZIL.in_combat = false;
             ZIL.center_screen_at(ZIL.player.mobile.x, ZIL.player.mobile.y);
             ZIL.clear_ground_target();
+            ZIL.player.mobile.remove_divs("player_plan");
             $("body").css("cursor", "default");
             ZIL.mouse_position_event(); // reselect creature under mouse
             return;
@@ -356,6 +368,8 @@ var ZIL = {
 
         // combat move
         if(ZIL.combat_creature.mobile.ap > 0 && (ZIL.combat_creature != ZIL.player || ZIL.combat_action_click_count > 1)) {
+
+            ZIL.player.mobile.remove_divs("player_plan");
 
             // make sure the combat is visible
             ZIL.recenter_screen(ZIL.combat_creature.mobile.x, ZIL.combat_creature.mobile.y);

@@ -322,8 +322,8 @@ Mobile.prototype.is_alive = function() {
 };
 
 Mobile.prototype.is_moving = function() {
-    return ZIL.player.mobile.move_path != null &&
-        ZIL.player.mobile.move_path.length > 0;
+    return this.move_path != null &&
+        this.move_path.length > 0;
 };
 
 Mobile.prototype.is_attacking = function() {
@@ -380,45 +380,49 @@ Mobile.prototype.is_target_dying = function() {
     return this.target && !this.target.mobile.is_alive() && !this.target.mobile.remove_me;
 };
 
-Mobile.prototype.is_target_in_range = function() {
-    return this.target && ZIL_UTIL.get_shape_distance(this.parent, this.target) <= this.parent.get_range();
+Mobile.prototype.is_target_in_range = function(x, y) {
+    return this.target && ZIL_UTIL.get_shape_distance(this.parent, this.target, x, y) <= this.parent.get_range();
 };
 
-Mobile.divs = {};
+Mobile.prototype.is_target_in_range_on_path = function() {
+    var current_ap = this.ap;
+    for(var i = 0; current_ap > 0 && i < this.move_path.length; i++, current_ap--) {
+        var node = this.move_path[i];
+        if(this.is_target_in_range(node.x, node.y)) {
+            return true;
+        }
+    }
+    return false;
+};
+
 Mobile.prototype.show_above = function(content, css_class) {
-    $("body").append("<div class='" + css_class + "'>" + content + "</div>");
+    $("body").append("<div class='mobile_div " + css_class + "' data-creature_id='" + this.parent.id + "'>" + content + "</div>");
     var el = $("div:last");
     this.position_above(el);
-    if(Mobile.divs[this.parent.id] == null) {
-        Mobile.divs[this.parent.id] = [el];
-    } else {
-        Mobile.divs[this.parent.id].push(el);
-    }
 };
 
-Mobile.reposition_all_divs = function(creatures) {
-    for(var i = 0; i  < creatures.length; i++) {
-        creatures[i].mobile.reposition_divs();
+Mobile.reposition_all_divs = function() {
+    var divs = $(".mobile_div");
+    for(var i = 0; i < divs.length; i++) {
+        var div = divs.eq(i);
+        var creature = ZIL.creatures_map[div.data("creature_id")];
+        creature.mobile.position_above(div);
     }
 };
 
 Mobile.prototype.reposition_divs = function() {
-    var divs = Mobile.divs[this.parent.id];
+    var divs = $(".mobile_div[data-creature_id='" + this.parent.id + "']");
     for(var i = 0; divs && i < divs.length; i++) {
-        this.position_above(divs[i]);
+        this.position_above(divs.eq(i));
     }
 };
 
-Mobile.prototype.remove_divs = function() {
-    Mobile._remove_divs(this.parent.id);
-};
-
-Mobile._remove_divs = function(creature_id) {
-    var divs = Mobile.divs[creature_id];
+Mobile.prototype.remove_divs = function(css_class) {
+    var divs = $(".mobile_div[data-creature_id='" + this.parent.id + "']");
     for(var i = 0; divs && i < divs.length; i++) {
-        divs[i].remove();
+        var div = divs.eq(i);
+        if(css_class == null || div.hasClass(css_class)) div.remove();
     }
-    delete Mobile.divs[creature_id];
 };
 
 Mobile.prototype.position_above = function(div) {
@@ -432,35 +436,28 @@ Mobile.prototype.position_above = function(div) {
 
 Mobile.move_damage_divs = function(delta_time) {
     var now = Date.now();
-    for(var creature_id in Mobile.divs) {
-        var divs = Mobile.divs[creature_id];
-        for(var i = 0; i < divs.length; i++) {
-            var div = divs[i];
-            if(div.hasClass("damage")) {
-                var start = div.attr("start_time");
-                if(start) {
-                    start = parseInt(start, 10);
-                } else {
-                    start = now;
-                    div.attr("start_time", start);
-                }
-
-                var life = now - start;
-                if(life > ZIL_UTIL.DAMAGE_LIFE) {
-                    div.remove();
-                    divs.splice(i, 1);
-                    i--;
-                } else {
-                    var y = parseInt(div.css("marginTop").replace(/[^-\d\.]/g, ''), 10);
-                    y -= delta_time / ZIL_UTIL.DAMAGE_SPEED;
-                    div.css({
-                        "marginTop": y + "px",
-                        "opacity":  (ZIL_UTIL.DAMAGE_LIFE - life) / ZIL_UTIL.DAMAGE_LIFE
-                    });
-                }
-            }
+    var divs = $(".mobile_div.damage");
+    for(var i = 0; i < divs.length; i++) {
+        var div = divs.eq(i);
+        var start = div.attr("start_time");
+        if(start) {
+            start = parseInt(start, 10);
+        } else {
+            start = now;
+            div.attr("start_time", start);
         }
-        if(divs.length == 0) delete Mobile.divs[creature_id];
+
+        var life = now - start;
+        if(life > ZIL_UTIL.DAMAGE_LIFE) {
+            div.remove();
+        } else {
+            var y = parseInt(div.css("marginTop").replace(/[^-\d\.]/g, ''), 10);
+            y -= delta_time / ZIL_UTIL.DAMAGE_SPEED;
+            div.css({
+                "marginTop": y + "px",
+                "opacity":  (ZIL_UTIL.DAMAGE_LIFE - life) / ZIL_UTIL.DAMAGE_LIFE
+            });
+        }
     }
 };
 

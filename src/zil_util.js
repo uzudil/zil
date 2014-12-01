@@ -59,11 +59,23 @@ ZIL_UTIL.get_distance = function(ax, ay, bx, by) {
     return Math.sqrt(((ax - bx) * (ax - bx)) + ((ay - by) * (ay - by)));
 };
 
-ZIL_UTIL.get_shape_distance = function(creature_a, creature_b) {
+/**
+ * Distance between creatures a and b.
+ * @param creature_a
+ * @param creature_b
+ * @param x optional position for creature a. If omitted, a's current position is used.
+ * @param y optional position for creature a. If omitted, a's current position is used.
+ * @returns {number}
+ */
+ZIL_UTIL.get_shape_distance = function(creature_a, creature_b, x, y) {
+    if(x == null || y == null) {
+        x = creature_a.mobile.x;
+        y = creature_a.mobile.y;
+    }
     var asize = (Math.max(creature_a.mobile.shape.width, creature_a.mobile.shape.height) / 2)|0;
     var bsize = (Math.max(creature_b.mobile.shape.width, creature_b.mobile.shape.height) / 2)|0;
-    var ax = creature_a.mobile.x + asize;
-    var ay = creature_a.mobile.y + asize;
+    var ax = x + asize;
+    var ay = y + asize;
     var bx = creature_b.mobile.x + bsize;
     var by = creature_b.mobile.y + bsize;
     return ZIL_UTIL.get_distance(ax, ay, bx, by) - (asize + bsize);
