@@ -350,7 +350,7 @@ var ZIL_BUILD = {
 		ZIL_BUILD.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
 		ZIL_BUILD.init_camera();
 
-		var size = Math.min(window.innerWidth, window.innerHeight);
+		var size = Math.min(window.innerWidth - $("#shape_chooser").width() - $("#palette").width() - 30, window.innerHeight);
 		ZIL_BUILD.renderer.setSize( size, size );
 		ZIL_BUILD.canvas_size = size;
 		document.body.appendChild( ZIL_BUILD.renderer.domElement );
@@ -462,14 +462,8 @@ var ZIL_BUILD = {
 	},
 
 	init_dom: function() {
-		// colors
-        var colors = window.localStorage["colors"];
-        if(colors == null) colors = ZIL_UTIL.palette;
-        else colors = JSON.parse(colors);
-
-        // set the global palette (todo: this should not be hidden here)
-        ZIL_UTIL.palette = colors;
-
+        ZIL_UTIL.load_config();
+        var colors = ZIL_UTIL.palette;
 		for(var i = 0; i < colors.length; i++) {
 			var s = "#" + colors[i].toString(16);
 			$("#color").append("<option value='" + colors[i] + "'>" + s + "</option>");
@@ -494,8 +488,7 @@ var ZIL_BUILD = {
             $("#color option[value='" + c + "']").css("color", s);
 			$("#color option[value='" + c + "']:checked").css("color", s);
 
-            var colors = $.map($("#color option"), function(x) { return parseInt($(x).attr("value"), 10); });
-            window.localStorage["colors"] = JSON.stringify(colors);
+            ZIL_UTIL.save_config();
         });
 
         $("#monsters").empty();
@@ -520,7 +513,7 @@ var ZIL_BUILD = {
     	});
 		
 		// load the cateogry names
-		var cat_names = JSON.parse(window.localStorage["cat_names"] || "[\"default\"]");
+		var cat_names = ZIL_UTIL.get_categories();
 		for(var i = 0; i < cat_names.length; i++) {
 			ZIL_BUILD.add_category(cat_names[i]);
 		}
@@ -539,7 +532,8 @@ var ZIL_BUILD = {
             var values = $.map($("#shape_chooser .group"), function(x) {
                 return $(".category_selector", $(x)).val() + "." + $(".shape_selector", $(x)).val();
             });
-            window.localStorage["shortcuts"] = JSON.stringify(values);
+            ZIL_UTIL.shortcuts = values;
+            ZIL_UTIL.save_config();
             t.blur();
         });
 
@@ -551,7 +545,8 @@ var ZIL_BUILD = {
 			ZIL_BUILD.load_shape(category_name, shape_name);
 			$("#shape_names").blur();
             // update the last edited shape name
-		    window.localStorage["shape_name"] = JSON.stringify(category_name + "." + shape_name);
+            ZIL_UTIL.last_shape_name = category_name + "." + shape_name;
+            ZIL_UTIL.save_config();
 			return false;
 		});
 		$("#clear").click(function(event) {
@@ -569,9 +564,7 @@ var ZIL_BUILD = {
 			if(n >= 0 && confirm("Delete shape \"" + name + "\"?")) {
 				$("#shape_names option").eq(n).remove();
 				// todo: remove from choosers
-				var names = $.map($("#shape_names option"), function(e) { return $(e).text(); });
-				window.localStorage["shape_names"] = JSON.stringify(names);
-				delete window.localStorage[name];
+                ZIL_UTIL.delete_shape(name);
 				$("#delete").blur();
 			}
 			return false;
@@ -614,7 +607,7 @@ var ZIL_BUILD = {
             // load this shape and add it to the cursor
             ZIL_BUILD.include_shape = ZilShape.load_shape(category, shape_name, rotation);
             ZIL_BUILD.include_shape.build_shape(ZIL_UTIL.update_progress, function() {
-                console.log("Including shape: ", ZIL_BUILD.include_shape);
+//                console.log("Including shape: ", ZIL_BUILD.include_shape);
                 ZIL_BUILD.include_shape_obj = ZIL_BUILD.include_shape.render_shape();
                 ZIL_BUILD.obj.add(ZIL_BUILD.include_shape_obj);
                 $("#include_message").fadeIn();
@@ -630,15 +623,14 @@ var ZIL_BUILD = {
 
 	load_last_shape: function() {
 		// load the current shape name
-		var name = JSON.parse(window.localStorage["shape_name"] || "\"default.default\"");
+		var name = ZIL_UTIL.last_shape_name;
 		var s = name.split(".");
 		var category_name = s[0];
 		var shape_name = s[1];
 		ZIL_BUILD.load_shape(category_name, shape_name);
 
-        var shortcuts_str = window.localStorage["shortcuts"];
-        if(shortcuts_str) {
-            var shortcuts = JSON.parse(shortcuts_str);
+        var shortcuts = ZIL_UTIL.shortcuts;
+        if(shortcuts) {
             for (var i = 0; shortcuts && i < shortcuts.length; i++) {
                 var s = shortcuts[i].split(".");
                 if (s[1] && s[1] != "null") {
@@ -653,7 +645,7 @@ var ZIL_BUILD = {
 
 	load_shape_names: function(category_name, el) {
 		// load the shape names
-		var shape_names = JSON.parse(window.localStorage[category_name + "_shape_names"] || "[\"default\"]");
+		var shape_names = ZIL_UTIL.get_shapes(category_name);
 		if(el == null) el = $("#shape_names");
 		el.empty();
 		for(var i = 0; i < shape_names.length; i++) {
@@ -681,18 +673,9 @@ var ZIL_BUILD = {
 		ZIL_BUILD.shape.name = shape_name;
 		ZIL_BUILD.shape.save_shape();
 
-		// save the shape's name into the category
-		var category_shape_names = JSON.parse(window.localStorage[category_name + "_shape_names"] || "[\"default\"]");
-		if(category_shape_names.indexOf(shape_name) < 0) {
-			category_shape_names.push(shape_name);
-			window.localStorage[category_name + "_shape_names"] = JSON.stringify(category_shape_names);
-		}
-
 		// add/select the category
 		if($("#category_names option:contains('" + category_name + "')").length == 0) {
 			ZIL_BUILD.add_category(category_name);
-			var names = $.map($("#category_names option"), function(e) { return $(e).text(); });
-			window.localStorage["cat_names"] = JSON.stringify(names);
 		}
 
 		// select the category (this will also select the shape)
@@ -700,7 +683,8 @@ var ZIL_BUILD = {
 		ZIL_BUILD.load_shape_names(category_name);
 
 		// update the last edited shape name
-		window.localStorage["shape_name"] = JSON.stringify(category_name + "." + shape_name);
+        ZIL_UTIL.last_shape_name = category_name + "." + shape_name;
+        ZIL_UTIL.save_config();
 	},
 
 	load_shape: function(category_name, shape_name) {

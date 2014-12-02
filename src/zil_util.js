@@ -20,7 +20,7 @@ ZIL_UTIL.ORIGIN = [0, 0, 0];
 ZIL_UTIL.DAMAGE_LIFE = 2300;
 ZIL_UTIL.DAMAGE_SPEED = 20;
 
-	// colors from: http://timtrott.co.uk/web-20-color-palette/
+// colors from: http://timtrott.co.uk/web-20-color-palette/
 ZIL_UTIL.palette = [
 	0xB02B2C, 
 	0xD15600, 
@@ -31,6 +31,8 @@ ZIL_UTIL.palette = [
 	0x356AA0, 
 	0xD01F3C
 ];
+ZIL_UTIL.last_shape_name = "default.default";
+ZIL_UTIL.shortcuts = null;
 
 ZIL_UTIL.make_square_face = function(size) {
     var n = size / 2;
@@ -159,4 +161,54 @@ ZIL_UTIL.bind = function(callerObj, method) {
 
 ZIL_UTIL.rand_int = function(a, b) {
     return Math.round(a + Math.random() * (b - a));
+};
+
+var fs = require('fs');
+
+ZIL_UTIL.load_config = function() {
+    var config = JSON.parse(fs.readFileSync("../../data/zil.json"));
+
+    // set the global palette
+    var colors = config["colors"];
+    if(colors == null) colors = ZIL_UTIL.palette;
+    ZIL_UTIL.palette = colors;
+    ZIL_UTIL.last_shape_name = config["shape_name"] || "default.default";
+    ZIL_UTIL.shortcuts = config["shortcuts"];
+};
+
+ZIL_UTIL.save_config = function() {
+    var config = {
+        colors: ZIL_UTIL.palette,
+        shape_name: ZIL_UTIL.last_shape_name,
+        shortcuts: ZIL_UTIL.shortcuts
+    };
+    fs.writeFileSync("../../data/zil.json", JSON.stringify(config));
+};
+
+ZIL_UTIL.get_categories = function() {
+    var file_names = fs.readdirSync("../../data/shapes");
+    return file_names == null || file_names.length == 0 ? ["default"] : file_names;
+};
+
+ZIL_UTIL.get_shapes = function(category_name) {
+    var file_names = fs.readdirSync("../../data/shapes/" + category_name);
+    return file_names == null || file_names.length == 0 ? ["default"] : file_names;
+};
+
+ZIL_UTIL.get_shape = function(category_name, shape_name) {
+    var path = "../../data/shapes/" + category_name + "/" + shape_name;
+    if(fs.existsSync(path)) {
+        return JSON.parse(fs.readFileSync(path));
+    } else {
+        return null;
+    }
+};
+
+ZIL_UTIL.set_shape = function(category_name, shape_name, shape_obj) {
+    var path = "../../data/shapes/" + category_name + "/" + shape_name;
+    fs.writeFileSync(path, JSON.stringify(shape_obj));
+};
+
+ZIL_UTIL.delete_shape = function(name) {
+    throw "Implement me: delete shape " + name;
 };

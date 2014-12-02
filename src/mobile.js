@@ -405,8 +405,14 @@ Mobile.reposition_all_divs = function() {
     var divs = $(".mobile_div");
     for(var i = 0; i < divs.length; i++) {
         var div = divs.eq(i);
-        var creature = ZIL.creatures_map[div.data("creature_id")];
-        creature.mobile.position_above(div);
+        var creature_id = div.data("creature_id");
+        var creature = ZIL.creatures_map[creature_id];
+        if(creature && creature.mobile) {
+            creature.mobile.position_above(div);
+        } else {
+            // creature died? This might be a bug.
+            Mobile.remove_divs(creature_id);
+        }
     }
 };
 
@@ -418,7 +424,11 @@ Mobile.prototype.reposition_divs = function() {
 };
 
 Mobile.prototype.remove_divs = function(css_class) {
-    var divs = $(".mobile_div[data-creature_id='" + this.parent.id + "']");
+    Mobile.remove_divs(this.parent.id, css_class);
+};
+
+Mobile.remove_divs = function(creature_id, css_class) {
+    var divs = $(".mobile_div[data-creature_id='" + creature_id + "']");
     for(var i = 0; divs && i < divs.length; i++) {
         var div = divs.eq(i);
         if(css_class == null || div.hasClass(css_class)) div.remove();

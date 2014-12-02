@@ -7,9 +7,7 @@
 				text-align: center;
 				background: #111;
 			}
-			canvas { border-left: 3px solid #222; border-right: 3px solid #222; cursor: crosshair;
-				float: left;
-			}
+			canvas { border: 3px solid #222; cursor: crosshair;	float: left; }
 			* {
 				font-family: arial, sans-serif;
 				font-size: 10px;
@@ -56,8 +54,8 @@
 				border-radius: 5px;
 			}
 		</style>
-		<script type="text/javascript" src="lib/jquery-2.0.3.min.js"></script>
-        <script type="text/javascript" src="lib/jscolor/jscolor.js"></script>
+		<script type="text/javascript" src="../../lib/jquery-2.0.3.min.js"></script>
+        <script type="text/javascript" src="../../lib/jscolor/jscolor.js"></script>
 	</head>
 	<body>
 		<div id="include_message" class="message">Hit Esc to stop including object</div>
@@ -142,12 +140,12 @@
 				<div><label>Shapes:<select class="shape_selector"></select></label></div>
 			</div>
 		</div>
-		<script src="lib/three.min.js"></script>
-		<script src="src/zil_util.js"></script>
-		<script src="src/monsters.js"></script>
-		<script src="src/chunk.js"></script>
-		<script src="src/zil_shape.js"></script>
-		<script src="src/zil_build.js"></script>
+		<script src="../../lib/three.min.js"></script>
+		<script src="../../src/zil_util.js"></script>
+		<script src="../../src/monsters.js"></script>
+		<script src="../../src/chunk.js"></script>
+		<script src="../../src/zil_shape.js"></script>
+		<script src="../../src/zil_build.js"></script>
 		<script>
 			ZIL_BUILD.start_builder();
 		</script>

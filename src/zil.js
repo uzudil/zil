@@ -627,13 +627,7 @@ var ZIL = {
 	},
 
 	init_dom: function() {
-		// colors
-        var colors = window.localStorage["colors"];
-        if(colors == null) colors = ZIL_UTIL.palette;
-        else colors = JSON.parse(colors);
-
-        // set the global palette (todo: this should not be hidden here)
-        ZIL_UTIL.palette = colors;
+		ZIL_UTIL.load_config();
 
 		$("canvas").
 			bind("mousemove", ZIL.mouse_move).
@@ -650,7 +644,7 @@ var ZIL = {
         ZIL.shape.build_shape(ZIL_UTIL.update_progress, function() {
 
             ZIL.target_texture = new THREE.MeshBasicMaterial({
-                map: THREE.ImageUtils.loadTexture( 'img/marker.png', new THREE.UVMapping() ),
+                map: THREE.ImageUtils.loadTexture( '../../img/marker.png', new THREE.UVMapping() ),
                 transparent: true,
                 opacity: 0.5,
                 color: 0xFFFFFF
