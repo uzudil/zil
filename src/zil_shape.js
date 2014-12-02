@@ -174,7 +174,7 @@ ZilShape.prototype.save_shape = function() {
 		shape: this.shape
 	};
     ZIL_UTIL.set_shape(this.category, this.name, obj);
-	ZilShape.SHAPE_CACHE[name] = this;
+	ZilShape.SHAPE_CACHE[this.category + "." + this.name + this.rotation] = this;
 };
 
 ZilShape.prototype.calculate_bounds = function() {
@@ -247,23 +247,33 @@ ZilShape.prototype.del_shape = function(x, y, z, child_shape) {
 ZilShape.prototype.del_position = function(x, y, z) {
 	var key = ZilShape._key(x, y, z);
     var p = this.expanded_shape[key];
-    var origin_key = ZilShape._key(p.origin_x, p.origin_y, p.origin_z);
-    var s_val = this.shape[origin_key];
-	if(isNaN(s_val)) {
-        var s = s_val.name.split(".");
-		var child_shape = ZilShape.load_shape(s[0], s[1], s_val.rot);
-        this.del_shape(p.origin_x, p.origin_y, p.origin_z, child_shape);
-	} else {
-		delete this.shape[key];
-		delete this.expanded_shape[key];
-		this.mark_chunk_updated(key);
-	}
+    if(p) {
+        var origin_key = ZilShape._key(p.origin_x, p.origin_y, p.origin_z);
+        var s_val = this.shape[origin_key];
+        if (isNaN(s_val)) {
+            var s = s_val.name.split(".");
+            var child_shape = ZilShape.load_shape(s[0], s[1], s_val.rot);
+            this.del_shape(p.origin_x, p.origin_y, p.origin_z, child_shape);
+        } else {
+            delete this.shape[key];
+            delete this.expanded_shape[key];
+            this.mark_chunk_updated(key);
+        }
+    }
 };
 
 ZilShape.prototype.set_position = function(x, y, z, value) {
 	var key = ZilShape._key(x, y, z);
 	this.shape[key] = value;
 	this.expand_shape(key);
+};
+
+/* copy as voxels, instead of reference shape, like set_shape() does. */
+ZilShape.prototype.include_shape = function(x, y, z, child_shape) {
+    for(var key in child_shape.expanded_shape) {
+        var pos = ZilShape._pos(key);
+        this.set_position(x + pos[0], y + pos[1], z + pos[2], child_shape.expanded_shape[key].value);
+    }
 };
 
 ZilShape.prototype.get_position = function(x, y, z) {
@@ -403,9 +413,10 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 				// re-render the chunk if needed
 				chunk = this.chunks_in_memory[chunk_key];
                 if(!chunk) {
-//                    console.log(">>> Can't find chunk " + chunk_key + " size=" + this.width + "," + this.height + "," + this.depth);
-//                    console.log(">>> All chunk keys: ", $.map(Object.keys(this.chunks_in_memory), function(x) { return "[" + x + "]"; }));
-                    continue;
+                    // create the chunk now: this should not happen during game runtime - only in the editor when we modify chunks
+                    chunk = new Chunk(chunk_key);
+                    this.chunks_in_memory[chunk_key] = chunk;
+                    this.chunks_updated[chunk_key] = true;
                 }
 				if(this.all_chunks_updated || this.chunks_updated[chunk_key]) {
                     if(chunk.shape && this.chunks_on_screen[chunk_key]) {

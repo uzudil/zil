@@ -216,7 +216,9 @@ ZIL_UTIL.get_shape = function(category_name, shape_name) {
 };
 
 ZIL_UTIL.set_shape = function(category_name, shape_name, shape_obj) {
-    var path = "../../data/shapes/" + category_name + "/" + shape_name;
+    var dir = "../../data/shapes/" + category_name;
+    if(!fs.existsSync(dir)) fs.mkdirSync(dir);
+    var path = dir + "/" + shape_name;
     fs.writeFileSync(path, JSON.stringify(shape_obj));
 };
 

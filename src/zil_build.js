@@ -23,6 +23,8 @@ var ZIL_BUILD = {
 	fps_start: Date.now(),
     shortcut_shape: [ null, null, null, null, null, null, null, null, null, null ],
     rotation: 0,
+    rocks: null,
+    rocks_obj: null,
 
 	mouse_zoom: function(event) {
 		if(event.originalEvent.wheelDelta /120 > 0) {
@@ -169,7 +171,7 @@ var ZIL_BUILD = {
 	},
 
 	key_down: function(event) {
-		console.log(event.which);
+//		console.log(event.which);
 		if(event.target != document.body) return true;
 		if(ZIL_BUILD.move_timer == 0 && !event.ctrlKey) {
 
@@ -206,12 +208,17 @@ var ZIL_BUILD = {
 
 		if(event.which == 32) {
 			ZIL_BUILD.set_position();
+		} else if(event.which == 82) {
+            $("#rocks_message").fadeIn();
+            ZIL_BUILD.draw_rocks();
 		} else if(event.which == 90 && event.ctrlKey) {
 			ZIL_BUILD.undo();
 		} else if(event.which == 70) {
 			ZIL_BUILD.flood_fill();
 		} else if(event.which == 27) {
-			if(ZIL_BUILD.include_shape) {
+            if(ZIL_BUILD.rocks) {
+                ZIL_BUILD.end_rocks_mode();
+            } else if(ZIL_BUILD.include_shape) {
 				// detach from cursor
 				ZIL_BUILD.obj.remove(ZIL_BUILD.include_shape_obj);
 				ZIL_BUILD.include_shape_obj = null;
@@ -250,6 +257,38 @@ var ZIL_BUILD = {
 		ZIL_BUILD.show_cursor_pos();
 		return true;
 	},
+
+    end_rocks_mode: function() {
+        $("#rocks_message").fadeOut();
+        ZIL_BUILD.obj.remove(ZIL_BUILD.rocks_obj);
+        ZIL_BUILD.rocks_obj = null;
+        ZIL_BUILD.rocks = null;
+    },
+
+    draw_rocks: function() {
+        var color1 = ZIL_BUILD.add_color(0x888888);
+        var color2 = ZIL_BUILD.add_color(0x222222);
+        ZIL_BUILD.rocks = new Rocks(color1, color2);
+        ZIL_BUILD.rocks.shape_obj.build_shape_inline();
+        ZIL_BUILD.rocks_obj = ZIL_BUILD.rocks.shape_obj.render_shape();
+        ZIL_BUILD.obj.add(ZIL_BUILD.rocks_obj);
+    },
+
+    add_color: function(color_hex) {
+        var c = (typeof color_hex == "string") ? parseInt(color_hex, 16) : color_hex;
+        var s = c.toString(16);
+        var n = ZIL_UTIL.palette.indexOf(c);
+        if(n < 0) {
+            s = "#" + s;
+            $("#color").append("<option value='" + c + "'>" + s + "</option>");
+            ZIL_UTIL.palette.push(c);
+            $("#color option[value='" + c + "']").css("color", s);
+            $("#color option[value='" + c + "']:checked").css("color", s);
+            ZIL_UTIL.save_config();
+            n = ZIL_UTIL.palette.indexOf(c);
+        }
+        return n;
+    },
 
 	show_cursor_pos: function() {
 		$("#cursor_pos").empty().html([
@@ -318,7 +357,9 @@ var ZIL_BUILD = {
 		var x = ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0];
 		var y = ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1];
 		var z = ZIL_BUILD.global_pos[2] + ZIL_BUILD.cursor[2];
-		if(ZIL_BUILD.include_shape) {
+        if(ZIL_BUILD.rocks) {
+            ZIL_BUILD.shape.include_shape(x, y, z, ZIL_BUILD.rocks.shape_obj);
+        } else if(ZIL_BUILD.include_shape) {
 			ZIL_BUILD.shape.set_shape(x, y, z, ZIL_BUILD.include_shape, {
                 monster: ZIL_BUILD.include_monster ? ZIL_BUILD.include_monster.key : null
             });
@@ -483,14 +524,7 @@ var ZIL_BUILD = {
 
         $("#add_color").click(function(e) {
             var s = $(".color", $(e.target).parent()).val();
-            var c = parseInt(s, 16);
-            s = "#" + s;
-            $("#color").append("<option value='" + c + "'>" + s + "</option>");
-            ZIL_UTIL.palette.push(c);
-            $("#color option[value='" + c + "']").css("color", s);
-			$("#color option[value='" + c + "']:checked").css("color", s);
-
-            ZIL_UTIL.save_config();
+            ZIL_BUILD.add_color(s);
         });
 
         $("#monsters").empty();
