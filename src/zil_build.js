@@ -169,7 +169,7 @@ var ZIL_BUILD = {
 	},
 
 	key_down: function(event) {
-//		console.log(event.which);
+		console.log(event.which);
 		if(event.target != document.body) return true;
 		if(ZIL_BUILD.move_timer == 0 && !event.ctrlKey) {
 
@@ -341,11 +341,14 @@ var ZIL_BUILD = {
 
 	redraw_shape: function() {
 		ZIL_BUILD.shape.render_shape(ZIL_BUILD.rendered_shape, ZIL_BUILD.global_pos);
-		$("#chunks_info").html("shown: " + Object.keys(ZIL_BUILD.shape.chunks_on_screen).length + 
-			" in memory: " + Object.keys(ZIL_BUILD.shape.chunks_in_memory).length);
+		$("#chunks_info").html("scr: " + Object.keys(ZIL_BUILD.shape.chunks_on_screen).length +
+			" mem: " + Object.keys(ZIL_BUILD.shape.chunks_in_memory).length);
 	},
 
 	start_builder: function() {
+        // do this first
+        ZIL_UTIL.load_config(640, 480);
+
 		ZIL_BUILD.scene = new THREE.Scene();
 		ZIL_BUILD.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
 		ZIL_BUILD.init_camera();
@@ -462,7 +465,6 @@ var ZIL_BUILD = {
 	},
 
 	init_dom: function() {
-        ZIL_UTIL.load_config();
         var colors = ZIL_UTIL.palette;
 		for(var i = 0; i < colors.length; i++) {
 			var s = "#" + colors[i].toString(16);

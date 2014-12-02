@@ -521,6 +521,9 @@ var ZIL = {
     },
 
 	start_game: function() {
+        // do this first
+        ZIL_UTIL.load_config(320, 240);
+
         ZIL_UTIL.VIEW_WIDTH *= 3;
         ZIL_UTIL.VIEW_HEIGHT *= 3;
         ZIL_UTIL.CAM_ZOOM *= 2.55;
@@ -627,8 +630,6 @@ var ZIL = {
 	},
 
 	init_dom: function() {
-		ZIL_UTIL.load_config();
-
 		$("canvas").
 			bind("mousemove", ZIL.mouse_move).
 			bind("mouseup", ZIL.mouse_up);

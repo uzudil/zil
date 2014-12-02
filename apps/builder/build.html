@@ -22,7 +22,7 @@
 				padding: 2px; margin: 2px;
 			}
 			#shape_chooser {
-				width: 200px;
+				width: 150px;
 				float: right;
 			}
             #shape_chooser * {
@@ -31,7 +31,7 @@
 			#palette {
 				background: #ccc;
 				padding: 2px; margin: 2px;
-				width: 200px;
+				width: 150px;
 				float: left;
 			}
 			#sample {
@@ -66,17 +66,17 @@
 				<div><label></label><button id="load_shape">Load</button> <button id="delete">Delete</button></div>
 			</div>
 			<div class="group">
-				<div><label for="category">Category:</label><input id="category"></div>
-				<div><label for="name">Name:</label><input id="name"></div>
+				<div><label for="category">Cat:</label><input id="category"></div>
+				<div><label for="name">Shp:</label><input id="name"></div>
 			</div>
 			<div class="group">
 				<div><label for="color">Color:</label><select size=4 id="color"></select><span id="sample"></span></div>
-                <div><input class="color"> <button id="add_color">Add Color</button></div>
+                <div><input class="color" style="width: 50px;"> <button id="add_color">Add</button></div>
                 <div><label for="clear">New shape:</label><button id="clear">Clear</button></div>
 			</div>
             <div class="group">
-                <label>Monsters:<br>
-                    <select id="monsters" size="10"></select>
+                <label>Creatures:<br>
+                    <select id="monsters" size="5"></select>
                 </label>
                 <button id="load_monster">Load</button>
             </div>
@@ -90,54 +90,44 @@
 		<canvas id="view"></canvas>
 		<div id="shape_chooser" class="panel">
 			<div class="group">
-				<div>0</div>
-				<div><label>Categories:<select class="category_selector"></select></label></div>
-				<div><label>Shapes:<select class="shape_selector"></select></label></div>
+				<div><label>0-Cat:<select class="category_selector"></select></label></div>
+				<div><label>Shape:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div>1</div>
-				<div><label>Categories:<select class="category_selector"></select></label></div>
-				<div><label>Shapes:<select class="shape_selector"></select></label></div>
+				<div><label>1-Cat:<select class="category_selector"></select></label></div>
+				<div><label>Shape:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div>2</div>
-				<div><label>Categories:<select class="category_selector"></select></label></div>
-				<div><label>Shapes:<select class="shape_selector"></select></label></div>
+				<div><label>2-Cat:<select class="category_selector"></select></label></div>
+				<div><label>Shape:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div>3</div>
-				<div><label>Categories:<select class="category_selector"></select></label></div>
-				<div><label>Shapes:<select class="shape_selector"></select></label></div>
+				<div><label>3-Cat:<select class="category_selector"></select></label></div>
+				<div><label>Shape:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div>4</div>
-				<div><label>Categories:<select class="category_selector"></select></label></div>
-				<div><label>Shapes:<select class="shape_selector"></select></label></div>
+				<div><label>4-Cat:<select class="category_selector"></select></label></div>
+				<div><label>Shape:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div>5</div>
-				<div><label>Categories:<select class="category_selector"></select></label></div>
-				<div><label>Shapes:<select class="shape_selector"></select></label></div>
+				<div><label>5-Cat:<select class="category_selector"></select></label></div>
+				<div><label>Shape:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div>6</div>
-				<div><label>Categories:<select class="category_selector"></select></label></div>
-				<div><label>Shapes:<select class="shape_selector"></select></label></div>
+				<div><label>6-Cat:<select class="category_selector"></select></label></div>
+				<div><label>Shape:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div>7</div>
-				<div><label>Categories:<select class="category_selector"></select></label></div>
-				<div><label>Shapes:<select class="shape_selector"></select></label></div>
+				<div><label>7-Cat:<select class="category_selector"></select></label></div>
+				<div><label>Shape:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div>8</div>
-				<div><label>Categories:<select class="category_selector"></select></label></div>
-				<div><label>Shapes:<select class="shape_selector"></select></label></div>
+				<div><label>8-Cat:<select class="category_selector"></select></label></div>
+				<div><label>Shape:<select class="shape_selector"></select></label></div>
 			</div>
 			<div class="group">
-				<div>9</div>
-				<div><label>Categories:<select class="category_selector"></select></label></div>
-				<div><label>Shapes:<select class="shape_selector"></select></label></div>
+				<div><label>9-Cat:<select class="category_selector"></select></label></div>
+				<div><label>Shape:<select class="shape_selector"></select></label></div>
 			</div>
 		</div>
 		<script src="../../lib/three.min.js"></script>

@@ -1,4 +1,9 @@
 {
-  "name": "zil",
-  "main": "index.html"
+    "name": "zil",
+    "main": "index.html",
+    "version": "0.1.0",
+    "window": {
+        "width": 1024,
+        "height": 768
+    }
 }

@@ -164,8 +164,19 @@ ZIL_UTIL.rand_int = function(a, b) {
 };
 
 var fs = require('fs');
+var gui = require('nw.gui');
 
-ZIL_UTIL.load_config = function() {
+ZIL_UTIL.load_config = function(mini_x, mini_y) {
+
+    // mini mode
+    if (gui.App.argv && gui.App.argv.indexOf("--mini") >= 0) {
+        var win = gui.Window.get();
+        if(win.width > mini_x) {
+            win.resizeTo(mini_x, mini_y);
+            location.reload();
+        }
+    }
+
     var config = JSON.parse(fs.readFileSync("../../data/zil.json"));
 
     // set the global palette
