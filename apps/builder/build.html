@@ -53,6 +53,26 @@
 				padding: 5px;
 				border-radius: 5px;
 			}
+			#help_info {
+				position: fixed;
+				top: 15px;
+				left: 50%;
+				margin-left: -100px;
+				display: none;
+				background: #ccc;
+				border: 1px solid #888;
+				padding: 5px;
+				border-radius: 5px;
+			}
+
+            #help_info ul {
+                padding: 10px;
+            }
+
+            #help_info li {
+                list-style: none;
+                text-align: left;
+            }
 		</style>
 		<script type="text/javascript" src="../../lib/jquery-2.0.3.min.js"></script>
         <script type="text/javascript" src="../../lib/jscolor/jscolor.js"></script>
@@ -86,8 +106,34 @@
 				<div>Global: <span id="global_pos"></span></div>
 				<div>Chunks: <span id="chunks_info"></span></div>
 				<div>FPS: <span id="fps"></span></div>
+                <div><a href="#" id="help">Help!</a></div>
 			</div>
 		</div>
+
+        <div id="help_info">
+            <p><b>ZIL Builder</b></p>
+
+            <p>
+                <ul>
+                    <li>Mouse click to place voxel.</li>
+                    <li>Mouse right click to erase voxel.</li>
+                    <li>ctrl+Mouse: move in a line.</li>
+                    <li>Mouse wheel to zoom in/out.</li>
+                    <li>Keys:</li>
+                    <li>Arrows, Home, End: move around</li>
+                    <li>F: flood-fill</li>
+                    <li>R: place rocks</li>
+                    <li>Z,X: up/down Z axis</li>
+                    <li>0-9: include shape from shortcut (right panel)</li>
+                    <li>[,]: Rotate included shape</li>
+                    <li>ctrl+Z: undo last edit</li>
+                    <li>Esc: </li>
+                </ul>
+            </p>
+
+            <p><a href="#" onclick="$('#help_info').fadeOut(); return false;">Close Help</a></p>
+        </div>
+
 		<canvas id="view"></canvas>
 		<div id="shape_chooser" class="panel">
 			<div class="group">

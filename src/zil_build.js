@@ -557,6 +557,11 @@ var ZIL_BUILD = {
 	},
 
 	init_dom: function() {
+        $("#help").click(function(event) {
+            $("#help_info").fadeIn();
+            return false;
+        });
+
         var colors = ZIL_UTIL.palette;
 		for(var i = 0; i < colors.length; i++) {
 			var s = "#" + colors[i].toString(16);
