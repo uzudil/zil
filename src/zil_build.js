@@ -93,11 +93,15 @@ var ZIL_BUILD = {
 				if(ZIL_BUILD.mouse_dir_lock != "y") ZIL_BUILD.cursor[0] = Math.round(point.x);
 				if(ZIL_BUILD.mouse_dir_lock != "x") ZIL_BUILD.cursor[1] = Math.round(point.y);
 
-                // find the highest location here
-                ZIL_BUILD.cursor[2] = ZIL_BUILD.shape.get_highest_empty_space(
-                        ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0],
-                        ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1],
+                if(ZIL_BUILD.rocks) {
+                    ZIL_BUILD.cursor[2] = 0;
+                } else {
+                    // find the highest location here
+                    ZIL_BUILD.cursor[2] = ZIL_BUILD.shape.get_highest_empty_space(
+                            ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0],
+                            ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1],
                         ZIL_BUILD.include_shape);
+                }
 
 				ZIL_BUILD.last_point.x = event.ctrlKey ? point.x : 0;
 				ZIL_BUILD.last_point.y = event.ctrlKey ? point.y : 0;
@@ -177,32 +181,73 @@ var ZIL_BUILD = {
 
 			// move the cursor
 			if(event.which == 37) { // W
-				if(ZIL_BUILD.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH - ZIL_UTIL.CHUNK_SIZE) {
-					ZIL_BUILD.global_pos[0] += ZIL_UTIL.CHUNK_SIZE;
-					ZIL_BUILD.redraw_shape();
-				}
+                if(ZIL_BUILD.rocks) {
+                    ZIL_BUILD.rocks.width++;
+                    ZIL_BUILD.rocks.regen();
+                    ZIL_BUILD.attach_rocks();
+                } else {
+                    if (ZIL_BUILD.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH - ZIL_UTIL.CHUNK_SIZE) {
+                        ZIL_BUILD.global_pos[0] += ZIL_UTIL.CHUNK_SIZE;
+                        ZIL_BUILD.redraw_shape();
+                    }
+                }
 			} else if(event.which == 39) { // E
-				if(ZIL_BUILD.global_pos[0] > 0) { 
-					ZIL_BUILD.global_pos[0] -= ZIL_UTIL.CHUNK_SIZE;
-					ZIL_BUILD.redraw_shape();
-				}
-				
+                if(ZIL_BUILD.rocks) {
+                    if(ZIL_BUILD.rocks.width > 1) {
+                        ZIL_BUILD.rocks.width--;
+                        ZIL_BUILD.rocks.regen();
+                        ZIL_BUILD.attach_rocks();
+                    }
+                } else {
+                    if (ZIL_BUILD.global_pos[0] > 0) {
+                        ZIL_BUILD.global_pos[0] -= ZIL_UTIL.CHUNK_SIZE;
+                        ZIL_BUILD.redraw_shape();
+                    }
+                }
 			} else if(event.which == 38) { // N
-				if(ZIL_BUILD.global_pos[1] > 0) { 
-					ZIL_BUILD.global_pos[1] -= ZIL_UTIL.CHUNK_SIZE;
-					ZIL_BUILD.redraw_shape();
+                if(ZIL_BUILD.rocks) {
+                    if(ZIL_BUILD.rocks.height > 1) {
+                        ZIL_BUILD.rocks.height--;
+                        ZIL_BUILD.rocks.regen();
+                        ZIL_BUILD.attach_rocks();
+                    }
+                } else {
+                    if(ZIL_BUILD.global_pos[1] > 0) {
+                        ZIL_BUILD.global_pos[1] -= ZIL_UTIL.CHUNK_SIZE;
+                        ZIL_BUILD.redraw_shape();
+                    }
 				}
 			} else if(event.which == 40) { // S
-				if(ZIL_BUILD.global_pos[1] < ZIL_UTIL.HEIGHT - ZIL_UTIL.VIEW_HEIGHT) {
-					ZIL_BUILD.global_pos[1] += ZIL_UTIL.CHUNK_SIZE;
-					ZIL_BUILD.redraw_shape();
+                if(ZIL_BUILD.rocks) {
+                    ZIL_BUILD.rocks.height++;
+                    ZIL_BUILD.rocks.regen();
+                    ZIL_BUILD.attach_rocks();
+                } else {
+                    if(ZIL_BUILD.global_pos[1] < ZIL_UTIL.HEIGHT - ZIL_UTIL.VIEW_HEIGHT) {
+                        ZIL_BUILD.global_pos[1] += ZIL_UTIL.CHUNK_SIZE;
+                        ZIL_BUILD.redraw_shape();
+                    }
 				}
-			} else if(event.which == 88 && ZIL_BUILD.cursor[2] > 0) { // <,
-				ZIL_BUILD.move_timer = Date.now();
-				ZIL_BUILD.move = [0, 0, -1];
-			} else if(event.which == 90 && ZIL_BUILD.cursor[2] < ZIL_UTIL.VIEW_DEPTH - 1) { // >.
-				ZIL_BUILD.move_timer = Date.now();
-				ZIL_BUILD.move = [0, 0, 1];
+			} else if(event.which == 88) { // <,
+                if(ZIL_BUILD.rocks) {
+                    if(ZIL_BUILD.rocks.depth > 1) {
+                        ZIL_BUILD.rocks.depth--;
+                        ZIL_BUILD.rocks.regen();
+                        ZIL_BUILD.attach_rocks();
+                    }
+                } else if(ZIL_BUILD.cursor[2] > 0) {
+				    ZIL_BUILD.move_timer = Date.now();
+				    ZIL_BUILD.move = [0, 0, -1];
+                }
+			} else if(event.which == 90) { // >.
+                if(ZIL_BUILD.rocks) {
+                    ZIL_BUILD.rocks.depth++;
+                    ZIL_BUILD.rocks.regen();
+                    ZIL_BUILD.attach_rocks();
+                } else if(ZIL_BUILD.cursor[2] < ZIL_UTIL.VIEW_DEPTH - 1) {
+                    ZIL_BUILD.move_timer = Date.now();
+                    ZIL_BUILD.move = [0, 0, 1];
+                }
             }
 		}
 
@@ -269,6 +314,12 @@ var ZIL_BUILD = {
         var color1 = ZIL_BUILD.add_color(0x888888);
         var color2 = ZIL_BUILD.add_color(0x222222);
         ZIL_BUILD.rocks = new Rocks(color1, color2);
+        ZIL_BUILD.attach_rocks();
+    },
+
+    attach_rocks: function() {
+        if(ZIL_BUILD.rocks_obj) ZIL_BUILD.obj.remove(ZIL_BUILD.rocks_obj);
+
         ZIL_BUILD.rocks.shape_obj.build_shape_inline();
         ZIL_BUILD.rocks_obj = ZIL_BUILD.rocks.shape_obj.render_shape();
         ZIL_BUILD.obj.add(ZIL_BUILD.rocks_obj);
