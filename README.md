@@ -18,7 +18,6 @@ The game engine:
 The editor:
 - the editor composes an object graph that is expanded into blocks on load
 - preset number keys speed up map editing
-- map/shape storage is currently in localStorage, will have to address this soon (maybe firebase?)
 
 Gameplay:
 - story: TBD
