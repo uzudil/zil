@@ -156,7 +156,7 @@ ZilShape.load_shape = function(category_name, shape_name, rotation, loading_dele
     var cache_name = name + "." + rotation;
 	var shape_obj = ZilShape.SHAPE_CACHE[cache_name];
 	if(!shape_obj) { // load from scratch when skip_bounds is true (so we update changed child shapes)
-		console.log("* Loading shape: " + cache_name);
+//		console.log("* Loading shape: " + cache_name);
 		var js = ZIL_UTIL.get_shape(category_name, shape_name);
 		var shape = js ? js : { width: ZIL_UTIL.WIDTH, height: ZIL_UTIL.HEIGHT, depth: ZIL_UTIL.DEPTH, shape: {} };
 		shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth, rotation, loading_delegate, use_boxes);
@@ -378,7 +378,7 @@ ZilShape.prototype._build_shape = function(x, y, z, progress_fx, complete_fx) {
 };
 
 ZilShape.prototype._build_shape_done = function(complete_fx) {
-    console.log("Built " + Object.keys(this.chunks_in_memory).length + " chunks. Map size=" + this.width + "x" + this.height + "x" + this.depth);
+//    console.log("Built " + Object.keys(this.chunks_in_memory).length + " chunks. Map size=" + this.width + "x" + this.height + "x" + this.depth);
     this.all_chunks_updated = false;
     this.chunks_updated = {};
     complete_fx();

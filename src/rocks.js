@@ -1,5 +1,5 @@
-function Rocks(color1, color2) {
-    this.recreate_shape(color1, color2);
+function Rocks(color1, color2, width, height, depth) {
+    this.recreate_shape(color1, color2, width, height, depth);
 }
 
 Rocks.prototype.recreate_shape = function(color1, color2, width, height, depth) {

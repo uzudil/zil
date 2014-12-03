@@ -140,7 +140,7 @@ var ZIL = {
     },
 
     show_forbidden: function() {
-        console.log("Can't move there.");
+//        console.log("Can't move there.");
         ZIL.combat_action_click_count = 0;
         ZIL.clear_ground_target();
         $("body").css("cursor", "not-allowed");
@@ -356,7 +356,7 @@ var ZIL = {
 
         // combat is over
         if(ZIL.combat_creature == null) {
-            console.log(">>> combat DONE.");
+//            console.log(">>> combat DONE.");
             ZIL.in_combat = false;
             ZIL.center_screen_at(ZIL.player.mobile.x, ZIL.player.mobile.y);
             ZIL.clear_ground_target();
@@ -689,7 +689,7 @@ var ZIL = {
     },
 
     start_combat: function() {
-        if(!ZIL.in_combat) console.log(">>> COMBAT start");
+//        if(!ZIL.in_combat) console.log(">>> COMBAT start");
         ZIL.in_combat = true;
     },
 

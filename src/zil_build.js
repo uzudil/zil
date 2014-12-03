@@ -25,6 +25,9 @@ var ZIL_BUILD = {
     rotation: 0,
     rocks: null,
     rocks_obj: null,
+    rocks_w: null,
+    rocks_h: null,
+    rocks_d: null,
 
 	mouse_zoom: function(event) {
 		if(event.originalEvent.wheelDelta /120 > 0) {
@@ -306,6 +309,9 @@ var ZIL_BUILD = {
     end_rocks_mode: function() {
         $("#rocks_message").fadeOut();
         ZIL_BUILD.obj.remove(ZIL_BUILD.rocks_obj);
+        ZIL_BUILD.rocks_w = ZIL_BUILD.rocks.width;
+        ZIL_BUILD.rocks_h = ZIL_BUILD.rocks.height;
+        ZIL_BUILD.rocks_d = ZIL_BUILD.rocks.depth;
         ZIL_BUILD.rocks_obj = null;
         ZIL_BUILD.rocks = null;
     },
@@ -314,9 +320,8 @@ var ZIL_BUILD = {
         var color1 = $("#color option:selected").index() || ZIL_BUILD.add_color(0x888888);
         var c = ZIL_UTIL.palette[color1];
         var c2 = ZIL_UTIL.shade_color(c, 0.9);
-        console.log("c1=" + c.toString(16) + " c2=" + c2.toString(16));
         var color2 = ZIL_BUILD.add_color(c2);
-        ZIL_BUILD.rocks = new Rocks(color1, color2);
+        ZIL_BUILD.rocks = new Rocks(color1, color2, ZIL_BUILD.rocks_w, ZIL_BUILD.rocks_h, ZIL_BUILD.rocks_d);
         ZIL_BUILD.attach_rocks();
     },
 
