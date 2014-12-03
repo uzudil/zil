@@ -565,15 +565,30 @@ var ZIL = {
 
 		ZIL.init_light();
 
-        ZIL.load_shape("maps", "battle");
+        ZIL.load_shape("maps", "arrival");
 	},
 
 	init_light: function() {
-		var light = new THREE.HemisphereLight( 0xffffff, 0x000000, 0.5 );
-		ZIL.scene.add( light );
-		var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
-		directionalLight.position.set( -1, 1, 1 );
-		ZIL.scene.add( directionalLight );
+        // credit: https://github.com/jeromeetienne/threex.basiclighting/blob/master/threex.basiclighting.js
+        var object3d	= new THREE.AmbientLight(0x101010);
+        object3d.name	= 'Ambient light';
+        ZIL.scene.add(object3d);
+
+        var object3d	= new THREE.DirectionalLight('white', 0.5);
+//        object3d.position.set(2.6,1,3);
+        object3d.position.set(0,3,3);
+        object3d.name	= 'Back light';
+        ZIL.scene.add(object3d);
+
+        var object3d	= new THREE.DirectionalLight('white', 0.1);
+        object3d.position.set(3, 3, 0);
+        object3d.name 	= 'Key light';
+        ZIL.scene.add(object3d);
+
+        var object3d	= new THREE.DirectionalLight('white', 0.7);
+        object3d.position.set(3, 0, 3);
+        object3d.name	= 'Fill light';
+        ZIL.scene.add(object3d);
 	},
 
 	init_cursor: function() {
