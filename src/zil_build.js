@@ -312,7 +312,7 @@ var ZIL_BUILD = {
 
     draw_rocks: function() {
         var color1 = ZIL_BUILD.add_color(0x888888);
-        var color2 = ZIL_BUILD.add_color(0x222222);
+        var color2 = ZIL_BUILD.add_color(0x666666);
         ZIL_BUILD.rocks = new Rocks(color1, color2);
         ZIL_BUILD.attach_rocks();
     },
