@@ -490,7 +490,7 @@ var ZIL = {
             screen_pos = ZIL.world_to_screen(px, py, 0);
             ZIL.screen_pos_map[key] = screen_pos;
         }
-        return screen_pos.x < 40 || screen_pos.y < 40 || screen_pos.x >= ZIL.canvas_size - 40 || screen_pos.y >= ZIL.canvas_size - 40;
+        return screen_pos.x < ZIL.canvas_edge_percent || screen_pos.y < ZIL.canvas_edge_percent || screen_pos.x >= ZIL.canvas_size - ZIL.canvas_edge_percent || screen_pos.y >= ZIL.canvas_size - ZIL.canvas_edge_percent;
     },
 
     world_to_screen: function(x, y, z) {
@@ -535,6 +535,7 @@ var ZIL = {
 		var size = Math.min(window.innerWidth, window.innerHeight);
 		ZIL.renderer.setSize( size, size );
 		ZIL.canvas_size = size;
+        ZIL.canvas_edge_percent = size * 0.1;
         ZIL.canvas_offset = $("canvas").offset();
 		document.body.appendChild( ZIL.renderer.domElement );
 		ZIL.offset_x = 0;
