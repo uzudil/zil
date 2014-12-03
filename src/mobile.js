@@ -516,6 +516,7 @@ Mobile.prototype.attack_roll = function() {
 
 Mobile.prototype.look_for_target = function() {
     if (this.target_action) return;
+    if (this.parent.is_peaceful()) return;
 
     this.find_target();
     if (this.target_action == null) return;

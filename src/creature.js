@@ -22,9 +22,13 @@ Creature.prototype.get_def = function() {
 };
 
 Creature.prototype.set_level_from_exp = function() {
-    this.mobile.level = this.monster.level;
+    this.mobile.level = this.mobile.monster.level;
 };
 
 Creature.prototype.get_range = function() {
     return 4;
+};
+
+Creature.prototype.is_peaceful = function() {
+    return this.mobile.monster.level == 0;
 };
