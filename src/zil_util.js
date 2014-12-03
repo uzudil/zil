@@ -225,3 +225,20 @@ ZIL_UTIL.set_shape = function(category_name, shape_name, shape_obj) {
 ZIL_UTIL.delete_shape = function(name) {
     throw "Implement me: delete shape " + name;
 };
+
+// credit: http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
+ZIL_UTIL.shade_color = function(color, percent) {
+    var R = (color & 0xff0000) >> 16;
+    var G = (color & 0x00ff00) >> 8;
+    var B = color & 0x0000ff;
+
+    R = (R * percent)|0;
+    G = (G * percent)|0;
+    B = (B * percent)|0;
+
+    R = (R<255)?R:255;
+    G = (G<255)?G:255;
+    B = (B<255)?B:255;
+
+    return (R << 16) + (G << 8) + B;
+};

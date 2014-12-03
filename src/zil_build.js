@@ -311,8 +311,11 @@ var ZIL_BUILD = {
     },
 
     draw_rocks: function() {
-        var color1 = ZIL_BUILD.add_color(0x888888);
-        var color2 = ZIL_BUILD.add_color(0x666666);
+        var color1 = $("#color option:selected").index() || ZIL_BUILD.add_color(0x888888);
+        var c = ZIL_UTIL.palette[color1];
+        var c2 = ZIL_UTIL.shade_color(c, 0.9);
+        console.log("c1=" + c.toString(16) + " c2=" + c2.toString(16));
+        var color2 = ZIL_BUILD.add_color(c2);
         ZIL_BUILD.rocks = new Rocks(color1, color2);
         ZIL_BUILD.attach_rocks();
     },

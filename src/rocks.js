@@ -23,7 +23,7 @@ Rocks.prototype.regen = function() {
             }
         }
     }
-    for(var i = 0; i < 4; i++) {
+    for(var i = 0; i < 5; i++) {
         this.erode_shape();
     }
     this.apply_gravity();
@@ -38,7 +38,7 @@ Rocks.prototype.erode_shape = function() {
             for(var z = 0; z < this.depth; z++) {
                 // max 18 neighbors
                 var neighbors = this.get_neighbor_count(x, y, z);
-                if(neighbors < 7) {
+                if(neighbors < 9) {
                     delete this.shape[ZilShape._key(x, y, z)];
                 }
             }
