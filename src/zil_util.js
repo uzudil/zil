@@ -101,7 +101,6 @@ ZIL_UTIL.update_progress = function(percent) {
         if ($("#progress").length == 0) {
             $("body").append("" +
                 "<div id='progress'>" +
-                "   <div>Loading...</div>" +
                 "   <div id='progress_bar_container'>" +
                 "      <div id='progress_bar'></div>" +
                 "   </div>" +
@@ -116,23 +115,17 @@ ZIL_UTIL.update_progress = function(percent) {
             "width": w + "px",
             "height": h + "px",
             "z-index": "1000",
-            "background": "#666",
-            "padding": "20px",
-            "border": "3px solid #333",
-            "border-radius": "5px",
             "left": ($(document).width() - w)/2 + "px",
             "top": ($(document).height() - h)/2 + "px",
             "color": "#000"
         });
         $("#progress_bar_container").css({
-            "border": "1px solid #333",
-            "padding": "5px",
-            "margin-top": "10px",
+            "border": "1px solid #111",
+            "padding": "0"
         });
         $("#progress_bar").css({
-            "background": "#66c",
-            "border": "1px solid #448",
-            "height": "5px",
+            "background": "#388",
+            "height": "3px",
             "width": (percent * 100) + "%"
         });
         $("#progress_overlay").css({
