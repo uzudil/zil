@@ -50,6 +50,7 @@ function Mobile(x, y, z, category, shape, parent) {
     this.shape = this.shapes[this.shape_index];
     this.shape_obj = this.shape_objects[this.shape_index];
     this.outline_obj = this.outline_objects[this.shape_index];
+    this.size = Math.max(this.shape.width, this.shape.height);
     this._set_chunk_pos(true);
 }
 
@@ -78,9 +79,8 @@ Mobile.prototype.make_glow = function(obj3d) {
 
 Mobile.prototype.contains_point = function(x, y, z, buffer) {
     if(buffer == null) buffer = 0;
-    var size = Math.max(this.shape.width, this.shape.height);
-    return ZIL_UTIL.contains(x, this.x - buffer, this.x + size + buffer) &&
-        ZIL_UTIL.contains(y, this.y - buffer, this.y + size + buffer) &&
+    return ZIL_UTIL.contains(x, this.x - buffer, this.x + this.size + buffer) &&
+        ZIL_UTIL.contains(y, this.y - buffer, this.y + this.size + buffer) &&
         ZIL_UTIL.contains(z, this.z - buffer, this.z + this.shape.depth + buffer);
 };
 
@@ -124,9 +124,8 @@ Mobile.prototype.creature_blocked_at = function(x, y, z) {
 };
 
 Mobile.prototype.creature_blocked = function(nx, ny, nz) {
-    var size = Math.max(this.shape.width, this.shape.height);
-    for(var x = 0; x < size; x++) {
-        for (var y = 0; y < size; y++) {
+    for(var x = 0; x < this.size; x++) {
+        for (var y = 0; y < this.size; y++) {
             for (var z = 0; z < this.shape.depth; z++) {
                 var c = this.creature_blocked_at(nx + x, ny + y, nz + 1 + z);
                 if (c) return c;

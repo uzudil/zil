@@ -16,8 +16,9 @@ ZilNode.prototype.toString = function() {
     return "[" + this.x + " " + this.y + " " + this.z + "]";
 };
 
-ZilNode.prototype.getCost = function() {
-    return this.value ? 1 : 0;
+ZilNode.prototype.getCost = function(other_node) {
+    var dz = Math.abs(this.z - other_node.z);
+    return dz <= 1 ? 1 : 100000;
 };
 
 

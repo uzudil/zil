@@ -98,6 +98,8 @@ var astar = {
                 if (!beenVisited || gScore < neighbor.g) {
 
                     // Found an optimal (so far) path to this node.  Take score for node to see how good it is.
+//                    var pp = pathTo(currentNode);
+//                    console.log("path: " + _.map(pp, function(n) { return n.x + "," + n.y + "," + n.z + "|"; }));
                     neighbor.visited = true;
                     neighbor.parent = currentNode;
                     neighbor.h = neighbor.h || heuristic(neighbor, end);
@@ -150,14 +152,19 @@ var astar = {
 };
 
 ZilShape.prototype.isWall = function(node, creature) {
-    // test against a square base since the shape could be rotated either way
-    var size = Math.max(creature.mobile.shape.bounds.w, creature.mobile.shape.bounds.h);
-    for(var x = 0; x < size; x++) {
-        for(var y = 0; y < size; y++) {
-            for(var z = 0; z < creature.mobile.shape.bounds.d; z++) {
-                var k = ZilShape._key(node.x + x, node.y + y, node.z + 1 + z);
-                if(this.expanded_shape[k]) return true;
 
+    // test a stick at the center of the shape
+    for(var z = 0; z < creature.mobile.shape.depth; z++) {
+        var k = ZilShape._key(node.x + (creature.mobile.size / 2)|0, node.y + (creature.mobile.size / 2)|0, node.z + 1 + z);
+        if (this.expanded_shape[k]) {
+//            console.log("--- wall: " + node.x + "," + node.y + "," + node.z);
+            return true;
+        }
+    }
+
+    for(var x = 0; x < creature.mobile.size; x++) {
+        for(var y = 0; y < creature.mobile.size; y++) {
+            for(var z = 0; z < creature.mobile.shape.bounds.d; z++) {
                 var px = node.x + x;
                 var py = node.y + y;
                 var pz = node.z + 1 + z;
@@ -175,9 +182,9 @@ ZilShape.prototype.isWall = function(node, creature) {
 ZilShape.prototype.astar_search = function(start, end, creature) {
     var start_node = this.expanded_shape[ZilShape._key(start[0], start[1], start[2])];
     var end_node = this.expanded_shape[ZilShape._key(end[0], end[1], end[2])];
-//    console.log("start_node=" + start_node + " end_node=" + end_node);
+//    console.log("==== start_node=" + start_node + " end_node=" + end_node);
     if(!(start_node && end_node)) return [];
-    return astar.search(this, start_node, end_node, creature);
+    return astar.search(this, start_node, end_node, creature, { closest: true });
 };
 
 ZilShape.prototype.astar_init = function() {
