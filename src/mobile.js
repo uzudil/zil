@@ -192,7 +192,7 @@ Mobile.prototype.creature_move_plan = function(map_shape) {
                 this.target_action = null;
             }
         } else {
-            var dir = (Math.random() * 5) | 0;
+            var dir = (Math.random() * 4) | 0;
             var dx = this.x;
             var dy = this.y;
             var dz = this.z;
@@ -222,9 +222,14 @@ Mobile.prototype.creature_move_plan = function(map_shape) {
                             break;
                     }
                     var pz = dz;
-                    dz = map_shape.get_highest_empty_space(dx, dy, this.shape) - 1;
-                    var node = map_shape.get_node(dx, dy, dz);
-                    if (node == null || Math.abs(dz - pz) > 1) break;
+                    dz = map_shape.get_highest_empty_space_at_point(dx, dy);
+                    if (dz == 0 || Math.abs(dz - pz) > 1) {
+                        break;
+                    }
+                    var node = map_shape.get_node(dx, dy, dz - 1);
+                    if(node == null) {
+                        break;
+                    }
                     this.move_path.push(node);
                 }
                 if (this.move_path.length == 0) this.move_path = null;
