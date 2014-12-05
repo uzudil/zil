@@ -7,6 +7,9 @@
 // Includes Binary Heap (with modifications) from Marijn Haverbeke.
 // http://eloquentjavascript.net/appendix2.html
 
+ACCURATE_ASTAR = true; // more expensive to run
+ASTAR_TIMEOUT = 1000; // give up after this many millis
+
 (function(definition) {
     /* global module, define */
     if(typeof module === 'object' && typeof module.exports === 'object') {
@@ -67,7 +70,7 @@ var astar = {
         var start_time = Date.now();
         while(openHeap.size() > 0) {
             // timeout?
-            if(Date.now() - start_time > 500) return [];
+            if(Date.now() - start_time > ASTAR_TIMEOUT) return [];
 
             // Grab the lowest f(x) to process next.  Heap keeps this sorted for us.
             var currentNode = openHeap.pop();
@@ -81,7 +84,7 @@ var astar = {
             currentNode.closed = true;
 
             // Find all neighbors for the current node.
-            var neighbors = graph.neighbors(currentNode);
+            var neighbors = graph.neighbors(currentNode, creature);
             for (var i = 0, il = neighbors.length; i < il; ++i) {
                 var neighbor = neighbors[i];
 
@@ -153,12 +156,14 @@ var astar = {
 
 ZilShape.prototype.isWall = function(node, creature) {
 
-    // test a stick at the center of the shape
-    for(var z = 0; z < creature.mobile.shape.depth; z++) {
-        var k = ZilShape._key(node.x + (creature.mobile.size / 2)|0, node.y + (creature.mobile.size / 2)|0, node.z + 1 + z);
-        if (this.expanded_shape[k]) {
+    if(!ACCURATE_ASTAR) {
+        // test a stick at the center of the shape
+        for (var z = 0; z < creature.mobile.shape.depth; z++) {
+            var k = ZilShape._key(node.x + (creature.mobile.size / 2) | 0, node.y + (creature.mobile.size / 2) | 0, node.z + 1 + z);
+            if (this.expanded_shape[k]) {
 //            console.log("--- wall: " + node.x + "," + node.y + "," + node.z);
-            return true;
+                return true;
+            }
         }
     }
 
@@ -168,6 +173,14 @@ ZilShape.prototype.isWall = function(node, creature) {
                 var px = node.x + x;
                 var py = node.y + y;
                 var pz = node.z + 1 + z;
+
+                if(ACCURATE_ASTAR) {
+                    // can the creature fit at the node's location?
+                    var k = ZilShape._key(px, py, pz);
+                    if (this.expanded_shape[k]) return true;
+                }
+
+                // is there another creature at the node's location?
                 var c = creature.mobile.creature_blocked_at(px, py, pz);
                 if(c) {
 //                    console.log("planner: " + creature.mobile.get_name() + " blocked by: " + c.mobile.get_name() + " at " + px + "," + py + "," + pz);
@@ -202,7 +215,7 @@ ZilShape.prototype.astar_init = function() {
 //    console.log(">>> finished astar_init in " + (Date.now() - t));
 };
 
-ZilShape.prototype.neighbors = function(node) {
+ZilShape.prototype.neighbors = function(node, creature) {
     var ret = [], grid = this.expanded_shape;
 
     for(var dx = -1; dx <= 1; dx++) {
@@ -210,7 +223,26 @@ ZilShape.prototype.neighbors = function(node) {
             for(var dz = -1; dz <= 1; dz++) {
                 if(!(dx == 0 && dy == 0 && dz == 0)) {
                     var k = ZilShape._key(node.x + dx, node.y + dy, node.z + dz);
-                    if(grid[k] != null) ret.push(grid[k]);
+                    if(grid[k] != null) {
+                        ret.push(grid[k]);
+                    } else if (ACCURATE_ASTAR) {
+                        // there is nothing at this node, but
+                        // if we put creature here, would it rest on something?
+                        var found = false;
+                        for(var cx = 0; !found && cx < creature.mobile.size; cx++) {
+                            for(var cy = 0; !found && cy < creature.mobile.size; cy++) {
+                                var kk  = ZilShape._key(node.x + dx + cx, node.y + dy + cy, node.z + dz);
+                                if(grid[kk] != null) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if(found) {
+                            // add a fake node
+                            ret.push(new ZilNode(node.x + dx, node.y + dy, node.z + dz, 0, node.x + dx, node.y + dy, node.z + dz));
+                        }
+                    }
                 }
             }
         }
