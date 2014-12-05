@@ -159,6 +159,7 @@ ZilShape.prototype.isWall = function(node, creature) {
     if(!ACCURATE_ASTAR) {
         // test a stick at the center of the shape
         for (var z = 0; z < creature.mobile.shape.depth; z++) {
+            // it's a wall if there is another node on top of this (z + 1)
             var k = ZilShape._key(node.x + (creature.mobile.size / 2) | 0, node.y + (creature.mobile.size / 2) | 0, node.z + 1 + z);
             if (this.expanded_shape[k]) {
 //            console.log("--- wall: " + node.x + "," + node.y + "," + node.z);
