@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<title>ZIL</title>
+        <link href='http://fonts.googleapis.com/css?family=Sue+Ellen+Francisco|BenchNine' rel='stylesheet' type='text/css'>
 		<style>
             * {
                 -webkit-touch-callout: none;
@@ -17,6 +18,7 @@
                 background: #000;
             }
             .group {
+                display: none;
                 position: fixed;
                 z-index: 1000;
                 right: 0;
@@ -59,6 +61,21 @@
                 font-size: 20px;
                 font-weight: bold;
             }
+            .intro {
+                display: none;
+                color: white;
+                font-size: 32px;
+                width: 600px;
+                height: 80px;
+                position: absolute;
+                left: 0;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                margin: auto;
+                font-family: 'Sue Ellen Francisco', cursive;
+                /*font-family: 'BenchNine', sans-serif;*/
+            }
 
 		</style>
 	</head>
@@ -82,7 +99,7 @@
         <script src="../../src/player.js"></script>
 		<script src="../../src/zil.js"></script>
 
-        <div class="group">
+        <div id="debug" class="group">
             <div>Cursor: <span id="cursor_pos"></span></div>
             <div>Global: <span id="global_pos"></span></div>
             <div>Chunks: <span id="chunks_info"></span></div>
@@ -94,8 +111,34 @@
 
         <canvas id="view"></canvas>
 
+        <div id="intro_1" class="intro">
+            <p>Writing the game progressed well at first.</p>
+            <p>The hours flew by as the world grew and the story unfolded.</p>
+        </div>
+        <div id="intro_2" class="intro">
+            <p>But a day came with no new ideas and coding stopped.</p>
+            <p>The story floundered and the world was stagnant.</p>
+        </div>
+        <div id="intro_3" class="intro">
+            <p>Then came <b>diab.js</b>: a minimal library to animate development.</p>
+            <p>Work sped up again and the world flourished.</p>
+        </div>
+        <div id="intro_4" class="intro">
+            <p>But soon troubling signs emerged: coding consumed all free time.</p>
+            <p>Friends were eschewed and obligations went unmet.</p>
+        </div>
+        <div id="intro_5" class="intro">
+            <p>Outside, much of winter passed while the game grew monstrous.</p>
+            <p>It started to take up all free space inside.</p>
+        </div>
+        <div id="intro_6" class="intro">
+            <p>One day the inside ripped and spilled to lower within.</p>
+            <p>As the darkness lifted a familiar landscape appeared...</p>
+        </div>
 		<script>
-			ZIL.start_game();
-		</script>
+            $(document).ready(function() {
+                ZIL.start_game();
+            });
+        </script>
 	</body>
 </html>

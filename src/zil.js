@@ -26,6 +26,7 @@ var ZIL = {
     combat_plan_z: 0,
     ground_marker: null,
     last_mouse_event: null,
+    INTRO_TIMEOUT: null,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -224,6 +225,15 @@ var ZIL = {
 	key_down: function(event) {
 //		console.log(event.which);
 		if(event.target != document.body) return true;
+
+        if(ZIL.INTRO_TIMEOUT) {
+            clearTimeout(ZIL.INTRO_TIMEOUT);
+            ZIL.INTRO_TIMEOUT = null;
+            $(".intro").hide();
+            ZIL.INTRO_ID++;
+            ZIL.play_intro_sequence();
+            return true;
+        }
 
         // move the cursor
         if(event.which == 65) {
@@ -524,49 +534,90 @@ var ZIL = {
         // do this first
         ZIL_UTIL.load_config(320, 240);
 
+        ZIL.init();
+
+        if (!ZIL_UTIL.seen_intro) {
+            ZIL.play_intro();
+        } else {
+            ZIL.load_game();
+        }
+    },
+
+    init: function() {
         ZIL_UTIL.VIEW_WIDTH *= 3;
         ZIL_UTIL.VIEW_HEIGHT *= 3;
         ZIL_UTIL.CAM_ZOOM *= 2.55;
 
-		ZIL.scene = new THREE.Scene();
-		ZIL.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
-		ZIL.init_camera();
+        ZIL.scene = new THREE.Scene();
+        ZIL.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
+        ZIL.init_camera();
 
-		var size = Math.min(window.innerWidth, window.innerHeight);
-		ZIL.renderer.setSize( size, size );
-		ZIL.canvas_size = size;
+        var size = Math.min(window.innerWidth, window.innerHeight);
+        ZIL.renderer.setSize(size, size);
+        ZIL.canvas_size = size;
         ZIL.canvas_edge_percent = size * 0.1;
         ZIL.canvas_offset = $("canvas").offset();
-		document.body.appendChild( ZIL.renderer.domElement );
-		ZIL.offset_x = 0;
-		ZIL.offset_y = 0;
+        document.body.appendChild(ZIL.renderer.domElement);
+        ZIL.offset_x = 0;
+        ZIL.offset_y = 0;
 
-		ZIL.init_dom();
+        ZIL.init_dom();
 
-		ZIL.world = new THREE.Object3D();
-		ZIL.world.position.set(ZIL_UTIL.VIEW_WIDTH / 2, ZIL_UTIL.VIEW_HEIGHT / 2, 0);
-		ZIL.world.scale.z = 2;
-		ZIL.scene.add( ZIL.world );
+        ZIL.world = new THREE.Object3D();
+        ZIL.world.position.set(ZIL_UTIL.VIEW_WIDTH / 2, ZIL_UTIL.VIEW_HEIGHT / 2, 0);
+        ZIL.world.scale.z = 2;
+        ZIL.scene.add(ZIL.world);
 
-		ZIL.inner = new THREE.Object3D();
-		ZIL.inner.position.x = -ZIL_UTIL.VIEW_WIDTH / 2;
-		ZIL.inner.position.y = -ZIL_UTIL.VIEW_HEIGHT / 2;
-		ZIL.world.add( ZIL.inner );
+        ZIL.inner = new THREE.Object3D();
+        ZIL.inner.position.x = -ZIL_UTIL.VIEW_WIDTH / 2;
+        ZIL.inner.position.y = -ZIL_UTIL.VIEW_HEIGHT / 2;
+        ZIL.world.add(ZIL.inner);
 
         ZIL.coord = new THREE.Object3D();
 //		ZIL.inner.add( ZIL.coord );
-		ZIL.init_coords();
+        ZIL.init_coords();
 
-		ZIL.rendered_shape = new THREE.Object3D();
-		ZIL.inner.add( ZIL.rendered_shape );
+        ZIL.rendered_shape = new THREE.Object3D();
+        ZIL.inner.add(ZIL.rendered_shape);
 
-		ZIL.obj = new THREE.Object3D();
+        ZIL.obj = new THREE.Object3D();
 //		ZIL.inner.add( ZIL.obj );
-		ZIL.init_cursor();
+        ZIL.init_cursor();
 
-		ZIL.init_light();
+        ZIL.init_light();
+    },
 
-        ZIL.load_shape("maps", "arrival");
+    play_intro: function() {
+        $("canvas").hide();
+        $("#debug").hide();
+        ZIL.INTRO_ID = 1;
+        ZIL.play_intro_sequence();
+    },
+
+    play_intro_sequence: function() {
+        if(ZIL.INTRO_ID >= 7) {
+            ZIL.intro_over();
+        }
+
+        $("#intro_" + ZIL.INTRO_ID).fadeIn(2000, function() {
+            ZIL.INTRO_TIMEOUT = setTimeout(function() {
+                $(".intro").hide();
+                ZIL.INTRO_ID++;
+                ZIL.play_intro_sequence();
+            }, 10000);
+        });
+    },
+
+    intro_over: function() {
+        ZIL.INTRO_TIMEOUT = null;
+        $("canvas").show();
+        ZIL_UTIL.seen_intro = true;
+        ZIL_UTIL.save_config();
+        ZIL.load_game();
+    },
+
+    load_game: function() {
+        ZIL.load_shape("maps", "arrival", 56, 56);
 	},
 
 	init_light: function() {
@@ -653,12 +704,14 @@ var ZIL = {
 		document.body.onkeydown = ZIL.key_down;
 	},
 
-	load_shape: function(category_name, shape_name) {
+	load_shape: function(category_name, shape_name, start_x, start_y) {
         ZilShape.reset_cache();
         Mobile.CHUNK_MAP = {};
         ZIL.creatures = [];
 		ZIL.shape = ZilShape.load_shape(category_name, shape_name, 0, this);
         ZIL.shape.build_shape(ZIL_UTIL.update_progress, function() {
+
+            $("#debug").show();
 
             ZIL.target_texture = new THREE.MeshBasicMaterial({
                 map: THREE.ImageUtils.loadTexture( '../../img/marker.png', new THREE.UVMapping() ),
@@ -667,8 +720,6 @@ var ZIL = {
                 color: 0xFFFFFF
             });
 
-            var start_x = 56;
-            var start_y = 56;
             ZIL.global_pos = [ start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0 ];
 
             ZIL.player = new Player(start_x, start_y);

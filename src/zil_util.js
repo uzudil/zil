@@ -33,6 +33,7 @@ ZIL_UTIL.palette = [
 ];
 ZIL_UTIL.last_shape_name = "default.default";
 ZIL_UTIL.shortcuts = null;
+ZIL_UTIL.seen_intro = false;
 
 ZIL_UTIL.make_square_face = function(size) {
     var n = size / 2;
@@ -97,7 +98,9 @@ ZIL_UTIL.update_progress = function(percent) {
     if(percent >= 1) {
         $("#progress").hide();
         $("#progress_overlay").hide();
+        $("body").css("cursor", "default");
     } else {
+        $("body").css("cursor", "progress");
         if ($("#progress").length == 0) {
             $("body").append("" +
                 "<div id='progress'>" +
@@ -178,13 +181,15 @@ ZIL_UTIL.load_config = function(mini_x, mini_y) {
     ZIL_UTIL.palette = colors;
     ZIL_UTIL.last_shape_name = config["shape_name"] || "default.default";
     ZIL_UTIL.shortcuts = config["shortcuts"];
+    ZIL_UTIL.seen_intro = config["seen_intro"] || false;
 };
 
 ZIL_UTIL.save_config = function() {
     var config = {
         colors: ZIL_UTIL.palette,
         shape_name: ZIL_UTIL.last_shape_name,
-        shortcuts: ZIL_UTIL.shortcuts
+        shortcuts: ZIL_UTIL.shortcuts,
+        seen_intro: ZIL_UTIL.seen_intro
     };
     fs.writeFileSync("../../data/zil.json", JSON.stringify(config));
 };
