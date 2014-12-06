@@ -336,7 +336,20 @@ var ZIL = {
             }
         }
 
+        // hack: the first render settles any css anomalies, so skip it
+        if(ZIL_UTIL.first_render == null) {
+            ZIL_UTIL.first_render = true;
+            return;
+        }
+
         Mobile.move_damage_divs(delta_time);
+
+        // game events: just experimenting... this will not be here
+        // for convo, show some ui to move game on after
+        if(ZIL_UTIL.game_events["intro"] == null) {
+            ZIL.player.mobile.say("Trapped in my own game?!<br>How is this possible?");
+            ZIL_UTIL.game_events["intro"] = Date.now();
+        }
 	},
 
     combat_step: function(delta_time) {
@@ -524,7 +537,6 @@ var ZIL = {
         for(var creature_id in ZIL.shown_creatures) {
             ZIL.creatures_map[creature_id].mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
         }
-        Mobile.reposition_all_divs(ZIL.get_shown_creatures(true));
 	},
 
     get_shown_creatures: function(include_player) {
@@ -619,7 +631,8 @@ var ZIL = {
 
     load_game: function() {
         ZIL.init();
-        ZIL.load_shape("maps", "arrival", 56, 56);
+//        ZIL.load_shape("maps", "arrival", 56, 56);
+        ZIL.load_shape("maps", "arrival2", 47, 63);
 	},
 
 	init_light: function() {
@@ -731,6 +744,7 @@ var ZIL = {
 
             $("canvas").show();
             $("#debug").show();
+
             ZIL.redraw_shape();
             ZIL.render();
         });

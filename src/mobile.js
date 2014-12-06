@@ -177,6 +177,7 @@ Mobile.prototype.set_shape = function(index) {
 
 Mobile.prototype.move = function(gx, gy, gz) {
     this.shape_obj.position.set(this.x - gx, this.y - gy, this.z - gz);
+    this.reposition_divs();
 };
 
 Mobile.prototype.creature_move_plan = function(map_shape) {
@@ -574,9 +575,14 @@ Mobile.prototype.set_target = function(target_creature) {
 };
 
 Mobile.prototype.get_name = function() {
-    return this.monster ? this.monster.name + "-" + this.parent.id : "player";
+//    return this.monster ? this.monster.name + "-" + this.parent.id : "player";
+    return this.monster ? this.monster.name : "player";
 };
 
 Mobile.prototype.to_string = function() {
     return this.get_name() + " ap=" + this.ap + " hp=" + this.hp;
+};
+
+Mobile.prototype.say = function(message) {
+    this.show_above(message, "convo_buble");
 };
