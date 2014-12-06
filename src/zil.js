@@ -26,6 +26,7 @@ var ZIL = {
     combat_plan_z: 0,
     ground_marker: null,
     last_mouse_event: null,
+    INTRO_ID: null,
     INTRO_TIMEOUT: null,
 
 	mouse_move: function(event) {
@@ -226,12 +227,14 @@ var ZIL = {
 //		console.log(event.which);
 		if(event.target != document.body) return true;
 
-        if(ZIL.INTRO_TIMEOUT) {
-            clearTimeout(ZIL.INTRO_TIMEOUT);
-            ZIL.INTRO_TIMEOUT = null;
-            $(".intro").hide();
-            ZIL.INTRO_ID++;
-            ZIL.play_intro_sequence();
+        if(ZIL.INTRO_ID != null) {
+            if(ZIL.INTRO_TIMEOUT) {
+                clearTimeout(ZIL.INTRO_TIMEOUT);
+                ZIL.INTRO_TIMEOUT = null;
+                $(".intro").hide();
+                ZIL.INTRO_ID++;
+                ZIL.play_intro_sequence();
+            }
             return true;
         }
 
@@ -534,9 +537,11 @@ var ZIL = {
         // do this first
         ZIL_UTIL.load_config(320, 240);
 
-        ZIL.init();
+        $("canvas").hide();
+        $("#debug").hide();
+        ZIL.init_dom();
 
-        if (!ZIL_UTIL.seen_intro) {
+        if (!ZIL_UTIL.seen_intro || ZIL_UTIL.force_new_game) {
             ZIL.play_intro();
         } else {
             ZIL.load_game();
@@ -560,8 +565,6 @@ var ZIL = {
         document.body.appendChild(ZIL.renderer.domElement);
         ZIL.offset_x = 0;
         ZIL.offset_y = 0;
-
-        ZIL.init_dom();
 
         ZIL.world = new THREE.Object3D();
         ZIL.world.position.set(ZIL_UTIL.VIEW_WIDTH / 2, ZIL_UTIL.VIEW_HEIGHT / 2, 0);
@@ -588,8 +591,6 @@ var ZIL = {
     },
 
     play_intro: function() {
-        $("canvas").hide();
-        $("#debug").hide();
         ZIL.INTRO_ID = 1;
         ZIL.play_intro_sequence();
     },
@@ -610,13 +611,14 @@ var ZIL = {
 
     intro_over: function() {
         ZIL.INTRO_TIMEOUT = null;
-        $("canvas").show();
+        ZIL.INTRO_ID = null;
         ZIL_UTIL.seen_intro = true;
         ZIL_UTIL.save_config();
         ZIL.load_game();
     },
 
     load_game: function() {
+        ZIL.init();
         ZIL.load_shape("maps", "arrival", 56, 56);
 	},
 
@@ -711,8 +713,6 @@ var ZIL = {
 		ZIL.shape = ZilShape.load_shape(category_name, shape_name, 0, this);
         ZIL.shape.build_shape(ZIL_UTIL.update_progress, function() {
 
-            $("#debug").show();
-
             ZIL.target_texture = new THREE.MeshBasicMaterial({
                 map: THREE.ImageUtils.loadTexture( '../../img/marker.png', new THREE.UVMapping() ),
                 transparent: true,
@@ -729,6 +729,8 @@ var ZIL = {
 
             ZIL.move_visible_creatures(1000);
 
+            $("canvas").show();
+            $("#debug").show();
             ZIL.redraw_shape();
             ZIL.render();
         });

@@ -34,6 +34,7 @@ ZIL_UTIL.palette = [
 ZIL_UTIL.last_shape_name = "default.default";
 ZIL_UTIL.shortcuts = null;
 ZIL_UTIL.seen_intro = false;
+ZIL_UTIL.force_new_game = false;
 
 ZIL_UTIL.make_square_face = function(size) {
     var n = size / 2;
@@ -165,11 +166,16 @@ var gui = require('nw.gui');
 ZIL_UTIL.load_config = function(mini_x, mini_y) {
 
     // mini mode
-    if (gui.App.argv && gui.App.argv.indexOf("--mini") >= 0) {
-        var win = gui.Window.get();
-        if(win.width > mini_x) {
-            win.resizeTo(mini_x, mini_y);
-            location.reload();
+    if (gui.App.argv) {
+        if(gui.App.argv.indexOf("--mini") >= 0) {
+            var win = gui.Window.get();
+            if (win.width > mini_x) {
+                win.resizeTo(mini_x, mini_y);
+                location.reload();
+            }
+        }
+        if(gui.App.argv.indexOf("--force_new") >= 0) {
+            ZIL_UTIL.force_new_game = true;
         }
     }
 
