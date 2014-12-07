@@ -196,8 +196,8 @@ var ZIL = {
     },
 
 	mouse_to_world: function(event) {
-		var mousex = (( (event.offsetX - ZIL.offset_x) / ZIL.canvas_size ) * 2 - 1);
-		var mousey = (-( (event.offsetY - ZIL.offset_y) / ZIL.canvas_size ) * 2 + 1);
+		var mousex = (( (event.offsetX - ZIL.offset_x) / window.innerWidth ) * 2 - 1);
+		var mousey = (-( (event.offsetY - ZIL.offset_y) / window.innerHeight ) * 2 + 1);
 		// console.log("" + mousex + "," + mousey);
 		var vector = new THREE.Vector3( mousex, mousey, 1 );
 		var ray_caster = ZIL.projector.pickingRay(vector, ZIL.camera);
@@ -517,7 +517,7 @@ var ZIL = {
             screen_pos = ZIL.world_to_screen(px, py, 0);
             ZIL.screen_pos_map[key] = screen_pos;
         }
-        return screen_pos.x < ZIL.canvas_edge_percent || screen_pos.y < ZIL.canvas_edge_percent || screen_pos.x >= ZIL.canvas_size - ZIL.canvas_edge_percent || screen_pos.y >= ZIL.canvas_size - ZIL.canvas_edge_percent;
+        return screen_pos.x < ZIL.canvas_edge_percent_x || screen_pos.y < ZIL.canvas_edge_percent_y || screen_pos.x >= window.innerWidth - ZIL.canvas_edge_percent_x || screen_pos.y >= window.innerHeight - ZIL.canvas_edge_percent_y;
     },
 
     world_to_screen: function(x, y, z) {
@@ -527,8 +527,8 @@ var ZIL = {
         projScreenMat.multiplyMatrices( ZIL.camera.projectionMatrix, ZIL.camera.matrixWorldInverse);
         pos.applyMatrix4(projScreenMat);
         return {
-            x: (pos.x+1) * ZIL.canvas_size/2 + ZIL.canvas_offset.left,
-            y: (-pos.y+1) * ZIL.canvas_size/2 +ZIL.canvas_offset.top
+            x: (pos.x+1) * window.innerWidth/2 + ZIL.canvas_offset.left,
+            y: (-pos.y+1) * window.innerHeight/2 +ZIL.canvas_offset.top
         };
     },
 
@@ -564,16 +564,15 @@ var ZIL = {
     init: function() {
         ZIL_UTIL.VIEW_WIDTH *= 3;
         ZIL_UTIL.VIEW_HEIGHT *= 3;
-        ZIL_UTIL.CAM_ZOOM *= 2.55;
+        ZIL_UTIL.CAM_ZOOM *= 2.25;
 
         ZIL.scene = new THREE.Scene();
         ZIL.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
         ZIL.init_camera();
 
-        var size = Math.min(window.innerWidth, window.innerHeight);
-        ZIL.renderer.setSize(size, size);
-        ZIL.canvas_size = size;
-        ZIL.canvas_edge_percent = size * 0.1;
+        ZIL.renderer.setSize(window.innerWidth, window.innerHeight);
+        ZIL.canvas_edge_percent_x = window.innerWidth * 0.1;
+        ZIL.canvas_edge_percent_y = window.innerHeight * 0.1;
         ZIL.canvas_offset = $("canvas").offset();
         document.body.appendChild(ZIL.renderer.domElement);
         ZIL.offset_x = 0;
@@ -581,7 +580,7 @@ var ZIL = {
 
         ZIL.world = new THREE.Object3D();
         ZIL.world.position.set(ZIL_UTIL.VIEW_WIDTH / 2, ZIL_UTIL.VIEW_HEIGHT / 2, 0);
-        ZIL.world.scale.z = 2;
+        ZIL.world.scale.z = 4;
         ZIL.scene.add(ZIL.world);
 
         ZIL.inner = new THREE.Object3D();
@@ -673,7 +672,7 @@ var ZIL = {
 			ZIL_UTIL.VIEW_HEIGHT / ZIL_UTIL.CAM_ZOOM, -ZIL_UTIL.VIEW_HEIGHT / ZIL_UTIL.CAM_ZOOM,
 			-1000, 1000 );
         var p = Math.max(ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT);
-		ZIL.camera.position.set(p * 1.7, p * 1.7, p * 2);
+		ZIL.camera.position.set(p * 1.2, p * 1.2, p * 2);
 		ZIL.camera.up = new THREE.Vector3(0,0,1);
 		ZIL.camera.lookAt(new THREE.Vector3(p * 0.45, p * 0.45, 0));
 		ZIL.projector = new THREE.Projector();
