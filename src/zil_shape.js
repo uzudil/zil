@@ -355,10 +355,7 @@ ZilShape.prototype.clear_shape = function(parent_shape, position_offset) {
             parent_shape.remove(_chunk.shape);
         }
     }
-    this.reset_shape();
-    this.build_shape();
-    this.all_chunks_updated = true;
-    this.render_shape(parent_shape, position_offset);
+    this.invalidate();
 };
 
 ZilShape.prototype._build_shape = function(x, y, z, progress_fx, complete_fx) {
