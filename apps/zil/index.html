@@ -40,12 +40,15 @@
                 font-weight: bold;
                 text-shadow: 0 0 50px yellow;
             }
-            .convo_buble {
+            .convo_bubble {
                 position: absolute;
                 background: #ccc;
                 color: black;
                 padding: 3px 10px;
                 border-radius: 10px;
+            }
+            .convo_bubble b,i {
+                color: #840;
             }
             .creature_description, .player_plan {
                 position: absolute;
@@ -68,6 +71,18 @@
                 border-radius: 5px;
                 font-size: 20px;
                 font-weight: bold;
+            }
+            #game_paused {
+                position: fixed;
+                background: #000;
+                color: #fff;
+                bottom: 0;
+                left: 0;
+                padding: 5px;
+                z-index: 100;
+                display: none;
+                width: 100%;
+                opacity: 0.9;
             }
             .intro {
                 display: none;
@@ -98,6 +113,7 @@
         <script src='../../lib/threex.objcoord.js'></script>
 
         <script src="../../src/zil_util.js"></script>
+        <script src="../../src/zil_events.js"></script>
         <script src="../../src/monsters.js"></script>
         <script src="../../src/chunk.js"></script>
         <script src="../../src/zil_shape.js"></script>
@@ -106,6 +122,7 @@
         <script src="../../src/creature.js"></script>
         <script src="../../src/player.js"></script>
 		<script src="../../src/zil.js"></script>
+		<script src="../../src/story.js"></script>
 
         <div id="debug" class="group">
             <div>Cursor: <span id="cursor_pos"></span></div>
@@ -116,6 +133,10 @@
         </div>
 
         <div id="level_up">Level Up!</div>
+
+        <div id="game_paused">
+            <button onclick="ZIL.set_paused(false);">Continue</button>
+        </div>
 
         <canvas id="view"></canvas>
 

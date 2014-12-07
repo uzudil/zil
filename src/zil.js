@@ -28,12 +28,15 @@ var ZIL = {
     last_mouse_event: null,
     INTRO_ID: null,
     INTRO_TIMEOUT: null,
+    GAME_PAUSED: false,
+    on_unpause: null,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
     },
 
     mouse_position_event: function(event) {
+        if(ZIL.GAME_PAUSED) return;
         if(event == null) event = ZIL.last_mouse_event;
         if(event == null) return;
 
@@ -78,6 +81,8 @@ var ZIL = {
     },
 
     mouse_up: function(event) {
+        if(ZIL.GAME_PAUSED) return;
+
         var x = ZIL.global_pos[0] + ZIL.cursor[0];
         var y = ZIL.global_pos[1] + ZIL.cursor[1];
         var z = ZIL.cursor[2];
@@ -226,6 +231,7 @@ var ZIL = {
 	key_down: function(event) {
 //		console.log(event.which);
 		if(event.target != document.body) return true;
+        if(ZIL.GAME_PAUSED) return;
 
         if(ZIL.INTRO_ID != null) {
             if(ZIL.INTRO_TIMEOUT) {
@@ -344,12 +350,7 @@ var ZIL = {
 
         Mobile.move_damage_divs(delta_time);
 
-        // game events: just experimenting... this will not be here
-        // for convo, show some ui to move game on after
-        if(ZIL_UTIL.game_events["intro"] == null) {
-            ZIL.player.mobile.say("Trapped in my own game?!<br>How is this possible?");
-            ZIL_UTIL.game_events["intro"] = Date.now();
-        }
+        ZilCal.run(delta_time);
 	},
 
     combat_step: function(delta_time) {
@@ -604,6 +605,7 @@ var ZIL = {
 
     play_intro: function() {
         ZIL.INTRO_ID = 1;
+        ZIL_UTIL.seen_intro = false;
         ZIL.play_intro_sequence();
     },
 
@@ -612,7 +614,7 @@ var ZIL = {
             ZIL.intro_over();
         }
 
-        $("#intro_" + ZIL.INTRO_ID).fadeIn(2000, function() {
+        $("#intro_" + ZIL.INTRO_ID).fadeIn(1000, function() {
             ZIL.INTRO_TIMEOUT = setTimeout(function() {
                 $(".intro").hide();
                 ZIL.INTRO_ID++;
@@ -624,7 +626,6 @@ var ZIL = {
     intro_over: function() {
         ZIL.INTRO_TIMEOUT = null;
         ZIL.INTRO_ID = null;
-        ZIL_UTIL.seen_intro = true;
         ZIL_UTIL.save_config();
         ZIL.load_game();
     },
@@ -745,10 +746,39 @@ var ZIL = {
             $("canvas").show();
             $("#debug").show();
 
+            if(!ZIL_UTIL.seen_intro) {
+                ZilStory.schedule_intro();
+            }
+
             ZIL.redraw_shape();
             ZIL.render();
         });
 	},
+
+    say: function(creature, message, on_complete) {
+        Mobile.hide_convos();
+        creature.mobile.say(message);
+        ZIL.on_unpause = on_complete;
+        ZIL.set_paused(true);
+    },
+
+    set_paused: function(b) {
+        if(!b && ZIL.on_unpause) {
+            if(!ZIL.on_unpause()) {
+                // by default, stay paused
+                return;
+            }
+        }
+        if(b) {
+            $("#game_paused").fadeIn(function() {
+                $("#game_paused button").focus();
+            });
+        } else {
+            $("#game_paused").fadeOut();
+        }
+        ZIL.GAME_PAUSED = b;
+
+    },
 
     load_monster: function(monster_key, pos) {
         var creature = new Creature(MONSTERS[monster_key], pos, Object.keys(ZIL.creatures_map).length);

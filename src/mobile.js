@@ -584,5 +584,9 @@ Mobile.prototype.to_string = function() {
 };
 
 Mobile.prototype.say = function(message) {
-    this.show_above(message, "convo_buble");
+    this.show_above(message, "convo_bubble");
+};
+
+Mobile.hide_convos = function() {
+    $(".convo_bubble").hide();
 };
