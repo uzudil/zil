@@ -167,7 +167,7 @@ ZilShape.load_shape = function(category_name, shape_name, rotation, loading_dele
 	return shape_obj;
 };
 
-ZilShape.prototype.remove_unseen = function() {
+ZilShape.prototype.remove_unseen = function(parent_shape) {
     // remove shapes not visible to the user
     var remove = [];
     for(var k in this.shape) {
@@ -176,11 +176,14 @@ ZilShape.prototype.remove_unseen = function() {
             if (this.has_static_shape(pos[0] + 1, pos[1], pos[2]) &&
                 this.has_static_shape(pos[0], pos[1] + 1, pos[2]) &&
                 this.has_static_shape(pos[0], pos[1], pos[2] + 1)) {
-                remove.push(k);
+                remove.push(pos);
             }
         }
     }
-    for(var i = 0; i < remove.length; i++) delete this.shape[remove[i]];
+    for(var i = 0; i < remove.length; i++) {
+        var pos = remove[i];
+        this.del_position(pos[0], pos[1], pos[2]);
+    }
 };
 
 ZilShape.prototype.has_static_shape = function(x, y, z) {
@@ -197,8 +200,6 @@ ZilShape.prototype.has_static_shape = function(x, y, z) {
 };
 
 ZilShape.prototype.save_shape = function() {
-    this.remove_unseen();
-
 	var obj = {
 		width: this.width,
 		height: this.height,
@@ -345,7 +346,7 @@ ZilShape.prototype.get_highest_empty_space_at_point = function(x, y) {
     return 0; // all free
 };
 
-ZilShape.prototype.clear_shape = function(parent_shape) {
+ZilShape.prototype.clear_shape = function(parent_shape, position_offset) {
 	this.shape = {};
 	this.expanded_shape = {};
     for(var _chunk_key in this.chunks_in_memory) {
@@ -354,7 +355,10 @@ ZilShape.prototype.clear_shape = function(parent_shape) {
             parent_shape.remove(_chunk.shape);
         }
     }
-    this.invalidate();
+    this.reset_shape();
+    this.build_shape();
+    this.all_chunks_updated = true;
+    this.render_shape(parent_shape, position_offset);
 };
 
 ZilShape.prototype._build_shape = function(x, y, z, progress_fx, complete_fx) {

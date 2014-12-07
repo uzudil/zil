@@ -658,6 +658,15 @@ var ZIL_BUILD = {
 			}
 			return false;
 		});
+		$("#compress").click(function(event) {
+			if(confirm("Are you sure?")) {
+				ZIL_BUILD.shape.remove_unseen(ZIL_BUILD.rendered_shape, this.global_pos);
+				ZIL_BUILD.redraw_shape();
+				ZIL_BUILD.save_shape();
+				$("#compress").blur();
+			}
+			return false;
+		});
 		$("#delete").click(function(event) {
 			var n = $("#shape_names option:selected").index();
 			var name = $("#shape_names option").eq(n).text() ? n >= 0 : "";
