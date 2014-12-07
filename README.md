@@ -3,6 +3,8 @@ zil
 
 Casual game developer hits writer's block, sells soul to the devil for inspiration, gets trapped in own game, and must find way back into the real world. Along the way mysterious revelations and many twists of the plot keep the action fresh. A mix of multi-dimensional roguelike and interactive mystery, liberally sprinkled with all manner of nerdcraft.
 
+![An early screenshot](/screens/ante.jpg?raw=true "An early screenshot")
+
 The game engine:
 - three.js-based, webgl-rendered, voxel engine
 - will add decal textures for a few things: explosion marks, blood, magic circles
