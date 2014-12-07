@@ -201,7 +201,7 @@ ZIL_UTIL.save_config = function() {
         seen_intro: ZIL_UTIL.seen_intro,
         game_events: ZIL_UTIL.game_events
     };
-    fs.writeFileSync("../../data/zil.json", JSON.stringify(config));
+    fs.writeFileSync("../../data/zil.json", JSON.stringify(config, undefined, 2));
 };
 
 ZIL_UTIL.get_categories = function() {

@@ -167,7 +167,38 @@ ZilShape.load_shape = function(category_name, shape_name, rotation, loading_dele
 	return shape_obj;
 };
 
+ZilShape.prototype.remove_unseen = function() {
+    // remove shapes not visible to the user
+    var remove = [];
+    for(var k in this.shape) {
+        var pos = ZilShape._pos(k);
+        if(typeof this.shape[k] == "number") {
+            if (this.has_static_shape(pos[0] + 1, pos[1], pos[2]) &&
+                this.has_static_shape(pos[0], pos[1] + 1, pos[2]) &&
+                this.has_static_shape(pos[0], pos[1], pos[2] + 1)) {
+                remove.push(k);
+            }
+        }
+    }
+    for(var i = 0; i < remove.length; i++) delete this.shape[remove[i]];
+};
+
+ZilShape.prototype.has_static_shape = function(x, y, z) {
+    var node = this.expanded_shape[ZilShape._key(x, y, z)];
+    if(node) {
+        var orig = this.shape[ZilShape._key(node.origin_x, node.origin_y, node.origin_z)];
+        if(orig && isNaN(orig)) {
+            return orig.options == null || orig.options.monster == null;
+        } else {
+            return true;
+        }
+    }
+    return false;
+};
+
 ZilShape.prototype.save_shape = function() {
+    this.remove_unseen();
+
 	var obj = {
 		width: this.width,
 		height: this.height,
