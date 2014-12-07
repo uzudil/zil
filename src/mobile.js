@@ -442,7 +442,7 @@ Mobile.remove_divs = function(creature_id, css_class) {
 
 Mobile.prototype.position_above = function(div) {
     var position = THREEx.ObjCoord.cssPosition(this.shape_obj, ZIL.camera, ZIL.renderer);
-    position.y -= this.shape.depth * 10;
+    position.y -= this.shape.depth * 15;
     div.css({
         left: (position.x - div[0].offsetWidth /2)+'px',
         top: (position.y - div[0].offsetHeight/2)+'px'

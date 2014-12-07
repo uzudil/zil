@@ -632,7 +632,8 @@ var ZIL = {
     load_game: function() {
         ZIL.init();
 //        ZIL.load_shape("maps", "arrival", 56, 56);
-        ZIL.load_shape("maps", "arrival2", 47, 63);
+//        ZIL.load_shape("maps", "arrival2", 47, 63);
+        ZIL.load_shape("maps", "ante", 70, 70);
 	},
 
 	init_light: function() {

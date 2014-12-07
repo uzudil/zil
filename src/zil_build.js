@@ -185,7 +185,7 @@ var ZIL_BUILD = {
 			// move the cursor
 			if(event.which == 37) { // W
                 if(ZIL_BUILD.rocks) {
-                    ZIL_BUILD.rocks.width++;
+                    ZIL_BUILD.rocks_w = ++ZIL_BUILD.rocks.width;
                     ZIL_BUILD.rocks.regen();
                     ZIL_BUILD.attach_rocks();
                 } else {
@@ -197,7 +197,7 @@ var ZIL_BUILD = {
 			} else if(event.which == 39) { // E
                 if(ZIL_BUILD.rocks) {
                     if(ZIL_BUILD.rocks.width > 1) {
-                        ZIL_BUILD.rocks.width--;
+                        ZIL_BUILD.rocks_w = --ZIL_BUILD.rocks.width;
                         ZIL_BUILD.rocks.regen();
                         ZIL_BUILD.attach_rocks();
                     }
@@ -210,7 +210,7 @@ var ZIL_BUILD = {
 			} else if(event.which == 38) { // N
                 if(ZIL_BUILD.rocks) {
                     if(ZIL_BUILD.rocks.height > 1) {
-                        ZIL_BUILD.rocks.height--;
+                        ZIL_BUILD.rocks_h = --ZIL_BUILD.rocks.height;
                         ZIL_BUILD.rocks.regen();
                         ZIL_BUILD.attach_rocks();
                     }
@@ -222,7 +222,7 @@ var ZIL_BUILD = {
 				}
 			} else if(event.which == 40) { // S
                 if(ZIL_BUILD.rocks) {
-                    ZIL_BUILD.rocks.height++;
+                    ZIL_BUILD.rocks_h = ++ZIL_BUILD.rocks.height;
                     ZIL_BUILD.rocks.regen();
                     ZIL_BUILD.attach_rocks();
                 } else {
@@ -234,7 +234,7 @@ var ZIL_BUILD = {
 			} else if(event.which == 88) { // <,
                 if(ZIL_BUILD.rocks) {
                     if(ZIL_BUILD.rocks.depth > 1) {
-                        ZIL_BUILD.rocks.depth--;
+                        ZIL_BUILD.rocks_d = --ZIL_BUILD.rocks.depth;
                         ZIL_BUILD.rocks.regen();
                         ZIL_BUILD.attach_rocks();
                     }
@@ -244,7 +244,7 @@ var ZIL_BUILD = {
                 }
 			} else if(event.which == 90) { // >.
                 if(ZIL_BUILD.rocks) {
-                    ZIL_BUILD.rocks.depth++;
+                    ZIL_BUILD.rocks_d = ++ZIL_BUILD.rocks.depth;
                     ZIL_BUILD.rocks.regen();
                     ZIL_BUILD.attach_rocks();
                 } else if(ZIL_BUILD.cursor[2] < ZIL_UTIL.VIEW_DEPTH - 1) {
@@ -827,7 +827,7 @@ var ZIL_BUILD = {
 			ZIL_BUILD.fps_counter = 0;
 			ZIL_BUILD.fps_start = now;
 		}
-		requestAnimationFrame(ZIL_BUILD.render);
-//		setTimeout(ZIL_BUILD.render, 50); // reduce fan noise
+//		requestAnimationFrame(ZIL_BUILD.render);
+		setTimeout(ZIL_BUILD.render, 50); // reduce fan noise
 	}	
 }

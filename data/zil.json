@@ -32,9 +32,10 @@
     5329233,
     9934743,
     15059481,
-    5855577
+    5855577,
+    2039595
   ],
-  "shape_name": "maps.arrival2",
+  "shape_name": "maps.ante",
   "shortcuts": [
     "walls.col",
     "simple.test_shape",
@@ -45,7 +46,7 @@
     "floor.stone",
     "objects.column",
     "creatures.null",
-    "objects.pine"
+    "objects.urn"
   ],
   "seen_intro": true,
   "game_events": {}
