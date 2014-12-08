@@ -516,3 +516,14 @@ ZilShape.prototype.rotate = function(dir) {
     this.expanded_shape = new_shape;
     this.invalidate();
 };
+
+ZilShape.prototype.get_shape_at = function(x, y, z) {
+    var node = this.get_node(x, y, z);
+    if(node) {
+        var orig = this.shape[ZilShape._key(node.origin_x, node.origin_y, node.origin_z)];
+        if(orig && orig.name) {
+            return [orig.name, node.origin_x, node.origin_y, node.origin_z];
+        }
+    }
+    return null;
+};

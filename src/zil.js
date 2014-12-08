@@ -30,6 +30,7 @@ var ZIL = {
     INTRO_TIMEOUT: null,
     GAME_PAUSED: false,
     on_unpause: null,
+    Z_SCALE: 4,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -48,31 +49,56 @@ var ZIL = {
         }
 
         $(".creature_description").remove();
-        var intersection = ZIL.mouse_to_world(event);
-        if(intersection) {
-            var point = intersection.point;
-            ZIL.cursor[0] = Math.round(point.x);
-            ZIL.cursor[1] = Math.round(point.y);
 
-            // find the highest location here
-            ZIL.cursor[2] = ZIL.shape.get_highest_empty_space(
-                    ZIL.global_pos[0] + ZIL.cursor[0],
-                    ZIL.global_pos[1] + ZIL.cursor[1]);
+        var intersections = ZIL.mouse_to_world(event);
+        if(intersections && intersections.length > 0) {
+            for(var i = 0; i < intersections.length; i++) {
+                var intersection = intersections[i];
 
-            ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
-            ZIL.show_cursor_pos();
+                // not sure why this is necessary...
+                intersection.point.z = (intersection.point.z + 0.5) / ZIL.Z_SCALE;
+                var point = intersection.point;
 
-            // a creature?
-            if(intersection.object && intersection.object.userData) {
-                var target_creature = intersection.object.userData.creature;
-                if (target_creature && target_creature != ZIL.player && target_creature.mobile.is_alive() && ZIL.is_waiting_for_player()) {
-                    target_creature.mobile.set_selected(true);
-                    ZIL.selected_creature = target_creature;
+                if(i == 0) {
+                    ZIL.cursor[0] = Math.round(point.x);
+                    ZIL.cursor[1] = Math.round(point.y);
+                    ZIL.cursor[2] = Math.round(point.z);
 
-                    // tooltip
-                    target_creature.mobile.show_above(target_creature.mobile.get_name(), "creature_description");
+                    ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
+                    ZIL.show_cursor_pos();
+                }
+
+                // a creature?
+                if (intersection.object && intersection.object.userData) {
+                    var target_creature = intersection.object.userData.creature;
+                    if (target_creature && target_creature != ZIL.player && target_creature.mobile.is_alive() && ZIL.is_waiting_for_player()) {
+                        target_creature.mobile.set_selected(true);
+                        ZIL.selected_creature = target_creature;
+
+                        // tooltip
+                        target_creature.mobile.show_above(target_creature.mobile.get_name(), "creature_description");
+                        $("body").css("cursor", "pointer");
+                        break;
+                    }
+                }
+
+                var tx = Math.round(point.x) + ZIL.global_pos[0];
+                var ty = Math.round(point.y) + ZIL.global_pos[1];
+                var tz = Math.round(point.z) + ZIL.global_pos[2];
+                var shape_name_and_location = ZIL.shape.get_shape_at(tx, ty, tz);
+                if (shape_name_and_location) {
+                    var pos = shape_name_and_location.slice(1, 4);
+                    if(ZilStory.mouseover_location(ZIL.shape.category, ZIL.shape.name, shape_name_and_location[0], pos)) {
+                        $("body").css("cursor", "pointer");
+                        break;
+                    }
                 }
             }
+        }
+
+        // reset cursor
+        if(!ZIL.selected_creature && ZilStory.clear_location()) {
+            $("body").css("cursor", "default");
         }
 	},
 
@@ -201,17 +227,7 @@ var ZIL = {
 		// console.log("" + mousex + "," + mousey);
 		var vector = new THREE.Vector3( mousex, mousey, 1 );
 		var ray_caster = ZIL.projector.pickingRay(vector, ZIL.camera);
-        var intersection = ray_caster.intersectObjects(ZIL.rendered_shape.children, true);
-        if(intersection.length > 0) {
-            // not sure why this is necessary...
-            intersection[0].point.z = (intersection[0].point.z + 0.5) / 2;
-//            console.log("intersection=", intersection[0]);
-//            if(intersection[0].point.z > 2)
-//            console.log("mouse=" + mousex.toFixed(2) + "," + mousey.toFixed(2) +
-//                " intersections=", $.map(intersection, function(x) { return [x.point.x.toFixed(2), x.point.y.toFixed(2), x.point.z.toFixed(2)]; }));
-            return intersection[0];
-        }
-		return null;
+        return ray_caster.intersectObjects(ZIL.rendered_shape.children, true);
 	},
 
 	cursor_moved: function() {
@@ -580,7 +596,7 @@ var ZIL = {
 
         ZIL.world = new THREE.Object3D();
         ZIL.world.position.set(ZIL_UTIL.VIEW_WIDTH / 2, ZIL_UTIL.VIEW_HEIGHT / 2, 0);
-        ZIL.world.scale.z = 4;
+        ZIL.world.scale.z = ZIL.Z_SCALE;
         ZIL.scene.add(ZIL.world);
 
         ZIL.inner = new THREE.Object3D();
@@ -810,5 +826,5 @@ var ZIL = {
 		}
 //		requestAnimationFrame(ZIL.render);
 		setTimeout(ZIL.render, 50); // reduce fan noise
-	}
+	},
 };
