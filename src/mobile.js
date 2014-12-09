@@ -3,6 +3,11 @@ function Mobile(x, y, z, category, shape, parent) {
     this.x = x;
     this.y = y;
     this.z = z;
+
+    this.origin_x = x;
+    this.origin_y = y;
+    this.origin_z = z;
+
     this.move_time = 0;
     this.move_path_index = 0;
     this.move_path = null;
@@ -229,6 +234,9 @@ Mobile.prototype.creature_move_plan = function(map_shape) {
                     }
                     var node = map_shape.get_node(dx, dy, dz - 1);
                     if(node == null) {
+                        break;
+                    }
+                    if(this.monster.loiter_radius && ZIL_UTIL.get_distance(this.origin_x, this.origin_y, dx, dy) >= this.monster.loiter_radius) {
                         break;
                     }
                     this.move_path.push(node);
@@ -583,10 +591,11 @@ Mobile.prototype.to_string = function() {
     return this.get_name() + " ap=" + this.ap + " hp=" + this.hp;
 };
 
-Mobile.prototype.say = function(message) {
+Mobile.prototype.say = function(message, on_render) {
     this.show_above(message, "convo_bubble");
+    if(on_render) on_render($(".convo_bubble"));
 };
 
 Mobile.hide_convos = function() {
-    $(".convo_bubble").hide();
+    $(".convo_bubble").remove();
 };

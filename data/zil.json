@@ -35,17 +35,17 @@
     5855577,
     2039595
   ],
-  "shape_name": "buildings.house",
+  "shape_name": "maps.ante",
   "shortcuts": [
     "walls.col",
     "simple.test_shape",
     "doors.simple",
     "floors.wood",
     "walls.stone2",
-    "walls.stone",
+    "walls.stone_low",
     "floor.stone",
-    "objects.column",
-    "buildings.null",
+    "walls.stone_low",
+    "walls.window",
     "objects.urn"
   ],
   "seen_intro": true,

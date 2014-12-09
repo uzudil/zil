@@ -4,7 +4,7 @@ function Creature(monster, pos, id) {
     this.mobile.ai_move = true;
     this.mobile.speed = 40;
     this.mobile.monster = monster;
-    this.mobile.alignment = "evil";
+    this.mobile.alignment = monster.level > 0 ? "evil" : "good";
     this.mobile.initiative = 2;
     this.mobile.ap = 0;
     this.mobile.max_ap = 10;

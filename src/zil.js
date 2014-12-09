@@ -162,14 +162,28 @@ var ZIL = {
                 ZIL.combat_plan_z = z;
             }
         } else {
-            // mark location and move
-            ZIL.show_ground_target(x, y);
-            ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
-            if(ZIL.player.mobile.move_path == null || ZIL.player.mobile.move_path.length == 0) {
-                ZIL.show_forbidden();
+            if(ZIL.selected_creature) {
+                if(ZIL.selected_creature.mobile.alignment == ZIL.player.mobile.alignment) {
+                    ZIL.start_convo();
+                } else {
+                    ZIL.start_combat();
+                }
+            } else {
+                // mark location and move
+                ZIL.show_ground_target(x, y);
+                ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
+                if (ZIL.player.mobile.move_path == null || ZIL.player.mobile.move_path.length == 0) {
+                    ZIL.show_forbidden();
+                }
             }
         }
         return false;
+    },
+
+    start_convo: function() {
+        if(ZIL.selected_creature) {
+            ZilStory.start_conversation(ZIL.shape.category, ZIL.shape.name, ZIL.selected_creature);
+        }
     },
 
     show_forbidden: function() {
@@ -771,9 +785,18 @@ var ZIL = {
         });
 	},
 
-    say: function(creature, message, on_complete) {
+    default_convo_complete: function() {
         Mobile.hide_convos();
-        creature.mobile.say(message);
+        // return true means: unpause game
+        return true;
+    },
+
+    say: function(creature, message, on_complete, on_render) {
+        Mobile.hide_convos();
+        creature.mobile.say(message, on_render);
+        if(on_complete == null) {
+            on_complete = ZIL.default_convo_complete;
+        }
         ZIL.on_unpause = on_complete;
         ZIL.set_paused(true);
     },
