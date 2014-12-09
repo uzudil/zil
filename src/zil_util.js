@@ -36,6 +36,7 @@ ZIL_UTIL.shortcuts = null;
 ZIL_UTIL.seen_intro = false;
 ZIL_UTIL.force_new_game = false;
 ZIL_UTIL.game_events = {};
+ZIL_UTIL.game_state = {};
 ZIL_UTIL.first_render = null;
 
 ZIL_UTIL.make_square_face = function(size) {
@@ -191,6 +192,7 @@ ZIL_UTIL.load_config = function(mini_x, mini_y) {
     ZIL_UTIL.shortcuts = config["shortcuts"];
     ZIL_UTIL.seen_intro = config["seen_intro"] || false;
     ZIL_UTIL.game_events = config["game_events"] || {};
+    ZIL_UTIL.game_state = config["game_state"] || {};
 };
 
 ZIL_UTIL.save_config = function() {
@@ -199,7 +201,8 @@ ZIL_UTIL.save_config = function() {
         shape_name: ZIL_UTIL.last_shape_name,
         shortcuts: ZIL_UTIL.shortcuts,
         seen_intro: ZIL_UTIL.seen_intro,
-        game_events: ZIL_UTIL.game_events
+        game_events: ZIL_UTIL.game_events,
+        game_state: ZIL_UTIL.game_state
     };
     fs.writeFileSync("../../data/zil.json", JSON.stringify(config, undefined, 2));
 };

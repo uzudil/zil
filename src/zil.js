@@ -31,6 +31,7 @@ var ZIL = {
     GAME_PAUSED: false,
     on_unpause: null,
     Z_SCALE: 4,
+    shape_name_and_location: null,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -47,6 +48,8 @@ var ZIL = {
             ZIL.selected_creature.mobile.set_selected(false);
             ZIL.selected_creature = null;
         }
+
+        ZIL.shape_name_and_location = null;
 
         $(".creature_description").remove();
 
@@ -85,10 +88,10 @@ var ZIL = {
                 var tx = Math.round(point.x) + ZIL.global_pos[0];
                 var ty = Math.round(point.y) + ZIL.global_pos[1];
                 var tz = Math.round(point.z) + ZIL.global_pos[2];
-                var shape_name_and_location = ZIL.shape.get_shape_at(tx, ty, tz);
-                if (shape_name_and_location) {
-                    var pos = shape_name_and_location.slice(1, 4);
-                    if(ZilStory.mouseover_location(ZIL.shape.category, ZIL.shape.name, shape_name_and_location[0], pos)) {
+                ZIL.shape_name_and_location = ZIL.shape.get_shape_at(tx, ty, tz);
+                if (ZIL.shape_name_and_location) {
+                    var pos = ZIL.shape_name_and_location.slice(1, 4);
+                    if(ZilStory.mouseover_location(ZIL.shape.category, ZIL.shape.name, ZIL.shape_name_and_location[0], pos)) {
                         $("body").css("cursor", "pointer");
                         break;
                     }
@@ -97,7 +100,7 @@ var ZIL = {
         }
 
         // reset cursor
-        if(!ZIL.selected_creature && ZilStory.clear_location()) {
+        if(!ZIL.selected_creature && !ZIL.shape_name_and_location) {
             $("body").css("cursor", "default");
         }
 	},
@@ -107,7 +110,11 @@ var ZIL = {
     },
 
     mouse_up: function(event) {
-        if(ZIL.GAME_PAUSED) return;
+        if(ZIL.GAME_PAUSED) {
+            // unpause
+            ZIL.set_paused(false);
+            return;
+        }
 
         var x = ZIL.global_pos[0] + ZIL.cursor[0];
         var y = ZIL.global_pos[1] + ZIL.cursor[1];
@@ -163,11 +170,14 @@ var ZIL = {
             }
         } else {
             if(ZIL.selected_creature) {
-                if(ZIL.selected_creature.mobile.alignment == ZIL.player.mobile.alignment) {
+                if (ZIL.selected_creature.mobile.alignment == ZIL.player.mobile.alignment) {
                     ZIL.start_convo();
                 } else {
                     ZIL.start_combat();
                 }
+            } else if(ZIL.shape_name_and_location) {
+                var pos = ZIL.shape_name_and_location.slice(1, 4);
+                ZilStory.mouseclick_location(ZIL.shape.category, ZIL.shape.name, ZIL.shape_name_and_location[0], pos);
             } else {
                 // mark location and move
                 ZIL.show_ground_target(x, y);

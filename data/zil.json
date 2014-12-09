@@ -35,7 +35,7 @@
     5855577,
     2039595
   ],
-  "shape_name": "maps.ante",
+  "shape_name": "doors.gate-open",
   "shortcuts": [
     "walls.col",
     "simple.test_shape",
@@ -49,5 +49,8 @@
     "objects.urn"
   ],
   "seen_intro": true,
-  "game_events": {}
+  "game_events": {},
+  "game_state": {
+    "has_password": true
+  }
 }
