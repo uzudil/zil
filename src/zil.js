@@ -101,7 +101,7 @@ var ZIL = {
         }
 
         // reset cursor
-        if(!ZIL.selected_creature && !ZIL.shape_name_and_location) {
+        if($("body").css("cursor") == "pointer" && !ZIL.selected_creature && !ZIL.shape_name_and_location) {
             $("body").css("cursor", "default");
         }
 	},

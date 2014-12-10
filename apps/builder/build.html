@@ -53,6 +53,9 @@
 				padding: 5px;
 				border-radius: 5px;
 			}
+            .message2 {
+                top: 40px;
+            }
 			#help_info {
 				position: fixed;
 				top: 15px;
@@ -80,7 +83,7 @@
 	<body>
 		<div id="include_message" class="message">Hit Esc to stop including object</div>
 		<div id="rocks_message" class="message">Rocks: Esc to stop including object, arrows to change size</div>
-		<div id="floor_message" class="message">Floor tile mode: Esc to stop</div>
+		<div id="floor_message" class="message message2">Floor tile mode: Esc to stop</div>
 		<div id="palette" class="panel">
 			<div class="group">
 				<div><label for="category_names">Categories:</label><select id="category_names"></select></div>
@@ -129,6 +132,7 @@
                     <li>D: delete shape (same as right click)</li>
                     <li>E: erase chunk</li>
                     <li>G: floor tile mode (z=0, snap to chunk)</li>
+                    <li>H: clear all but shapes (remove all rock)</li>
                     <li>Z,X: up/down Z axis</li>
                     <li>0-9: include shape from shortcut (right panel)</li>
                     <li>[,]: Rotate included shape</li>

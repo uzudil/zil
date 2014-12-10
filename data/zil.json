@@ -39,7 +39,7 @@
   "shape_name": "maps.hallway",
   "shortcuts": [
     "objects.urn",
-    "simple.test_shape",
+    "objects.urn",
     "doors.simple",
     "floors.wood",
     "walls.stone",
@@ -47,7 +47,7 @@
     "floor.stone",
     "walls.stone_low",
     "walls.window",
-    "doors.gate-open"
+    "doors.gate"
   ],
   "seen_intro": true,
   "game_events": {},

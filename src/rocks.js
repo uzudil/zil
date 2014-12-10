@@ -28,8 +28,44 @@ Rocks.prototype.regen = function() {
     }
     this.apply_gravity();
     this.implode();
+    this.ensure_wall();
     this.shape_obj = new ZilShape("rocks", "rock", this.shape, this.width, this.height, this.depth);
-//    this.shape_obj.save_shape();
+};
+
+// make sure around the base of the rock is high enough so pathfinding avoids climbing onto the wall.
+Rocks.MIN_WALL_HEIGHT = 4;
+Rocks.prototype.ensure_wall = function() {
+    if(this.depth < 8) return;
+
+    while(true) {
+        var found = false;
+        for(var x = 0; x < this.width; x++) {
+            for (var y = 0; y < this.height; y++) {
+                for (var z = this.depth; z >= 0; z--) {
+                    if (this.shape[ZilShape._key(x, y, z)]) {
+
+                        if (z >= Rocks.MIN_WALL_HEIGHT ||
+                            !(this.shape[ZilShape._key(x - 1, y, z)] == null ||
+                                this.shape[ZilShape._key(x + 1, y, z)] == null ||
+                                this.shape[ZilShape._key(x, y - 1, z)] == null ||
+                                this.shape[ZilShape._key(x, y + 1, z)] == null)
+                            ) {
+                            break;
+                        }
+
+                        for (var zz = z + 1; zz <= Rocks.MIN_WALL_HEIGHT; zz++) {
+                            var color = Math.random() * 10 < 7 ? this.color1 : this.color2;
+                            this.shape[ZilShape._key(x, y, zz)] = color;
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if(!found) break;
+    }
 };
 
 Rocks.prototype.erode_shape = function() {

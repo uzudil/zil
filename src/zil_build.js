@@ -313,6 +313,8 @@ var ZIL_BUILD = {
         } else if(event.which == 71) {
             $("#floor_message").fadeIn();
             ZIL_BUILD.FLOOR_TILE_MODE = true;
+        } else if(event.which == 72) {
+            ZIL_BUILD.clear_rocks();
         }
 
 		$("#global_pos").empty().html(ZIL_BUILD.global_pos.join(",") + "-" + [
@@ -431,11 +433,26 @@ var ZIL_BUILD = {
     clear_chunk: function() {
         var cx = ((ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0]) / ZIL_UTIL.CHUNK_SIZE)|0;
 		var cy = ((ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1]) / ZIL_UTIL.CHUNK_SIZE)|0;
-        console.log("chunk=" + cx + "," + cy);
 		for(var x = 0; x < ZIL_UTIL.CHUNK_SIZE; x++) {
             for(var y = 0; y < ZIL_UTIL.CHUNK_SIZE; y++) {
                 for(var z = 0; z < ZIL_UTIL.DEPTH; z++) {
                     ZIL_BUILD.shape.del_position(cx * ZIL_UTIL.CHUNK_SIZE + x, cy * ZIL_UTIL.CHUNK_SIZE + y, z);
+                }
+            }
+        }
+        ZIL_BUILD.save_shape();
+		ZIL_BUILD.redraw_shape();
+    },
+
+    clear_rocks: function() {
+        // keep only linked shapes
+		for(var x = 0; x < ZIL_UTIL.WIDTH; x++) {
+            for(var y = 0; y < ZIL_UTIL.HEIGHT; y++) {
+                for(var z = 0; z < ZIL_UTIL.DEPTH; z++) {
+                    var shape_name_and_pos = ZIL_BUILD.shape.get_shape_at(x, y, z);
+                    if(!shape_name_and_pos) {
+                        ZIL_BUILD.shape.del_position(x, y, z);
+                    }
                 }
             }
         }
