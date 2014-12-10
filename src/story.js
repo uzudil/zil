@@ -24,7 +24,12 @@ ZilStory.STORY_LOCATIONS = {
                 if(ZIL_UTIL.game_state["has_password"]) {
                     var shape_name_and_location = ZIL.shape.get_shape_at(74, 22, 2);
                     if (shape_name_and_location['0'] == "doors.gate-open") {
-                        ZIL.say(ZIL.player, "A path leading into darkness...");
+                        ZIL.load_shape("maps", "hallway", 94, 372, function() {
+                            ZIL.say(ZIL.player, "This seems to be the way into the mountain.<br>" +
+                                "It's cold and damp down here and smells like wet fur.", function() {
+                                ZIL.say(ZIL.player, "Something is moving in the darkness... I better stay alert.");
+                            });
+                        });
                     } else {
                         ZIL.say(ZIL.player, "Here goes nothing...<br>WIND UNDER SILVER STARS", function () {
                             ZIL.say(ZIL.player, "I'm sure this is complete nonsense.<br>I'll never open these... what?!", function () {

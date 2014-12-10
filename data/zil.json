@@ -33,20 +33,21 @@
     9934743,
     15059481,
     5855577,
-    2039595
+    2039595,
+    6447714
   ],
-  "shape_name": "doors.gate-open",
+  "shape_name": "maps.hallway",
   "shortcuts": [
-    "walls.col",
+    "objects.urn",
     "simple.test_shape",
     "doors.simple",
     "floors.wood",
-    "walls.stone2",
+    "walls.stone",
     "walls.stone_low",
     "floor.stone",
     "walls.stone_low",
     "walls.window",
-    "objects.urn"
+    "doors.gate-open"
   ],
   "seen_intro": true,
   "game_events": {},

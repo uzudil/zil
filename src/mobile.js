@@ -91,6 +91,10 @@ Mobile.prototype.contains_point = function(x, y, z, buffer) {
 
 Mobile.CHUNK_MAP = {};
 
+Mobile.clear_chunk_map = function() {
+    Mobile.CHUNK_MAP = {};
+};
+
 Mobile.prototype._set_chunk_pos = function(force) {
     // remove the previous pos
     var last_key = "" + ((this.last_x / ZIL_UTIL.CHUNK_SIZE) | 0) + "," + ((this.last_y / ZIL_UTIL.CHUNK_SIZE) | 0);

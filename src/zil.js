@@ -32,13 +32,14 @@ var ZIL = {
     on_unpause: null,
     Z_SCALE: 4,
     shape_name_and_location: null,
+    LOADING: false,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
     },
 
     mouse_position_event: function(event) {
-        if(ZIL.GAME_PAUSED) return;
+        if(ZIL.GAME_PAUSED || ZIL.LOADING) return;
         if(event == null) event = ZIL.last_mouse_event;
         if(event == null) return;
 
@@ -110,6 +111,7 @@ var ZIL = {
     },
 
     mouse_up: function(event) {
+        if(ZIL.LOADING) return;
         if(ZIL.GAME_PAUSED) {
             // unpause
             ZIL.set_paused(false);
@@ -269,6 +271,8 @@ var ZIL = {
 	},
 
 	key_down: function(event) {
+        if(ZIL.LOADING) return;
+
 //		console.log(event.which);
 		if(event.target != document.body) return true;
         if(ZIL.GAME_PAUSED) return;
@@ -669,13 +673,6 @@ var ZIL = {
         ZIL.load_game();
     },
 
-    load_game: function() {
-        ZIL.init();
-//        ZIL.load_shape("maps", "arrival", 56, 56);
-//        ZIL.load_shape("maps", "arrival2", 47, 63);
-        ZIL.load_shape("maps", "ante", 70, 70);
-	},
-
 	init_light: function() {
         // credit: https://github.com/jeromeetienne/threex.basiclighting/blob/master/threex.basiclighting.js
         var object3d	= new THREE.AmbientLight(0x101010);
@@ -760,39 +757,67 @@ var ZIL = {
 		document.body.onkeydown = ZIL.key_down;
 	},
 
-	load_shape: function(category_name, shape_name, start_x, start_y) {
-        ZilShape.reset_cache();
-        Mobile.CHUNK_MAP = {};
-        ZIL.creatures = [];
-		ZIL.shape = ZilShape.load_shape(category_name, shape_name, 0, this);
-        ZIL.shape.build_shape(ZIL_UTIL.update_progress, function() {
-
+    load_game: function() {
+        ZIL.init();
+//        ZIL.load_shape("maps", "arrival", 56, 56);
+//        ZIL.load_shape("maps", "arrival2", 47, 63);
+        ZIL.load_shape("maps", "ante", 70, 70, function() {
             ZIL.target_texture = new THREE.MeshBasicMaterial({
                 map: THREE.ImageUtils.loadTexture( '../../img/marker.png', new THREE.UVMapping() ),
                 transparent: true,
                 opacity: 0.5,
                 color: 0xFFFFFF
             });
-
-            ZIL.global_pos = [ start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0 ];
-
-            ZIL.player = new Player(start_x, start_y);
-            ZIL.player.mobile.z = ZIL.shape.get_highest_empty_space(start_x, start_y, ZIL.player.mobile.shape);
-            ZIL.rendered_shape.add(ZIL.player.mobile.shape_obj);
-            ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
-
-            ZIL.move_visible_creatures(1000);
+            ZIL.player = new Player();
 
             $("canvas").show();
             $("#debug").show();
 
+            // todo: use ZIL_UTIL.game_state instead
             if(!ZIL_UTIL.seen_intro) {
                 ZilStory.schedule_intro();
             }
-
-            ZIL.redraw_shape();
-            ZIL.render();
         });
+	},
+
+	load_shape: function(category_name, shape_name, start_x, start_y, on_load) {
+        ZIL.LOADING = true;
+
+        if(ZIL.shape) {
+            ZIL.shape.clear_shape(ZIL.rendered_shape);
+        }
+        // remove whatever else
+        while(ZIL.rendered_shape.children.length > 0) {
+            ZIL.rendered_shape.remove(ZIL.rendered_shape.children[0])
+        }
+
+        ZilShape.reset_cache();
+        Mobile.clear_chunk_map();
+        ZIL.creatures = [];
+
+        $("body").css("cursor", "progress");
+        setTimeout(ZIL_UTIL.bind(this, function() {
+            ZIL.shape = ZilShape.load_shape(category_name, shape_name, 0, this);
+            ZIL.shape.build_shape(ZIL_UTIL.update_progress, function() {
+
+                if(on_load) on_load();
+
+                ZIL.global_pos = [ start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0 ];
+
+                ZIL.player.mobile.x = start_x;
+                ZIL.player.mobile.y = start_y;
+                ZIL.player.mobile.z = ZIL.shape.get_highest_empty_space(start_x, start_y, ZIL.player.mobile.shape);
+                ZIL.rendered_shape.add(ZIL.player.mobile.shape_obj);
+                ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
+
+                ZIL.move_visible_creatures(1000);
+
+                ZIL.redraw_shape();
+                ZIL.render();
+
+                ZIL.LOADING = false;
+            });
+        }), 500);
 	},
 
     default_convo_complete: function() {

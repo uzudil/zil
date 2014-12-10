@@ -28,6 +28,7 @@ var ZIL_BUILD = {
     rocks_w: null,
     rocks_h: null,
     rocks_d: null,
+    FLOOR_TILE_MODE: false,
 
 	mouse_zoom: function(event) {
 		if(event.originalEvent.wheelDelta /120 > 0) {
@@ -98,6 +99,14 @@ var ZIL_BUILD = {
 
                 if(ZIL_BUILD.rocks) {
                     ZIL_BUILD.cursor[2] = 0;
+                } else if(ZIL_BUILD.FLOOR_TILE_MODE) {
+                    if(ZIL_BUILD.include_shape && ZIL_BUILD.include_shape.depth == 1) {
+                        ZIL_BUILD.cursor[0] = ((ZIL_BUILD.cursor[0] / ZIL_UTIL.CHUNK_SIZE) | 0) * ZIL_UTIL.CHUNK_SIZE;
+                        ZIL_BUILD.cursor[1] = ((ZIL_BUILD.cursor[1] / ZIL_UTIL.CHUNK_SIZE) | 0) * ZIL_UTIL.CHUNK_SIZE;
+                        ZIL_BUILD.cursor[2] = 0;
+                    } else {
+                        ZIL_BUILD.cursor[2] = 1;
+                    }
                 } else {
                     // find the highest location here
                     ZIL_BUILD.cursor[2] = ZIL_BUILD.shape.get_highest_empty_space(
@@ -274,7 +283,10 @@ var ZIL_BUILD = {
                 ZIL_BUILD.include_monster = null;
                 ZIL_BUILD.rotation = 0;
 				$("#include_message").fadeOut();
-			}
+			} else if(ZIL_BUILD.FLOOR_TILE_MODE) {
+                ZIL_BUILD.FLOOR_TILE_MODE = false;
+                $("#floor_message").fadeOut();
+            }
 		} else if(event.which == 36) {
 			ZIL_BUILD.global_pos[0] = ZIL_BUILD.global_pos[1] = 0;
 			ZIL_BUILD.redraw_shape();
@@ -296,6 +308,11 @@ var ZIL_BUILD = {
             ZIL_BUILD.rotate_include_shape(-1);
         } else if(event.which == 68) {
             ZIL_BUILD.set_position(0);
+        } else if(event.which == 69) {
+            ZIL_BUILD.clear_chunk();
+        } else if(event.which == 71) {
+            $("#floor_message").fadeIn();
+            ZIL_BUILD.FLOOR_TILE_MODE = true;
         }
 
 		$("#global_pos").empty().html(ZIL_BUILD.global_pos.join(",") + "-" + [
@@ -410,6 +427,21 @@ var ZIL_BUILD = {
 			ZIL_BUILD._flood_fill(x, y - 1, z);
 		}
 	},
+
+    clear_chunk: function() {
+        var cx = ((ZIL_BUILD.global_pos[0] + ZIL_BUILD.cursor[0]) / ZIL_UTIL.CHUNK_SIZE)|0;
+		var cy = ((ZIL_BUILD.global_pos[1] + ZIL_BUILD.cursor[1]) / ZIL_UTIL.CHUNK_SIZE)|0;
+        console.log("chunk=" + cx + "," + cy);
+		for(var x = 0; x < ZIL_UTIL.CHUNK_SIZE; x++) {
+            for(var y = 0; y < ZIL_UTIL.CHUNK_SIZE; y++) {
+                for(var z = 0; z < ZIL_UTIL.DEPTH; z++) {
+                    ZIL_BUILD.shape.del_position(cx * ZIL_UTIL.CHUNK_SIZE + x, cy * ZIL_UTIL.CHUNK_SIZE + y, z);
+                }
+            }
+        }
+        ZIL_BUILD.save_shape();
+		ZIL_BUILD.redraw_shape();
+    },
 
 	set_position: function(force) {
 		// console.log("force=" + force + " include=" + ZIL_BUILD.include_shape);

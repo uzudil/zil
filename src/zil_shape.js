@@ -305,7 +305,11 @@ ZilShape.prototype.set_position = function(x, y, z, value) {
 ZilShape.prototype.include_shape = function(x, y, z, child_shape) {
     for(var key in child_shape.expanded_shape) {
         var pos = ZilShape._pos(key);
-        this.set_position(x + pos[0], y + pos[1], z + pos[2], child_shape.expanded_shape[key].value);
+        var shape_name_and_pos = this.get_shape_at(x + pos[0], y + pos[1], z + pos[2]);
+        // don't erase linked shapes
+        if(shape_name_and_pos == null) {
+            this.set_position(x + pos[0], y + pos[1], z + pos[2], child_shape.expanded_shape[key].value);
+        }
     }
 };
 
