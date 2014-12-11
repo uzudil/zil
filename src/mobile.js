@@ -31,30 +31,28 @@ function Mobile(x, y, z, category, shape, parent) {
     this.exp = 0;
     this.remove_me = false;
 
-    this.shapes = [];
-    this.shape_objects = [];
-    this.outline_objects = [];
-    for(var i = 0; i < 4; i++) {
-        var s = ZilShape.load_shape(category, shape, i, null, true);
-        s.build_shape_inline();
-        this.shapes.push(s);
-        var obj3d = s.render_shape();
-        this.outline_objects.push(this.make_glow(obj3d));
-        this.shape_objects.push(obj3d);
+    this.shape = ZilShape.load_shape(category, shape, 0, null, true);
+    this.shape.build_shape_inline();
 
-        // store the creature ref. in the userdata (used for mouseover lookup)
-        obj3d.userData.creature = this.parent;
-        for(var t = 0; t < obj3d.children.length; t++) {
-            obj3d.children[t].userData.creature = this.parent;
-        }
+    this.shape_obj = this.shape.render_shape();
+    // center the shape's geometry (so rotation work correctly)
+    for(var i = 0; i < this.shape_obj.children.length; i++) {
+        var mesh = this.shape_obj.children[i];
+        mesh.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( -this.shape.width/2, -this.shape.height/2, 0 ) );
     }
+    this.outline_obj = this.make_glow(this.shape_obj);
+
+    // store the creature ref. in the userdata (used for mouseover lookup)
+    this.shape_obj.userData.creature = this.parent;
+    for(var t = 0; t < this.shape_obj.children.length; t++) {
+        this.shape_obj.children[t].userData.creature = this.parent;
+    }
+    this.dir = ZIL_UTIL.N;
+
     this.last_x = x;
     this.last_y = y;
     this.last_z = z;
-    this.shape_index = 2;
-    this.shape = this.shapes[this.shape_index];
-    this.shape_obj = this.shape_objects[this.shape_index];
-    this.outline_obj = this.outline_objects[this.shape_index];
+
     this.size = Math.max(this.shape.width, this.shape.height);
     this._set_chunk_pos(true);
 }
@@ -165,23 +163,18 @@ Mobile.prototype.move_to = function(nx, ny, nz, gx, gy, gz) {
 
 Mobile.prototype.set_selected = function(selected) {
     this.selected = selected;
-    this.set_shape(this.shape_index);
+    this.set_shape(this.dir);
 };
 
-Mobile.prototype.set_shape = function(index) {
-    this.shape_index = index;
-    this.shape = this.shapes[this.shape_index];
-
-    var parent = this.shape_obj.parent;
-    if(parent) parent.remove(this.shape_obj);
-    this.shape_obj = this.shape_objects[this.shape_index];
-    if(parent) parent.add(this.shape_obj);
-
+Mobile.prototype.set_shape = function(dir) {
     this.shape_obj.remove(this.outline_obj);
-    this.outline_obj = this.outline_objects[this.shape_index];
     if(this.selected) {
         this.shape_obj.add(this.outline_obj);
     }
+
+    this.dir = dir;
+
+    this.shape_obj.rotation.set(0, 0, PI/2 * dir);
 };
 
 Mobile.prototype.move = function(gx, gy, gz) {

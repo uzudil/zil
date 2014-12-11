@@ -239,10 +239,6 @@ var ZIL = {
 
         var xp = x - ZIL.global_pos[0];
         var yp = y - ZIL.global_pos[1];
-        if(ZIL.combat_selected_creature) {
-            xp += (w/2)|0;
-            yp += (h/2)|0;
-        }
 
         var geometry = new THREE.PlaneGeometry(w, h);
         ZIL.ground_marker = new THREE.Mesh(geometry, ZIL.target_texture);
