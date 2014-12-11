@@ -171,16 +171,20 @@ var ZIL = {
                 ZIL.combat_plan_z = z;
             }
         } else {
+            var click_handled = false;
             if(ZIL.selected_creature) {
                 if (ZIL.selected_creature.mobile.alignment == ZIL.player.mobile.alignment) {
                     ZIL.start_convo();
                 } else {
                     ZIL.start_combat();
                 }
+                click_handled = true;
             } else if(ZIL.shape_name_and_location) {
                 var pos = ZIL.shape_name_and_location.slice(1, 4);
-                ZilStory.mouseclick_location(ZIL.shape.category, ZIL.shape.name, ZIL.shape_name_and_location[0], pos);
-            } else {
+                click_handled = ZilStory.mouseclick_location(ZIL.shape.category, ZIL.shape.name, ZIL.shape_name_and_location[0], pos);
+            }
+
+            if(!click_handled) {
                 // mark location and move
                 ZIL.show_ground_target(x, y);
                 ZIL.player.mobile.plan_move_to(ZIL.shape, x, y, z - 1);
