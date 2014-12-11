@@ -35,11 +35,14 @@ function Mobile(x, y, z, category, shape, parent) {
     this.shape.build_shape_inline();
 
     this.shape_obj = this.shape.render_shape();
-    // center the shape's geometry (so rotation work correctly)
+
+    // center the shape's geometry (so rotation works correctly)
     for(var i = 0; i < this.shape_obj.children.length; i++) {
         var mesh = this.shape_obj.children[i];
         mesh.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( -this.shape.width/2, -this.shape.height/2, 0 ) );
     }
+
+    // add the selection glow
     this.outline_obj = this.make_glow(this.shape_obj);
 
     // store the creature ref. in the userdata (used for mouseover lookup)
@@ -370,7 +373,7 @@ Mobile.prototype.attack = function(delta_time) {
                     this.attack_dir = null;
                 }
             }
-            this.shape_obj.children[0].rotation.y = ZIL_UTIL.angle_to_radians(this.attack_angle);
+            this.shape_obj.children[0].rotation.x = -ZIL_UTIL.angle_to_radians(this.attack_angle);
         } else {
             // last part: wait some time, run encounter and end attack
             this.attack_phase += delta_time;
