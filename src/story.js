@@ -3,7 +3,7 @@ function ZilStory() {
 
 ZilStory.schedule_intro = function() {
     ZilCal.schedule("intro", 500, function () {
-        ZIL_UTIL.seen_intro = true;
+        ZIL_UTIL.game_state["seen_intro"] = true;
         ZIL_UTIL.save_config();
         ZIL.say(ZIL.player, "What... <b>is...</b> <i>happening?...</i>", function () {
             ZIL.say(ZIL.player, "I've seen this land before...<br>It's <b>Grove</b>, the world I built!", function () {

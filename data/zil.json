@@ -49,9 +49,15 @@
     "walls.window",
     "doors.gate"
   ],
-  "seen_intro": true,
   "game_events": {},
   "game_state": {
+    "seen_intro": true,
+    "player_start": [
+      "maps",
+      "hallway",
+      94,
+      372
+    ],
     "has_password": true
   }
 }

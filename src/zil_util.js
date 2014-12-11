@@ -33,8 +33,6 @@ ZIL_UTIL.palette = [
 ];
 ZIL_UTIL.last_shape_name = "default.default";
 ZIL_UTIL.shortcuts = null;
-ZIL_UTIL.seen_intro = false;
-ZIL_UTIL.force_new_game = false;
 ZIL_UTIL.game_events = {};
 ZIL_UTIL.game_state = {};
 ZIL_UTIL.first_render = null;
@@ -177,9 +175,6 @@ ZIL_UTIL.load_config = function(mini_x, mini_y) {
                 location.reload();
             }
         }
-        if(gui.App.argv.indexOf("--force_new") >= 0) {
-            ZIL_UTIL.force_new_game = true;
-        }
     }
 
     var config = JSON.parse(fs.readFileSync("../../data/zil.json"));
@@ -190,9 +185,12 @@ ZIL_UTIL.load_config = function(mini_x, mini_y) {
     ZIL_UTIL.palette = colors;
     ZIL_UTIL.last_shape_name = config["shape_name"] || "default.default";
     ZIL_UTIL.shortcuts = config["shortcuts"];
-    ZIL_UTIL.seen_intro = config["seen_intro"] || false;
     ZIL_UTIL.game_events = config["game_events"] || {};
     ZIL_UTIL.game_state = config["game_state"] || {};
+
+    if(gui.App.argv.indexOf("--force_new") >= 0) {
+        ZIL_UTIL.game_state = {};
+    }
 };
 
 ZIL_UTIL.save_config = function() {
@@ -200,7 +198,6 @@ ZIL_UTIL.save_config = function() {
         colors: ZIL_UTIL.palette,
         shape_name: ZIL_UTIL.last_shape_name,
         shortcuts: ZIL_UTIL.shortcuts,
-        seen_intro: ZIL_UTIL.seen_intro,
         game_events: ZIL_UTIL.game_events,
         game_state: ZIL_UTIL.game_state
     };

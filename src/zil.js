@@ -224,8 +224,8 @@ var ZIL = {
 
         var w, h;
         if(ZIL.combat_selected_creature) {
-            w = ZIL.combat_selected_creature.mobile.shape.width + 4;
-            h = ZIL.combat_selected_creature.mobile.shape.height + 4;
+            w = ZIL.combat_selected_creature.mobile.shape.width + 2;
+            h = ZIL.combat_selected_creature.mobile.shape.height + 2;
         } else {
             w = ZIL.player.mobile.shape.width + 4;
             h = ZIL.player.mobile.shape.height + 4;
@@ -406,9 +406,9 @@ var ZIL = {
                 $(".creature_description").remove();
                 ZIL.selected_creature = null;
             }
-            $("body").css("cursor", "not-allowed");
+            $("body").css("cursor", "progress");
         } else {
-            if($("body").css("cursor") == "not-allowed") {
+            if($("body").css("cursor") == "progress") {
                 $("body").css("cursor", "default");
                 ZIL.mouse_position_event(); // reselect creature under mouse
             }
@@ -598,7 +598,7 @@ var ZIL = {
         $("#debug").hide();
         ZIL.init_dom();
 
-        if (!ZIL_UTIL.seen_intro || ZIL_UTIL.force_new_game) {
+        if (!ZIL_UTIL.game_state["seen_intro"]) {
             ZIL.play_intro();
         } else {
             ZIL.load_game();
@@ -648,7 +648,7 @@ var ZIL = {
 
     play_intro: function() {
         ZIL.INTRO_ID = 1;
-        ZIL_UTIL.seen_intro = false;
+        ZIL_UTIL.game_state["seen_intro"] = false;
         ZIL.play_intro_sequence();
     },
 
@@ -761,7 +761,11 @@ var ZIL = {
         ZIL.init();
 //        ZIL.load_shape("maps", "arrival", 56, 56);
 //        ZIL.load_shape("maps", "arrival2", 47, 63);
-        ZIL.load_shape("maps", "ante", 70, 70, function() {
+        var player_start = ZIL_UTIL.game_state["player_start"];
+        if(player_start == null) {
+            player_start = ["maps", "ante", 70, 70];
+        }
+        ZIL.load_shape(player_start[0], player_start[1], player_start[2], player_start[3], function() {
             ZIL.target_texture = new THREE.MeshBasicMaterial({
                 map: THREE.ImageUtils.loadTexture( '../../img/marker.png', new THREE.UVMapping() ),
                 transparent: true,
@@ -773,8 +777,7 @@ var ZIL = {
             $("canvas").show();
             $("#debug").show();
 
-            // todo: use ZIL_UTIL.game_state instead
-            if(!ZIL_UTIL.seen_intro) {
+            if(!ZIL_UTIL.game_state["seen_intro"]) {
                 ZilStory.schedule_intro();
             }
         });
@@ -794,6 +797,9 @@ var ZIL = {
         ZilShape.reset_cache();
         Mobile.clear_chunk_map();
         ZIL.creatures = [];
+
+        ZIL_UTIL.game_state["player_start"] = [category_name, shape_name, start_x, start_y];
+        ZIL_UTIL.save_config();
 
         $("body").css("cursor", "progress");
         setTimeout(ZIL_UTIL.bind(this, function() {
