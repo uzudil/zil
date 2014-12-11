@@ -33,7 +33,7 @@ Rocks.prototype.regen = function() {
 };
 
 // make sure around the base of the rock is high enough so pathfinding avoids climbing onto the wall.
-Rocks.MIN_WALL_HEIGHT = 4;
+Rocks.MIN_WALL_HEIGHT = 2;
 Rocks.prototype.ensure_wall = function() {
     if(this.depth < 8) return;
 
