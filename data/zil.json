@@ -34,20 +34,24 @@
     15059481,
     5855577,
     2039595,
-    6447714
+    6447714,
+    12217394,
+    7162653,
+    10582540,
+    5789784
   ],
   "shape_name": "maps.hallway",
   "shortcuts": [
     "objects.urn",
-    "objects.urn",
+    "objects.column-wood",
     "doors.simple",
     "floors.wood",
-    "walls.stone",
+    "walls.stone_low",
     "walls.stone_low",
     "floor.stone",
     "walls.stone_low",
     "walls.window",
-    "doors.gate"
+    "doors.gate-open"
   ],
   "game_events": {},
   "game_state": {

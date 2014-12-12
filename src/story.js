@@ -56,6 +56,15 @@ ZilStory.STORY_LOCATIONS = {
                 }
             }
         }
+    },
+    "maps.hallway": {
+        "81,397,1": {
+            on_mouseover: function() {
+            },
+            on_mouseclick: function() {
+                ZIL.load_shape("maps", "ante", 90, 49);
+            }
+        }
     }
 };
 
@@ -69,7 +78,7 @@ ZilStory.mouseover_location = function(map_category, map_name, shape_name, pos) 
 
 ZilStory._mouse_location = function(map_category, map_name, shape_name, pos, fx) {
     var pos_key = pos.join(",");
-//    console.log(map_category + "." + map_name + " shape=" + shape_name, pos_key);
+    if(fx == "on_mouseclick") console.log(map_category + "." + map_name + " shape=" + shape_name, pos_key);
     var m = ZilStory.STORY_LOCATIONS[map_category + "." + map_name];
     if(m && m[pos_key]) {
         m[pos_key][fx]();
