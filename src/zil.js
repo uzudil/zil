@@ -59,8 +59,11 @@ var ZIL = {
             for(var i = 0; i < intersections.length; i++) {
                 var intersection = intersections[i];
 
-                // not sure why this is necessary...
+                // adjust for scale
                 intersection.point.z = (intersection.point.z + 0.5) / ZIL.Z_SCALE;
+                // -0.5 seems to make picking more reliable...
+                intersection.point.x -= 0.5;
+                intersection.point.y -= 0.5;
                 var point = intersection.point;
 
                 if(i == 0) {
