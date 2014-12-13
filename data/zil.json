@@ -38,7 +38,16 @@
     12217394,
     7162653,
     10582540,
-    5789784
+    5789784,
+    16768642,
+    15058805,
+    6439706,
+    13546345,
+    5782551,
+    12165470,
+    10915924,
+    9797963,
+    8811587
   ],
   "shape_name": "maps.hallway",
   "shortcuts": [
@@ -47,7 +56,7 @@
     "doors.simple",
     "floors.wood",
     "walls.stone_low",
-    "walls.stone_low",
+    "walls.stone",
     "floor.stone",
     "walls.stone_low",
     "walls.window",
@@ -59,8 +68,8 @@
     "player_start": [
       "maps",
       "skrit",
-      0,
-      0
+      136,
+      310
     ],
     "has_password": true,
     "opened_ante_gate": true,

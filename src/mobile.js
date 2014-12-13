@@ -330,6 +330,11 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
     return false;
 };
 
+Mobile.prototype.is_interested_in_combat = function() {
+    var c = this.find_target(true);
+    return c != null;
+};
+
 Mobile.prototype.is_alive = function() {
     return this.hp > 0;
 };
@@ -531,7 +536,9 @@ Mobile.prototype.look_for_target = function() {
     if (this.target_action) return;
     if (this.parent.is_peaceful()) return;
 
-    this.find_target();
+    var c = this.find_target();
+    if(c) this.set_target(c);
+
     if (this.target_action == null) return;
 
     if(this.target_action == "attack") {
@@ -539,7 +546,7 @@ Mobile.prototype.look_for_target = function() {
     }
 };
 
-Mobile.prototype.find_target = function() {
+Mobile.prototype.find_target = function(force_action) {
     var cx = (this.x / ZIL_UTIL.CHUNK_SIZE)|0;
     var cy = (this.y / ZIL_UTIL.CHUNK_SIZE)|0;
     for(var dx = -2; dx <= 2; dx++) {
@@ -552,14 +559,14 @@ Mobile.prototype.find_target = function() {
 
                 // attack foes
                 if(c.mobile.alignment != this.alignment) {
-                    if(50 < Math.random() * 100) {
-                        this.set_target(c);
-                        return;
+                    if(force_action || 50 < Math.random() * 100) {
+                        return c;
                     }
                 }
             }
         }
     }
+    return null;
 };
 
 Mobile.prototype.reset_move = function() {

@@ -491,7 +491,7 @@ var ZIL = {
         ZIL.combat_creature_index = 0;
         ZIL.combat_creatures = _.filter($.map(Object.keys(ZIL.shown_creatures), function(id) {
             return ZIL.creatures_map[id];
-        }), function(c) { return c.mobile.is_alive(); });
+        }), function(c) { return c.mobile.is_alive() && c.mobile.is_interested_in_combat(); });
         ZIL.combat_creatures.push(ZIL.player);
         if(ZIL.combat_creatures.length > 0) {
             ZIL.combat_creatures.sort(function(a, b) {

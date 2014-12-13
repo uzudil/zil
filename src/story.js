@@ -85,12 +85,13 @@ ZilStory.MAPS = {
                 },
                 on_mouseclick: function () {
                     if (ZIL_UTIL.game_state["skrit_intro"]) {
-                        ZIL.load_shape("maps", "skrit", 0, 0);
+                        ZIL.load_shape("maps", "skrit", 136, 310);
                     } else {
                         ZIL.say(ZIL.player, "It sounds like the <b>din of a town</b> behind that door.", function () {
                             ZIL.say(ZIL.player, "But how could there be a town<br>...inside the mountain?", function () {
                                 ZIL.say(ZIL.player, "There is only one way to find out, I guess!", function () {
-                                    ZIL.load_shape("maps", "skrit", 0, 0, function () {
+                                    Mobile.hide_convos();
+                                    ZIL.load_shape("maps", "skrit", 136, 310, function () {
 
                                         ZIL.say(ZIL.player, "I smell food... todo todo todo...");
 
@@ -101,6 +102,20 @@ ZilStory.MAPS = {
                             });
                         });
                     }
+                }
+            }
+        }
+    },
+    "maps.skrit": {
+        events: {
+
+        },
+        locations: {
+            "134,332,2": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "hallway", 18, 16);
                 }
             }
         }
@@ -124,7 +139,7 @@ ZilStory.mouseover_location = function(map_category, map_name, shape_name, pos) 
 
 ZilStory._mouse_location = function(map_category, map_name, shape_name, pos, fx) {
     var pos_key = pos.join(",");
-    if(fx == "on_mouseclick") console.log(map_category + "." + map_name + " shape=" + shape_name, pos_key);
+//    console.log(map_category + "." + map_name + " shape=" + shape_name, pos_key);
     var m = ZilStory.MAPS[map_category + "." + map_name];
     if(m && m.locations && m.locations[pos_key]) {
         m.locations[pos_key][fx]();
