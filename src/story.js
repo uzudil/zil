@@ -1,94 +1,116 @@
 function ZilStory() {
 }
 
-ZilStory.schedule_intro = function() {
-    ZilCal.schedule("intro", 500, function () {
-        ZIL_UTIL.game_state["seen_intro"] = true;
-        ZIL_UTIL.save_config();
-        ZIL.say(ZIL.player, "What... <b>is...</b> <i>happening?...</i>", function () {
-            ZIL.say(ZIL.player, "I've seen this land before...<br>It's <b>Grove</b>, the world I built!", function () {
-                ZIL.say(ZIL.player, "Trapped in my own game?!<br>How is this possible?", function () {
-                    ZIL.say(ZIL.player, "I must find a <b>way back into reality.</b>");
-                });
-            });
-        });
-    });
+ZilStory.replace_ante_door = function() {
+    // remove the closed door
+    ZIL.shape.del_position(74, 22, 2);
+
+    // add open door
+    var s = ZilShape.load_shape("doors", "gate-open");
+    s.build_shape_inline();
+    ZIL.shape.set_shape(74, 22, 2, s);
+    ZIL.redraw_shape();
 };
 
-ZilStory.STORY_LOCATIONS = {
+ZilStory.MAPS = {
     "maps.ante": {
-        "74,22,2": {
-            on_mouseover: function() {
-            },
-            on_mouseclick: function() {
-                if(ZIL_UTIL.game_state["has_password"]) {
-                    var shape_name_and_location = ZIL.shape.get_shape_at(74, 22, 2);
-                    if (shape_name_and_location['0'] == "doors.gate-open") {
-                        ZIL.load_shape("maps", "hallway", 94, 372, function() {
-                            ZIL.say(ZIL.player, "This seems to be the way into the mountain.<br>" +
-                                "It's cold and damp down here and smells like wet fur.", function() {
-                                ZIL.say(ZIL.player, "Something is moving in the darkness... I better stay alert.");
-                            });
-                        });
-                    } else {
-                        ZIL.say(ZIL.player, "Here goes nothing...<br>WIND UNDER SILVER STARS", function () {
-                            ZIL.say(ZIL.player, "I'm sure this is complete nonsense.<br>I'll never open these... what?!", function () {
-
-                                Mobile.hide_convos();
-
-                                // quake
-                                ZIL.quake();
-
-                                // remove the closed door
-                                ZIL.shape.del_position(74, 22, 2);
-
-                                // add open door
-                                var s = ZilShape.load_shape("doors", "gate-open");
-                                s.build_shape_inline();
-                                ZIL.shape.set_shape(74, 22, 2, s);
-                                ZIL.redraw_shape();
-
-                                return true;
-                            });
-                        });
-                    }
-                } else {
-                    ZIL.say(ZIL.player, "Great. These doors are jammed. I can't open them.");
-                }
-            }
-        }
-    },
-    "maps.hallway": {
-        "81,397,1": {
-            on_mouseover: function() {
-            },
-            on_mouseclick: function() {
-                ZIL.load_shape("maps", "ante", 90, 49);
-            }
-        },
-        "12,1,1": {
-            on_mouseover: function() {
-            },
-            on_mouseclick: function() {
-                if(ZIL_UTIL.game_state["skrit_intro"]) {
-                    ZIL.load_shape("maps", "skrit", 0, 0);
-                } else {
-                    ZIL.say(ZIL.player, "It sounds like the <b>din of a town</b> behind that door.", function () {
-                        ZIL.say(ZIL.player, "But how could there be a town<br>...inside the mountain?", function () {
-                            ZIL.say(ZIL.player, "There is only one way to find out, I guess!", function () {
-                                ZIL.load_shape("maps", "skrit", 0, 0, function() {
-
-                                    ZIL.say(ZIL.player, "I smell food... todo todo todo...");
-
-                                    ZIL_UTIL.game_state["skrit_intro"] = true;
-                                    ZIL_UTIL.save_config();
+        events: {
+            on_load: function() {
+                if(!ZIL_UTIL.game_state["seen_intro"]) {
+                    ZilCal.schedule("intro", 500, function () {
+                        ZIL_UTIL.game_state["seen_intro"] = true;
+                        ZIL_UTIL.save_config();
+                        ZIL.say(ZIL.player, "What... <b>is...</b> <i>happening?...</i>", function () {
+                            ZIL.say(ZIL.player, "I've seen this land before...<br>It's <b>Grove</b>, the world I built!", function () {
+                                ZIL.say(ZIL.player, "Trapped in my own game?!<br>How is this possible?", function () {
+                                    ZIL.say(ZIL.player, "I must find a <b>way back into reality.</b>");
                                 });
                             });
                         });
                     });
                 }
+
+                if(ZIL_UTIL.game_state["opened_ante_gate"]) {
+                    ZilStory.replace_ante_door();
+                }
+            }
+        },
+        locations: {
+            "74,22,2": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    if (ZIL_UTIL.game_state["has_password"]) {
+                        var shape_name_and_location = ZIL.shape.get_shape_at(74, 22, 2);
+                        if (shape_name_and_location['0'] == "doors.gate-open") {
+                            ZIL.load_shape("maps", "hallway", 94, 372, function () {
+                                ZIL.say(ZIL.player, "This seems to be the way into the mountain.<br>" +
+                                    "It's cold and damp down here and smells like wet fur.", function () {
+                                    ZIL.say(ZIL.player, "Something is moving in the darkness... I better stay alert.");
+                                });
+                            });
+                        } else {
+                            ZIL.say(ZIL.player, "Here goes nothing...<br>WIND UNDER SILVER STARS", function () {
+                                ZIL.say(ZIL.player, "I'm sure this is complete nonsense.<br>I'll never open these... what?!", function () {
+                                    Mobile.hide_convos();
+                                    ZIL.quake();
+                                    ZilStory.replace_ante_door();
+                                    ZIL_UTIL.game_state["opened_ante_gate"] = true;
+                                    ZIL_UTIL.save_config();
+                                    return true;
+                                });
+                            });
+                        }
+                    } else {
+                        ZIL.say(ZIL.player, "Great. These doors are jammed. I can't open them.");
+                    }
+                }
             }
         }
+    },
+    "maps.hallway": {
+        events: {
+
+        },
+        locations: {
+            "81,397,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "ante", 90, 49);
+                }
+            },
+            "12,1,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    if (ZIL_UTIL.game_state["skrit_intro"]) {
+                        ZIL.load_shape("maps", "skrit", 0, 0);
+                    } else {
+                        ZIL.say(ZIL.player, "It sounds like the <b>din of a town</b> behind that door.", function () {
+                            ZIL.say(ZIL.player, "But how could there be a town<br>...inside the mountain?", function () {
+                                ZIL.say(ZIL.player, "There is only one way to find out, I guess!", function () {
+                                    ZIL.load_shape("maps", "skrit", 0, 0, function () {
+
+                                        ZIL.say(ZIL.player, "I smell food... todo todo todo...");
+
+                                        ZIL_UTIL.game_state["skrit_intro"] = true;
+                                        ZIL_UTIL.save_config();
+                                    });
+                                });
+                            });
+                        });
+                    }
+                }
+            }
+        }
+    }
+};
+
+ZilStory.on_map_load = function(map_category_name, map_shape_name) {
+    var m = ZilStory.MAPS[map_category_name + "." + map_shape_name];
+    if(m && m.events && m.events.on_load) {
+        m.events.on_load();
     }
 };
 
@@ -103,9 +125,9 @@ ZilStory.mouseover_location = function(map_category, map_name, shape_name, pos) 
 ZilStory._mouse_location = function(map_category, map_name, shape_name, pos, fx) {
     var pos_key = pos.join(",");
     if(fx == "on_mouseclick") console.log(map_category + "." + map_name + " shape=" + shape_name, pos_key);
-    var m = ZilStory.STORY_LOCATIONS[map_category + "." + map_name];
-    if(m && m[pos_key]) {
-        m[pos_key][fx]();
+    var m = ZilStory.MAPS[map_category + "." + map_name];
+    if(m && m.locations && m.locations[pos_key]) {
+        m.locations[pos_key][fx]();
         return true;
     }
     return false;

@@ -766,8 +766,6 @@ var ZIL = {
 
     load_game: function() {
         ZIL.init();
-//        ZIL.load_shape("maps", "arrival", 56, 56);
-//        ZIL.load_shape("maps", "arrival2", 47, 63);
         var player_start = ZIL_UTIL.game_state["player_start"];
         if(player_start == null) {
             player_start = ["maps", "ante", 70, 70];
@@ -783,10 +781,6 @@ var ZIL = {
 
             $("canvas").show();
             $("#debug").show();
-
-            if(!ZIL_UTIL.game_state["seen_intro"]) {
-                ZilStory.schedule_intro();
-            }
         });
 	},
 
@@ -829,6 +823,8 @@ var ZIL = {
                 ZIL.render();
 
                 ZIL.LOADING = false;
+
+                ZilStory.on_map_load(category_name, shape_name);
             });
         }), 500);
 	},

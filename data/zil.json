@@ -58,10 +58,12 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "hallway",
-      94,
-      372
+      "skrit",
+      0,
+      0
     ],
-    "has_password": true
+    "has_password": true,
+    "opened_ante_gate": true,
+    "skrit_intro": true
   }
 }
