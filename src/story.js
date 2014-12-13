@@ -37,6 +37,7 @@ ZilStory.STORY_LOCATIONS = {
                                 Mobile.hide_convos();
 
                                 // quake
+                                ZIL.quake();
 
                                 // remove the closed door
                                 ZIL.shape.del_position(74, 22, 2);
@@ -63,6 +64,29 @@ ZilStory.STORY_LOCATIONS = {
             },
             on_mouseclick: function() {
                 ZIL.load_shape("maps", "ante", 90, 49);
+            }
+        },
+        "12,1,1": {
+            on_mouseover: function() {
+            },
+            on_mouseclick: function() {
+                if(ZIL_UTIL.game_state["skrit_intro"]) {
+                    ZIL.load_shape("maps", "skrit", 0, 0);
+                } else {
+                    ZIL.say(ZIL.player, "It sounds like the <b>din of a town</b> behind that door.", function () {
+                        ZIL.say(ZIL.player, "But how could there be a town<br>...inside the mountain?", function () {
+                            ZIL.say(ZIL.player, "There is only one way to find out, I guess!", function () {
+                                ZIL.load_shape("maps", "skrit", 0, 0, function() {
+
+                                    ZIL.say(ZIL.player, "I smell food... todo todo todo...");
+
+                                    ZIL_UTIL.game_state["skrit_intro"] = true;
+                                    ZIL_UTIL.save_config();
+                                });
+                            });
+                        });
+                    });
+                }
             }
         }
     }

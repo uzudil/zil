@@ -33,6 +33,8 @@ var ZIL = {
     Z_SCALE: 4,
     shape_name_and_location: null,
     LOADING: false,
+    quake_start: null,
+    quake_step_start: null,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -370,6 +372,8 @@ var ZIL = {
 
     // delta_time: millis since last render
 	game_step: function(delta_time) {
+        ZIL.quake_step();
+
         ZIL.show_cursor();
 
         if (ZIL.in_combat) {
@@ -894,4 +898,25 @@ var ZIL = {
 //		requestAnimationFrame(ZIL.render);
 		setTimeout(ZIL.render, 50); // reduce fan noise
 	},
+
+    quake: function() {
+        ZIL.quake_start = ZIL.quake_step_start = Date.now();
+    },
+
+    quake_step: function() {
+        if(ZIL.quake_start) {
+            var now = Date.now();
+            if (now - ZIL.quake_start > 3000) {
+                ZIL.inner.position.x = -ZIL_UTIL.VIEW_WIDTH / 2;
+                ZIL.inner.position.y = -ZIL_UTIL.VIEW_HEIGHT / 2;
+                ZIL.quake_start = null;
+            } else {
+                if(now - ZIL.quake_step_start > 25) {
+                    ZIL.quake_step_start = now;
+                    ZIL.inner.position.x = -ZIL_UTIL.VIEW_WIDTH / 2 + (Math.random() * 6 - 3);
+                    ZIL.inner.position.y = -ZIL_UTIL.VIEW_HEIGHT / 2 + (Math.random() * 6 - 3);
+                }
+            }
+        }
+    }
 };
