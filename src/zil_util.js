@@ -190,6 +190,7 @@ ZIL_UTIL.load_config = function(mini_x, mini_y) {
 
     if(gui.App.argv.indexOf("--force_new") >= 0) {
         ZIL_UTIL.game_state = {};
+        ZIL_UTIL.game_events = {};
     }
 };
 

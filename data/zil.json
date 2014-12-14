@@ -49,18 +49,18 @@
     9797963,
     8811587
   ],
-  "shape_name": "maps.hallway",
+  "shape_name": "maps.skrit",
   "shortcuts": [
     "objects.urn",
     "objects.column-wood",
     "doors.simple",
     "floors.wood",
     "walls.stone_low",
+    "walls.stone2",
     "walls.stone",
-    "floor.stone",
     "walls.stone_low",
     "walls.window",
-    "doors.gate-open"
+    "floor.stone"
   ],
   "game_events": {},
   "game_state": {

@@ -1,17 +1,6 @@
 function ZilStory() {
 }
 
-ZilStory.replace_ante_door = function() {
-    // remove the closed door
-    ZIL.shape.del_position(74, 22, 2);
-
-    // add open door
-    var s = ZilShape.load_shape("doors", "gate-open");
-    s.build_shape_inline();
-    ZIL.shape.set_shape(74, 22, 2, s);
-    ZIL.redraw_shape();
-};
-
 ZilStory.MAPS = {
     "maps.ante": {
         events: {
@@ -31,7 +20,7 @@ ZilStory.MAPS = {
                 }
 
                 if(ZIL_UTIL.game_state["opened_ante_gate"]) {
-                    ZilStory.replace_ante_door();
+                    ZIL.replace_shape(74, 22, 2, "doors", "gate-open");
                 }
             }
         },
@@ -54,7 +43,7 @@ ZilStory.MAPS = {
                                 ZIL.say(ZIL.player, "I'm sure this is complete nonsense.<br>I'll never open these... what?!", function () {
                                     Mobile.hide_convos();
                                     ZIL.quake();
-                                    ZilStory.replace_ante_door();
+                                    ZIL.replace_shape(74, 22, 2, "doors", "gate-open");
                                     ZIL_UTIL.game_state["opened_ante_gate"] = true;
                                     ZIL_UTIL.save_config();
                                     return true;

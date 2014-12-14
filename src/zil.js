@@ -95,9 +95,13 @@ var ZIL = {
                 var ty = Math.round(point.y) + ZIL.global_pos[1];
                 var tz = Math.round(point.z) + ZIL.global_pos[2];
                 ZIL.shape_name_and_location = ZIL.shape.get_shape_at(tx, ty, tz);
+//                console.log(">>> ZIL.shape_name_and_location=", ZIL.shape_name_and_location);
                 if (ZIL.shape_name_and_location) {
                     var pos = ZIL.shape_name_and_location.slice(1, 4);
                     if(ZilStory.mouseover_location(ZIL.shape.category, ZIL.shape.name, ZIL.shape_name_and_location[0], pos)) {
+                        $("body").css("cursor", "pointer");
+                        break;
+                    } else if(ZIL.shape_hover(ZIL.shape_name_and_location[0], pos)) {
                         $("body").css("cursor", "pointer");
                         break;
                     }
@@ -187,6 +191,9 @@ var ZIL = {
             } else if(ZIL.shape_name_and_location) {
                 var pos = ZIL.shape_name_and_location.slice(1, 4);
                 click_handled = ZilStory.mouseclick_location(ZIL.shape.category, ZIL.shape.name, ZIL.shape_name_and_location[0], pos);
+                if(!click_handled) {
+                    click_handled = ZIL.shape_clicked(ZIL.shape_name_and_location[0], pos);
+                }
             }
 
             if(!click_handled) {
@@ -197,6 +204,42 @@ var ZIL = {
                     ZIL.show_forbidden();
                 }
             }
+        }
+        return false;
+    },
+
+    replace_shape: function(x, y, z, cat, name, rot, nx, ny, nz) {
+        // remove the current shape
+        ZIL.shape.del_position(x, y, z);
+
+        // add new shape
+        var s = ZilShape.load_shape(cat, name, rot);
+        s.build_shape_inline();
+        if(nx == null) {
+            nx = x;
+            ny = y;
+            nz = z;
+        }
+        ZIL.shape.set_shape(nx, ny, nz, s);
+
+        ZIL.redraw_shape();
+    },
+
+    shape_hover: function(shape_name, pos) {
+        return shape_name.indexOf("doors.") == 0;
+    },
+
+    shape_clicked: function(shape_name, pos) {
+        var split_name = shape_name.split(".");
+        if(shape_name.indexOf("doors.") == 0) {
+            var shape = ZIL.shape.get_shape(pos[0], pos[1], pos[2]);
+            console.log("shape=", shape);
+            if(shape.rot == 1 || shape.rot == 3) {
+                ZIL.replace_shape(pos[0], pos[1], pos[2], split_name[0], split_name[1], 0);
+            } else {
+                ZIL.replace_shape(pos[0], pos[1], pos[2], split_name[0], split_name[1], 1);
+            }
+            return true;
         }
         return false;
     },
