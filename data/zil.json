@@ -47,17 +47,21 @@
     12165470,
     10915924,
     9797963,
-    8811587
+    8811587,
+    16765104,
+    16762529,
+    16761218,
+    12554594
   ],
   "shape_name": "maps.skrit",
   "shortcuts": [
-    "objects.urn",
-    "objects.column-wood",
+    "objects.chair",
+    "objects.bottle",
     "doors.simple",
     "floors.wood",
     "walls.stone_low",
     "walls.stone2",
-    "walls.stone",
+    "walls.stone_low",
     "walls.stone_low",
     "walls.window",
     "floor.stone"

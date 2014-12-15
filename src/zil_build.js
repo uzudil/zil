@@ -29,6 +29,8 @@ var ZIL_BUILD = {
     rocks_h: null,
     rocks_d: null,
     FLOOR_TILE_MODE: false,
+    DRAW_MODE: false,
+    DRAW_MODE_PEN_DOWN: true,
 
 	mouse_zoom: function(event) {
 		if(event.originalEvent.wheelDelta /120 > 0) {
@@ -65,6 +67,8 @@ var ZIL_BUILD = {
 	XY_PLANE: new THREE.Plane(new THREE.Vector3(0, 0, 1), 1),
 
 	mouse_move: function(event) {
+        if(ZIL_BUILD.DRAW_MODE) return false;
+
 		if(ZIL_BUILD.dragging) {
             // rotating the view
 			if(ZIL_BUILD.last_mouse_x == null) {
@@ -118,11 +122,7 @@ var ZIL_BUILD = {
 				ZIL_BUILD.last_point.x = event.ctrlKey ? point.x : 0;
 				ZIL_BUILD.last_point.y = event.ctrlKey ? point.y : 0;
 
-				ZIL_BUILD.obj.position.set(ZIL_BUILD.cursor[0], ZIL_BUILD.cursor[1], ZIL_BUILD.cursor[2]);
-				ZIL_BUILD.xy.position.z = -ZIL_BUILD.obj.position.z - 0.5;
-				ZIL_BUILD.yz.position.x = -ZIL_BUILD.obj.position.x - 0.5;
-				ZIL_BUILD.xz.position.y = -ZIL_BUILD.obj.position.y - 0.5;
-				ZIL_BUILD.show_cursor_pos();
+				ZIL_BUILD.position_cursor();
 
 				ZIL_BUILD.check_mouse(event);
 			}
@@ -168,6 +168,8 @@ var ZIL_BUILD = {
 	},
 
 	mouse_down: function(event) {
+        if(ZIL_BUILD.DRAW_MODE) return false;
+
 		if(!ZIL_BUILD.editing) {
 			ZIL_BUILD.editing = true;
 			ZIL_BUILD.shape.set_undo_shape();
@@ -180,6 +182,8 @@ var ZIL_BUILD = {
 	},
 
 	mouse_up: function(event) {
+        if(ZIL_BUILD.DRAW_MODE) return false;
+
 		ZIL_BUILD.dragging = false;
 		ZIL_BUILD.world.rotation.x = ZIL_BUILD.world.rotation.y = ZIL_BUILD.world.rotation.z = 0;
 		ZIL_BUILD.last_mouse_x = ZIL_BUILD.last_mouse_y = null;
@@ -193,7 +197,14 @@ var ZIL_BUILD = {
 
 			// move the cursor
 			if(event.which == 37) { // W
-                if(ZIL_BUILD.rocks) {
+                if(ZIL_BUILD.DRAW_MODE) {
+                    if (ZIL_BUILD.cursor[0] < ZIL_UTIL.VIEW_WIDTH - 1) {
+                        ZIL_BUILD.cursor[0]++;
+                        if(ZIL_BUILD.DRAW_MODE_PEN_DOWN) ZIL_BUILD.set_position(1);
+                        ZIL_BUILD.position_cursor();
+                        ZIL_BUILD.redraw_shape();
+                    }
+                } else if(ZIL_BUILD.rocks) {
                     ZIL_BUILD.rocks_w = ++ZIL_BUILD.rocks.width;
                     ZIL_BUILD.rocks.regen();
                     ZIL_BUILD.attach_rocks();
@@ -204,7 +215,14 @@ var ZIL_BUILD = {
                     }
                 }
 			} else if(event.which == 39) { // E
-                if(ZIL_BUILD.rocks) {
+                if(ZIL_BUILD.DRAW_MODE) {
+                    if (ZIL_BUILD.cursor[0] > 0) {
+                        ZIL_BUILD.cursor[0]--;
+                        if(ZIL_BUILD.DRAW_MODE_PEN_DOWN) ZIL_BUILD.set_position(1);
+                        ZIL_BUILD.position_cursor();
+                        ZIL_BUILD.redraw_shape();
+                    }
+                } else if(ZIL_BUILD.rocks) {
                     if(ZIL_BUILD.rocks.width > 1) {
                         ZIL_BUILD.rocks_w = --ZIL_BUILD.rocks.width;
                         ZIL_BUILD.rocks.regen();
@@ -217,7 +235,14 @@ var ZIL_BUILD = {
                     }
                 }
 			} else if(event.which == 38) { // N
-                if(ZIL_BUILD.rocks) {
+                if(ZIL_BUILD.DRAW_MODE) {
+                    if (ZIL_BUILD.cursor[1] > 0) {
+                        ZIL_BUILD.cursor[1]--;
+                        if(ZIL_BUILD.DRAW_MODE_PEN_DOWN) ZIL_BUILD.set_position(1);
+                        ZIL_BUILD.position_cursor();
+                        ZIL_BUILD.redraw_shape();
+                    }
+                } else if(ZIL_BUILD.rocks) {
                     if(ZIL_BUILD.rocks.height > 1) {
                         ZIL_BUILD.rocks_h = --ZIL_BUILD.rocks.height;
                         ZIL_BUILD.rocks.regen();
@@ -230,7 +255,14 @@ var ZIL_BUILD = {
                     }
 				}
 			} else if(event.which == 40) { // S
-                if(ZIL_BUILD.rocks) {
+                if(ZIL_BUILD.DRAW_MODE) {
+                    if (ZIL_BUILD.cursor[1] < ZIL_UTIL.VIEW_HEIGHT - 1) {
+                        ZIL_BUILD.cursor[1]++;
+                        if(ZIL_BUILD.DRAW_MODE_PEN_DOWN) ZIL_BUILD.set_position(1);
+                        ZIL_BUILD.position_cursor();
+                        ZIL_BUILD.redraw_shape();
+                    }
+                } else if(ZIL_BUILD.rocks) {
                     ZIL_BUILD.rocks_h = ++ZIL_BUILD.rocks.height;
                     ZIL_BUILD.rocks.regen();
                     ZIL_BUILD.attach_rocks();
@@ -264,7 +296,16 @@ var ZIL_BUILD = {
 		}
 
 		if(event.which == 32) {
-			ZIL_BUILD.set_position();
+            if(ZIL_BUILD.DRAW_MODE) {
+                ZIL_BUILD.DRAW_MODE_PEN_DOWN = !ZIL_BUILD.DRAW_MODE_PEN_DOWN;
+                if(ZIL_BUILD.DRAW_MODE_PEN_DOWN) {
+                    ZIL_BUILD.set_position(1);
+                    ZIL_BUILD.position_cursor();
+                    ZIL_BUILD.redraw_shape();
+                }
+            } else {
+                ZIL_BUILD.set_position();
+            }
 		} else if(event.which == 82) {
             $("#rocks_message").fadeIn();
             ZIL_BUILD.draw_rocks();
@@ -286,6 +327,9 @@ var ZIL_BUILD = {
 			} else if(ZIL_BUILD.FLOOR_TILE_MODE) {
                 ZIL_BUILD.FLOOR_TILE_MODE = false;
                 $("#floor_message").fadeOut();
+            } else if(ZIL_BUILD.DRAW_MODE) {
+                ZIL_BUILD.DRAW_MODE = false;
+                $("#draw_message").fadeOut();
             }
 		} else if(event.which == 36) {
 			ZIL_BUILD.global_pos[0] = ZIL_BUILD.global_pos[1] = 0;
@@ -315,6 +359,11 @@ var ZIL_BUILD = {
             ZIL_BUILD.FLOOR_TILE_MODE = true;
         } else if(event.which == 72) {
             ZIL_BUILD.clear_rocks();
+        } else if(event.which == 73) {
+            ZIL_BUILD.DRAW_MODE = ZIL_BUILD.DRAW_MODE_PEN_DOWN = true;
+            $("#draw_message").fadeIn();
+            ZIL_BUILD.set_position(1);
+            ZIL_BUILD.redraw_shape();
         }
 
 		$("#global_pos").empty().html(ZIL_BUILD.global_pos.join(",") + "-" + [
@@ -366,6 +415,14 @@ var ZIL_BUILD = {
             n = ZIL_UTIL.palette.indexOf(c);
         }
         return n;
+    },
+
+    position_cursor: function() {
+        ZIL_BUILD.obj.position.set(ZIL_BUILD.cursor[0], ZIL_BUILD.cursor[1], ZIL_BUILD.cursor[2]);
+        ZIL_BUILD.xy.position.z = -ZIL_BUILD.obj.position.z - 0.5;
+        ZIL_BUILD.yz.position.x = -ZIL_BUILD.obj.position.x - 0.5;
+        ZIL_BUILD.xz.position.y = -ZIL_BUILD.obj.position.y - 0.5;
+        ZIL_BUILD.show_cursor_pos();
     },
 
 	show_cursor_pos: function() {
