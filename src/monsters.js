@@ -9,6 +9,7 @@ function Monster(category, shape, name, level, loiter_radius) {
 
 MONSTERS = {
     "bunny": new Monster("creatures", "bunny", "Rabbit", 0),
+    "cow": new Monster("creatures", "cow", "Cow", 0),
     "monk": new Monster("creatures", "monk", "Monk", 0, 16),
     "man": new Monster("creatures", "man", "Man", 0, 16),
     "woman": new Monster("creatures", "woman", "Woman", 0, 16),

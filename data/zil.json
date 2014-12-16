@@ -51,20 +51,24 @@
     16765104,
     16762529,
     16761218,
-    12554594
+    12554594,
+    5191188,
+    16646092,
+    15066597,
+    1778405
   ],
   "shape_name": "maps.skrit",
   "shortcuts": [
-    "objects.chair",
-    "objects.bottle",
+    "objects.fence",
+    "objects.mushroom2",
     "doors.simple",
     "floors.wood",
     "walls.stone_low",
     "walls.stone2",
-    "walls.stone_low",
+    "walls.stone",
     "walls.stone_low",
     "walls.window",
-    "floor.stone"
+    "objects.mushroom2"
   ],
   "game_events": {},
   "game_state": {
