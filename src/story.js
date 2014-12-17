@@ -82,7 +82,7 @@ ZilStory.MAPS = {
                                     Mobile.hide_convos();
                                     ZIL.load_shape("maps", "skrit", 136, 310, function () {
 
-                                        ZIL.say(ZIL.player, "I smell food... todo todo todo...");
+                                        ZIL.say(ZIL.player, "This must be the where<br><b>Gav the Seer</b>lives.");
 
                                         ZIL_UTIL.game_state["skrit_intro"] = true;
                                         ZIL_UTIL.save_config();
@@ -140,6 +140,7 @@ ZilStory._mouse_location = function(map_category, map_name, shape_name, pos, fx)
 ZilStory.CONVO = {
     "maps.ante": {
         "136,209,4": {
+            "_name_": "Monk",
             "": "You look <a>confused</a> child...<br>Have you come to be <a>shriven</a>?",
             "confused": "Fell from a far-away land, you say?<br>Well, if you seek answers, visit <a>Gav</a> in the <a w='gav'>mountain</a>.",
             "shriven": "All are but dust to the <a>divinity</a>.<br>We move like moths around the divine <a>flame</a>.",
@@ -152,9 +153,41 @@ ZilStory.CONVO = {
             "peaks": "But, beware of depths child... There are things<br>in the darkness that aren't what they <a>seem</a>.",
             "seem": "Use your wits and might if you can.<br>The seer <a>Gav</a> only helps those who walk the right path."
         }
+    },
+    "maps.skrit": {
+        "83,286,3": {
+            "_name_": "Nezz",
+            "": "I am Nezz, the town <a>sage</a>. You must be <a>wondering</a> where you are.",
+            "sage": "It is my job to <a w='wondering'>divine</a> the fate of all here.",
+            "wondering": "Yes it is confusing at first, I know. <a>Many</a> like you come through here.",
+            "many": "The town of <a>Skrit</a> is the first <a>nexus</a> in the <a>mountain</a>.<br>All <a>travelers</a> arrive here first.",
+            "travelers": "Travelers like you, on their way to see <a>Gav</a> at the <a>Observatory</a>.",
+            "skrit": "The bustling town you see before you. It's one of the biggest in the <a>mountain</a>.<br>Skrit is also a gateway town to the rest of the <a>mountain</a> though the entrance is currently <a>sealed</a>.<br>Go and see mayor <a>Zef</a> if you want to travel that way.",
+            "nexus": "Most of the <a>mountain</a> is made up of the ruins of the ages past.<br>The few places of relative peace are the settlements.<br>We call these nexuses.",
+            "mountain": "There is more to the mountain than the pile of rock it seems to be.<br>To learn more find the Seer <a>Gav</a>.",
+            "gav": "The seer Gav makes his home in the <a>Observatory</a>, high in the crown of the <a>mountain</a>.<br>No one knows where he came from or how long he's lived here.<br>He is a mystic and an oracle who only appears to those he finds worthy.",
+            "observatory": "The Observatory is an ancient citadel built by the <a>Fehrr</a> on a remote outcropping near the top of the <a>mountain</a>.<br>It is here that <a>Gav</a> meditates and studies the heavens.<br>To reach him, you must open a <a>sealed</a> passage and use it to travel into the <a>upper</a> levels.",
+            "upper": "This town is a peaceful <a>nexus</a> but the rest of the <a>mountain</a> is a warren of ruined passages. There are additional levels above and below us. If you'd like you can borrow my map of the mountain from my <a>library</a>.",
+            "library": "Take the stairs down to my basement and feel free to browse my tomes. It may teach you a little of the history of our world.",
+            "sealed": "Mayor <a>Zef</a> had it sealed for our protection. Although the <a>nexus</a> shields us, the rest of the <a>mountain</a> is a place of darkness and ruin.<br>Evil <a>things</a> lurk in unused spaces...",
+            "things": "You may consult my <a>library</a> downstairs if you wish to learn more about the local fauna.",
+            "fehrr": "The Fehrr are an ancient race, now extinct. Little is known of them, other than that they inhabited the <a>mountain</a> before humankind.",
+            "zef": "He is our mayor. You can usually find him at the inn."
+        }
     }
 };
 ZilStory.CONVO_KEY = null;
+
+ZilStory.get_creature_name = function(map_category, map_name, creature) {
+    var pos_key = [creature.mobile.origin_x, creature.mobile.origin_y, creature.mobile.origin_z].join(",");
+    var m = ZilStory.CONVO[map_category + "." + map_name];
+    console.log(map_category + "." + map_name + " pos=", pos_key);
+    if(m && m[pos_key] && m[pos_key]["_name_"]) {
+        return m[pos_key]["_name_"];
+    } else {
+        return creature.mobile.get_name();
+    }
+};
 
 ZilStory.on_convo_render = function(el) {
     var as = $("a", el);

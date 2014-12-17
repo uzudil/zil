@@ -85,7 +85,7 @@ var ZIL = {
                         ZIL.selected_creature = target_creature;
 
                         // tooltip
-                        target_creature.mobile.show_above(target_creature.mobile.get_name(), "creature_description");
+                        target_creature.mobile.show_above(ZilStory.get_creature_name(ZIL.shape.category, ZIL.shape.name, target_creature), "creature_description");
                         $("body").css("cursor", "pointer");
                         break;
                     }

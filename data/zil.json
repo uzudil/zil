@@ -57,12 +57,12 @@
     15066597,
     1778405
   ],
-  "shape_name": "maps.skrit",
+  "shape_name": "maps.skrit-library",
   "shortcuts": [
     "objects.fence",
     "objects.mushroom2",
     "doors.simple",
-    "floors.wood",
+    "floor.stone",
     "walls.stone_low",
     "walls.stone2",
     "walls.stone",
