@@ -106,6 +106,27 @@ ZilStory.MAPS = {
                 on_mouseclick: function () {
                     ZIL.load_shape("maps", "hallway", 18, 16);
                 }
+            },
+            "39,264,3": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "skrit-library", 127, 108);
+                }
+            }
+        }
+    },
+    "maps.skrit-library": {
+        events: {
+
+        },
+        locations: {
+            "116,112,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "skrit", 51, 283);
+                }
             }
         }
     }
