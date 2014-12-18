@@ -155,10 +155,7 @@ ZilStory.CONVO = {
         }
     },
     "maps.skrit": {
-        "83,286,3": {
-            "_name_": "Nezz",
-            "": "I am Nezz, the town <a>sage</a>. You must be <a>wondering</a> where you are.",
-            "sage": "It is my job to <a w='wondering'>divine</a> the fate of all here.",
+        "common": {
             "wondering": "Yes it is confusing at first, I know. <a>Many</a> like you come through here.",
             "many": "The town of <a>Skrit</a> is the first <a>nexus</a> in the <a>mountain</a>.<br>All <a>travelers</a> arrive here first.",
             "travelers": "Travelers like you, on their way to see <a>Gav</a> at the <a>Observatory</a>.",
@@ -167,12 +164,48 @@ ZilStory.CONVO = {
             "mountain": "There is more to the mountain than the pile of rock it seems to be.<br>To learn more find the Seer <a>Gav</a>.",
             "gav": "The seer Gav makes his home in the <a>Observatory</a>, high in the crown of the <a>mountain</a>.<br>No one knows where he came from or how long he's lived here.<br>He is a mystic and an oracle who only appears to those he finds worthy.",
             "observatory": "The Observatory is an ancient citadel built by the <a>Fehrr</a> on a remote outcropping near the top of the <a>mountain</a>.<br>It is here that <a>Gav</a> meditates and studies the heavens.<br>To reach him, you must open a <a>sealed</a> passage and use it to travel into the <a>upper</a> levels.",
-            "upper": "This town is a peaceful <a>nexus</a> but the rest of the <a>mountain</a> is a warren of ruined passages. There are additional levels above and below us. If you'd like you can borrow my map of the mountain from my <a>library</a>.",
-            "library": "Take the stairs down to my basement and feel free to browse my tomes. It may teach you a little of the history of our world.",
+            "upper": "This town is a peaceful <a>nexus</a> but the rest of the <a>mountain</a> is a warren of ruined passages. There are additional levels above and below us.",
             "sealed": "Mayor <a>Zef</a> had it sealed for our protection. Although the <a>nexus</a> shields us, the rest of the <a>mountain</a> is a place of darkness and ruin.<br>Evil <a>things</a> lurk in unused spaces...",
-            "things": "You may consult my <a>library</a> downstairs if you wish to learn more about the local fauna.",
+            "things": "Goblins and such. Never seen one myself, though rumor has it there are undead and demons on the lower levels.",
             "fehrr": "The Fehrr are an ancient race, now extinct. Little is known of them, other than that they inhabited the <a>mountain</a> before humankind.",
-            "zef": "He is our mayor. You can usually find him at the inn."
+            "zef": "He is our mayor. You can usually find him at <a>Anita</a>'s inn.",
+            "anita": "She is the local innkeeper."
+        },
+        "83,286,3": {
+            "_name_": "Nezz",
+            "": "I am Nezz, the town <a>sage</a>. You must be <a>wondering</a> where you are.",
+            "sage": "It is my job to <a w='wondering'>divine</a> the fate of all here.",
+            "library": "Take the stairs down to my basement and feel free to browse my tomes. It may teach you a little of the history of our world.",
+            "things": "Goblins and other monsters. You may consult my <a>library</a> downstairs if you wish to learn more about the local fauna.",
+            "upper": "This town is a peaceful <a>nexus</a> but the rest of the <a>mountain</a> is a warren of ruined passages. There are additional levels above and below us. If you'd like you can borrow my map of the mountain from my <a>library</a>.",
+        },
+        "170,43,3": {
+            "_name_": "Zef",
+            "": "Work, work work."
+        },
+        "159,59,3": {
+            "_name_": "Anita",
+            "": "Are you thirsty, dear? We have the finest ales in all of <a w='many'>Skrit</a>."
+        },
+        "242,49,1": {
+            "_name_": "Geoff",
+            "": "Welcome to <a w='many'>Skrit</a>, traveler. How can a simple cow-hand be of assistance?"
+        },
+        "107,48,3": {
+            "_name_": "Han",
+            "": "I was once a <a w='travelers'>traveler</a> like yourself."
+        },
+        "47,114,3": {
+            "_name_": "Sten",
+            "": "I am a simple mushroom farmer here in <a w='many'>Skrit</a>."
+        },
+        "43,62,3": {
+            "_name_": "Mur",
+            "": "<a>Geoff</a> is a bloody thief, is what he is!"
+        },
+        "252,207,2": {
+            "_name_": "Narg",
+            "": "Begone you lout, before you <a>break</a> something."
         }
     }
 };
@@ -198,8 +231,7 @@ ZilStory.on_convo_render = function(el) {
             var key = a.attr("w") || a.text().trim().toLowerCase();
 //            console.log("convo key=" + key + " click=", a);
             var convo_tree = ZilStory.CONVO[ZilStory.CONVO_KEY[0]][ZilStory.CONVO_KEY[1]];
-            if(!convo_tree[key]) key = "";
-            var text = convo_tree[key];
+            var text = convo_tree[key] || ZilStory.CONVO[ZilStory.CONVO_KEY[0]]["common"][key] || convo_tree[""];
             if(typeof text == "function") text = text();
             ZIL.say(ZilStory.CONVO_KEY[2], text, null, ZilStory.on_convo_render);
             return false;
