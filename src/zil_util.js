@@ -12,10 +12,10 @@ ZIL_UTIL.CHUNK_SIZE = 16;
 ZIL_UTIL.WIDTH = 100 * ZIL_UTIL.CHUNK_SIZE;
 ZIL_UTIL.HEIGHT = 100 * ZIL_UTIL.CHUNK_SIZE;
 ZIL_UTIL.DEPTH = 2 * ZIL_UTIL.CHUNK_SIZE;
-ZIL_UTIL.VIEW_WIDTH = 4 * ZIL_UTIL.CHUNK_SIZE;
-ZIL_UTIL.VIEW_HEIGHT = 4 * ZIL_UTIL.CHUNK_SIZE;
+ZIL_UTIL.VIEW_WIDTH = 12 * ZIL_UTIL.CHUNK_SIZE;
+ZIL_UTIL.VIEW_HEIGHT = 12 * ZIL_UTIL.CHUNK_SIZE;
 ZIL_UTIL.VIEW_DEPTH = 2 * ZIL_UTIL.CHUNK_SIZE;
-ZIL_UTIL.CAM_ZOOM = 1.4;
+ZIL_UTIL.CAM_ZOOM = 1.4 * 2.25;
 ZIL_UTIL.ORIGIN = [0, 0, 0];
 ZIL_UTIL.DAMAGE_LIFE = 2300;
 ZIL_UTIL.DAMAGE_SPEED = 20;
@@ -203,7 +203,7 @@ ZIL_UTIL.save_config = function() {
         shortcuts: ZIL_UTIL.shortcuts,
         game_events: ZIL_UTIL.game_events,
         game_state: ZIL_UTIL.game_state,
-        player_stats: ZIL.player.get_stats()
+        player_stats: ZIL_UTIL.player_stats
     };
     fs.writeFileSync("../../data/zil.json", JSON.stringify(config, undefined, 2));
 };

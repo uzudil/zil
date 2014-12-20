@@ -669,10 +669,6 @@ var ZIL = {
     },
 
     init: function() {
-        ZIL_UTIL.VIEW_WIDTH *= 3;
-        ZIL_UTIL.VIEW_HEIGHT *= 3;
-        ZIL_UTIL.CAM_ZOOM *= 2.25;
-
         ZIL.scene = new THREE.Scene();
         ZIL.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
         ZIL.init_camera();

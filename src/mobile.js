@@ -529,6 +529,7 @@ Mobile.prototype.receive_exp = function(exp) {
             $("#level_up").hide();
         }, 2000);
     }
+    ZIL_UTIL.player_stats = ZIL.player.get_stats();
     ZIL_UTIL.save_config();
 };
 

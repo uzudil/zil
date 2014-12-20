@@ -59,14 +59,14 @@
   ],
   "shape_name": "maps.skrit_sewers",
   "shortcuts": [
-    "objects.stairs_up",
-    "objects.candelabra",
-    "objects.chair",
+    "objects.column",
+    "objects.column-wood",
     "floor.stone",
+    "floors.wood",
     "doors.simple",
     "walls.stone2",
     "walls.stone_low",
-    "walls.stone",
+    "walls.stone_low",
     "walls.window",
     "objects.mushroom2"
   ],
@@ -75,9 +75,9 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "skrit",
-      245,
-      90
+      "skrit_sewers",
+      14,
+      14
     ],
     "has_password": true,
     "opened_ante_gate": true,
@@ -91,7 +91,7 @@
   },
   "player_stats": {
     "hp": 80,
-    "exp": 3200,
+    "exp": 3850,
     "level": 5
   }
 }
