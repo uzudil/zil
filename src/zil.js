@@ -9,7 +9,6 @@ var ZIL = {
 	fps_counter: 0,
 	fps_start: Date.now(),
 	XY_PLANE: new THREE.Plane(new THREE.Vector3(0, 0, 1), 1),
-    show_grid: false,
     last_time: 0,
     screen_pos_map: {},
     creatures_map: {},
@@ -35,6 +34,8 @@ var ZIL = {
     LOADING: false,
     quake_start: null,
     quake_step_start: null,
+    DEBUG_MODE: false,
+    creature_listeners: [],
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -95,8 +96,8 @@ var ZIL = {
                 var ty = Math.round(point.y) + ZIL.global_pos[1];
                 var tz = Math.round(point.z) + ZIL.global_pos[2];
                 ZIL.shape_name_and_location = ZIL.shape.get_shape_at(tx, ty, tz);
-//                console.log(">>> ZIL.shape_name_and_location=", ZIL.shape_name_and_location);
                 if (ZIL.shape_name_and_location) {
+                    if(ZIL.DEBUG_MODE) console.log(">>> ZIL.shape_name_and_location=", ZIL.shape_name_and_location);
                     var pos = ZIL.shape_name_and_location.slice(1, 4);
                     if(ZilStory.mouseover_location(ZIL.shape.category, ZIL.shape.name, ZIL.shape_name_and_location[0], pos)) {
                         $("body").css("cursor", "pointer");
@@ -133,6 +134,17 @@ var ZIL = {
 
         if(ZIL.in_combat) {
             if(ZIL.combat_creature == ZIL.player) {
+
+                // open doors, use ladders, etc
+                if(ZIL.shape_name_and_location) {
+                    var pos = ZIL.shape_name_and_location.slice(1, 4);
+                    click_handled = ZilStory.mouseclick_location(ZIL.shape.category, ZIL.shape.name, ZIL.shape_name_and_location[0], pos);
+                    if(!click_handled) {
+                        click_handled = ZIL.shape_clicked(ZIL.shape_name_and_location[0], pos);
+                    }
+                }
+                if(click_handled) return;
+
                 ZIL.combat_selected_creature = ZIL.selected_creature;
                 if(ZIL.combat_selected_creature) {
                     x = ZIL.combat_selected_creature.mobile.x;
@@ -233,7 +245,6 @@ var ZIL = {
         var split_name = shape_name.split(".");
         if(shape_name.indexOf("doors.") == 0) {
             var shape = ZIL.shape.get_shape(pos[0], pos[1], pos[2]);
-            console.log("shape=", shape);
             if(shape.rot == 1 || shape.rot == 3) {
                 ZIL.replace_shape(pos[0], pos[1], pos[2], split_name[0], split_name[1], 0);
             } else {
@@ -340,13 +351,15 @@ var ZIL = {
         if(event.which == 65) {
             ZIL.player.mobile.start_attack();
         } else if(event.which == 32) {
-            ZIL.show_grid = ZIL.show_grid ? false : true;
-            if(ZIL.show_grid) {
+            ZIL.DEBUG_MODE = !ZIL.DEBUG_MODE;
+            if(ZIL.DEBUG_MODE) {
                 ZIL.inner.add( ZIL.coord );
                 ZIL.inner.add( ZIL.obj );
+                $("#debug").show();
             } else {
                 ZIL.inner.remove( ZIL.coord );
                 ZIL.inner.remove( ZIL.obj );
+                $("#debug").hide();
             }
         }
 
@@ -821,9 +834,10 @@ var ZIL = {
                 color: 0xFFFFFF
             });
             ZIL.player = new Player();
+            ZIL.player.set_stats(ZIL_UTIL.player_stats);
 
             $("canvas").show();
-            $("#debug").show();
+//            $("#debug").show();
         });
 	},
 
@@ -841,9 +855,6 @@ var ZIL = {
         ZilShape.reset_cache();
         Mobile.clear_chunk_map();
         ZIL.creatures = [];
-
-        ZIL_UTIL.game_state["player_start"] = [category_name, shape_name, start_x, start_y];
-        ZIL_UTIL.save_config();
 
         $("body").css("cursor", "progress");
         setTimeout(ZIL_UTIL.bind(this, function() {
@@ -868,6 +879,9 @@ var ZIL = {
                 ZIL.LOADING = false;
 
                 ZilStory.on_map_load(category_name, shape_name);
+
+                ZIL_UTIL.game_state["player_start"] = [category_name, shape_name, start_x, start_y];
+                ZIL_UTIL.save_config();
             });
         }), 500);
 	},
@@ -956,6 +970,61 @@ var ZIL = {
                     ZIL.inner.position.y = -ZIL_UTIL.VIEW_HEIGHT / 2 + (Math.random() * 6 - 3);
                 }
             }
+        }
+    },
+
+    add_quest: function(quest_key) {
+        if(!ZIL_UTIL.game_state["quests"]) ZIL_UTIL.game_state["quests"] = [];
+        ZIL_UTIL.game_state["quests"].push(quest_key);
+        ZIL_UTIL.save_config();
+
+        var quest = ZilStory.QUESTS[quest_key];
+        console.log("Quest added " + quest.name);
+    },
+
+    quest_completed: function(quest_key) {
+        var quest = ZilStory.QUESTS[quest_key];
+        if(quest.on_complete) quest.on_complete(quest);
+
+        var x = ZIL_UTIL.game_state["quests"].indexOf(quest_key);
+        if(x >= 0) {
+            // if we didn't receive this quest, it's still completed, but we don't score it
+            ZIL.player.mobile.receive_exp(Math.max(quest.level - this.level, 1) * 50);
+
+            ZIL_UTIL.game_state["quests"].splice(x, 1);
+
+            if (!ZIL_UTIL.game_state["completed_quests"]) ZIL_UTIL.game_state["completed_quests"] = [];
+            ZIL_UTIL.game_state["completed_quests"].push(quest_key);
+
+            ZIL_UTIL.save_config();
+        }
+
+        console.log("Quest completed " + quest.name);
+    },
+
+    has_quest: function(quest_key) {
+        return ZIL_UTIL.game_state["quests"] && ZIL_UTIL.game_state["quests"].indexOf(quest_key) >= 0;
+    },
+
+    completed_quest: function(quest_key) {
+        return ZIL_UTIL.game_state["completed_quests"] && ZIL_UTIL.game_state["completed_quests"].indexOf(quest_key) >= 0;
+    },
+
+    add_creature_listener: function(creature_listener) {
+        ZIL.creature_listeners.push(creature_listener);
+    },
+
+    creature_dead: function(creature) {
+        console.log("+++ Creature died: " + creature.mobile.origin_x + "," + creature.mobile.origin_y + "," + creature.mobile.origin_z);
+        if(creature.mobile.ai_move) {
+            console.log(creature.mobile.get_name() + " dies.");
+            for(var i = 0; i < ZIL.creature_listeners.length; i++) {
+                ZIL.creature_listeners[i](ZIL.shape.category, ZIL.shape.name, creature);
+            }
+        } else {
+            // player death
+            alert("Player dies.");
+            // game over
         }
     }
 };

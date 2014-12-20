@@ -1,6 +1,17 @@
 function ZilStory() {
 }
 
+ZilStory.QUESTS = {
+    "sewers": {
+        name: "Kill the beast in the Skrit sewers",
+        level: 1,
+        on_complete: function() {
+            ZIL_UTIL.game_state["opened_skrit_gate"] = true;
+            ZIL_UTIL.save_config();
+        }
+    }
+};
+
 ZilStory.MAPS = {
     "maps.ante": {
         events: {
@@ -97,7 +108,11 @@ ZilStory.MAPS = {
     },
     "maps.skrit": {
         events: {
-
+            on_load: function() {
+                if (ZIL_UTIL.game_state["opened_skrit_gate"]) {
+                    ZIL.replace_shape(19, 195, 8, "doors", "gate-open", 3);
+                }
+            }
         },
         locations: {
             "134,332,2": {
@@ -113,10 +128,43 @@ ZilStory.MAPS = {
                 on_mouseclick: function () {
                     ZIL.load_shape("maps", "skrit-library", 127, 108);
                 }
+            },
+            "254,83,2": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "skrit_sewers", 14, 14);
+                }
+            },
+            "19,195,8": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                }
             }
         }
     },
-    "maps.skrit-library": {
+    "maps.skrit_sewers": {
+        events: {
+            on_load: function() {
+                ZIL.add_creature_listener(function(map_cat, map_name, creature) {
+                    if(creature.mobile.origin_x == 280 && creature.mobile.origin_y == 313 && creature.mobile.origin_z == 1) {
+                        ZIL.quest_completed("sewers");
+                    }
+                });
+            }
+        },
+        locations: {
+            "6,4,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "skrit", 245, 90);
+                }
+            }
+        }
+    },
+   "maps.skrit-library": {
         events: {
 
         },
@@ -126,6 +174,26 @@ ZilStory.MAPS = {
                 },
                 on_mouseclick: function () {
                     ZIL.load_shape("maps", "skrit", 51, 283);
+                }
+            },
+            "58,4,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    if (ZIL_UTIL.game_state["has_map"]) {
+                        ZIL.say(ZIL.player, "I will return the <b>map of the mountain</b> when I don't need it anymore.");
+                    } else {
+                        ZIL.say(ZIL.player, "What's this now? A <b>map of the mountain</b>?<br>I think I'll borrow this for a bit.", function () {
+                            Mobile.hide_convos();
+
+                            ZIL_UTIL.game_state["has_map"] = true;
+                            ZIL_UTIL.save_config();
+
+                            // todo: show world map button in ui
+
+                            return true;
+                        });
+                    }
                 }
             }
         }
@@ -180,7 +248,7 @@ ZilStory.CONVO = {
             "wondering": "Yes it is confusing at first, I know. <a>Many</a> like you come through here.",
             "many": "The town of <a>Skrit</a> is the first <a>nexus</a> in the <a>mountain</a>.<br>All <a>travelers</a> arrive here first.",
             "travelers": "Travelers like you, on their way to see <a>Gav</a> at the <a>Observatory</a>.",
-            "skrit": "The bustling town you see before you. It's one of the biggest in the <a>mountain</a>.<br>Skrit is also a gateway town to the rest of the <a>mountain</a> though the entrance is currently <a>sealed</a>.<br>Go and see mayor <a>Zef</a> if you want to travel that way.",
+            "skrit": "The bustling town you see before you. It's one of the biggest in the <a>mountain</a>.<br>Skrit is also a gateway town to the rest of the <a>mountain</a> though the entrance is currently <a>sealed</a>.",
             "nexus": "Most of the <a>mountain</a> is made up of the ruins of the ages past.<br>The few places of relative peace are the settlements.<br>We call these nexuses.",
             "mountain": "There is more to the mountain than the pile of rock it seems to be.<br>To learn more find the Seer <a>Gav</a>.",
             "gav": "The seer Gav makes his home in the <a>Observatory</a>, high in the crown of the <a>mountain</a>.<br>No one knows where he came from or how long he's lived here.<br>He is a mystic and an oracle who only appears to those he finds worthy.",
@@ -202,7 +270,23 @@ ZilStory.CONVO = {
         },
         "170,43,3": {
             "_name_": "Zef",
-            "": "Work, work work."
+            "": "Speak quickly <a w='travelers'>traveler</a>, for the work of <a>mayor</a> never ceases.",
+            "mayor": "My name is Zef, I'm the mayor of the town of <a>Skrit</a>. Mainly, I oversee the <a>safety</a> of our citizens.",
+            "safety": "As I'm sure you <a w='nexus'>know</a>, the <a>mountain</a> is a dangerous place. Towns like <a>Skrit</a> are but beacons of safety in its darkness.<br>For this reason, I've had the gateway to the outside <a>sealed</a>.",
+            "sealed": function() {
+                if(ZIL.has_quest("sewers")) {
+                    return "The gateway out of Skrit will remain closed until you've helped me by getting rid of the beast in the <a>sewers</a>.";
+                } else if(ZIL.completed_quest("sewers")) {
+                    return "Thank you for ensuring the safetry of our citizens! As promised, I've had the gateway is to the rest of the <a>mountain</a> opened.";
+                } else if(ZIL_UTIL.game_state["opened_skrit_gate"]) {
+                    return "In response to reports of fewer monsters in the area, I've decided to open the gateway to the rest of the <a>mountain</a>.";
+                } else {
+                    ZIL.add_quest("sewers");
+                    return "You want to venture into the outer darkness of the <a>mountain</a>? To do that, first you must do a <a>favor</a> for me."
+                }
+            },
+            "favor": "I've heard rumors of some kind of monster living in the town <a>sewers</a>. I want you to get rid of it for me before someone gets hurt.",
+            "sewers": "Like all old construction in the <a>mountain</a>, the sewers were also built by the <a>Fehrr</a>. You can find the entrance in the west part of town."
         },
         "159,59,3": {
             "_name_": "Anita",
@@ -235,7 +319,7 @@ ZilStory.CONVO_KEY = null;
 ZilStory.get_creature_name = function(map_category, map_name, creature) {
     var pos_key = [creature.mobile.origin_x, creature.mobile.origin_y, creature.mobile.origin_z].join(",");
     var m = ZilStory.CONVO[map_category + "." + map_name];
-    console.log(map_category + "." + map_name + " pos=", pos_key);
+    if(ZIL.DEBUG_MODE) console.log(map_category + "." + map_name + " pos=", pos_key);
     if(m && m[pos_key] && m[pos_key]["_name_"]) {
         return m[pos_key]["_name_"];
     } else {

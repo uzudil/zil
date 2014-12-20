@@ -507,29 +507,29 @@ Mobile.prototype.attack_roll = function() {
 
             // experience gain
             if(!this.ai_move) {
-                var old_level = this.level;
-                this.exp += Math.max(this.target.mobile.level - this.level, 1) * 50;
-                this.parent.set_level_from_exp();
-                if(this.level > old_level) {
-                    $("#level_up").show();
-                    setTimeout(function() {
-                        $("#level_up").hide();
-                    }, 2000);
-                }
+                this.receive_exp(Math.max(this.target.mobile.level - this.level, 1) * 50);
             }
 
             // won't need this anymore
             this.shape_obj.remove(this.outline_obj);
 
             // target death
-            if(this.target.mobile.ai_move) {
-                console.log(this.target.mobile.get_name() + " dies.");
-            } else {
-                // player death
-                alert("Player dies.");
-            }
+            ZIL.creature_dead(this.target);
         }
     }
+};
+
+Mobile.prototype.receive_exp = function(exp) {
+    var old_level = this.level;
+    this.exp += exp;
+    this.parent.set_level_from_exp();
+    if(this.level > old_level) {
+        $("#level_up").show();
+        setTimeout(function() {
+            $("#level_up").hide();
+        }, 2000);
+    }
+    ZIL_UTIL.save_config();
 };
 
 Mobile.prototype.look_for_target = function() {

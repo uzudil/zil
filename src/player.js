@@ -27,3 +27,17 @@ Player.prototype.set_level_from_exp = function() {
 Player.prototype.get_range = function() {
     return 4;
 };
+
+Player.prototype.get_stats = function() {
+    return {
+        "hp": this.mobile.hp,
+        "exp": this.mobile.exp,
+        "level": this.mobile.level
+    }
+};
+
+Player.prototype.set_stats = function(stats) {
+    this.mobile.hp = stats["hp"] || this.mobile.hp;
+    this.mobile.exp = stats["exp"] || this.mobile.exp;
+    this.mobile.level = stats["level"] || this.mobile.level;
+};

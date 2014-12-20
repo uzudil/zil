@@ -57,7 +57,7 @@
     15066597,
     1778405
   ],
-  "shape_name": "maps.skrit",
+  "shape_name": "maps.skrit_sewers",
   "shortcuts": [
     "objects.stairs_up",
     "objects.candelabra",
@@ -65,8 +65,8 @@
     "floor.stone",
     "doors.simple",
     "walls.stone2",
-    "walls.stone",
     "walls.stone_low",
+    "walls.stone",
     "walls.window",
     "objects.mushroom2"
   ],
@@ -76,11 +76,22 @@
     "player_start": [
       "maps",
       "skrit",
-      51,
-      283
+      245,
+      90
     ],
     "has_password": true,
     "opened_ante_gate": true,
-    "skrit_intro": true
+    "skrit_intro": true,
+    "has_map": true,
+    "quests": [],
+    "opened_skrit_gate": true,
+    "completed_quests": [
+      "sewers"
+    ]
+  },
+  "player_stats": {
+    "hp": 80,
+    "exp": 3200,
+    "level": 5
   }
 }
