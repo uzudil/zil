@@ -140,6 +140,21 @@ ZilStory.MAPS = {
                 on_mouseover: function () {
                 },
                 on_mouseclick: function () {
+                    ZIL.load_shape("maps", "westvein", 311, 82);
+                }
+            }
+        }
+    },
+    "maps.westvein": {
+        events: {
+
+        },
+        locations: {
+            "333,81,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "skrit", 27, 195);
                 }
             }
         }
