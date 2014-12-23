@@ -1,6 +1,7 @@
 var ZIL = {
 
 	scene: null,
+	scene2: null,
 	camera: null,
 	renderer: null,
 	move: [0, 0, 0],
@@ -307,12 +308,13 @@ var ZIL = {
     },
 
 	mouse_to_world: function(event) {
+        // http://stackoverflow.com/questions/26822587/using-raycaster-with-an-orthographic-camera
 		var mousex = (( (event.offsetX - ZIL.offset_x) / window.innerWidth ) * 2 - 1);
 		var mousey = (-( (event.offsetY - ZIL.offset_y) / window.innerHeight ) * 2 + 1);
-		// console.log("" + mousex + "," + mousey);
-		var vector = new THREE.Vector3( mousex, mousey, 1 );
-		var ray_caster = ZIL.projector.pickingRay(vector, ZIL.camera);
-        return ray_caster.intersectObjects(ZIL.rendered_shape.children, true);
+        var vector = new THREE.Vector3( mousex, mousey, -1 ).unproject( ZIL.camera );
+        ZIL.dir_vector.set( 0, 0, -1 ).transformDirection( ZIL.camera.matrixWorld );
+        ZIL.raycaster.set( vector, ZIL.dir_vector );
+        return ZIL.raycaster.intersectObjects( ZIL.rendered_shape.children, true );
 	},
 
 	cursor_moved: function() {
@@ -393,6 +395,7 @@ var ZIL = {
                             // if not yet added, add creature
                             if (ZIL.shown_creatures[c.id] == null) {
                                 ZIL.rendered_shape.add(c.mobile.shape_obj);
+                                ZIL.rendered_shape2.add(c.mobile.shape_obj_copy);
                                 ZIL.shown_creatures[c.id] = true;
                             }
 
@@ -409,6 +412,7 @@ var ZIL = {
         for(var creature_id in ZIL.shown_creatures) {
             if(drawn_creatures[creature_id] == null) {
                 ZIL.rendered_shape.remove(ZIL.creatures_map[creature_id].mobile.shape_obj);
+                ZIL.rendered_shape2.remove(ZIL.creatures_map[creature_id].mobile.shape_obj_copy);
                 ZIL.creatures_map[creature_id].mobile.remove_divs();
                 remove_ids.push(creature_id);
             }
@@ -669,8 +673,12 @@ var ZIL = {
     },
 
     init: function() {
+
+        // ---------------------
+        // scene
         ZIL.scene = new THREE.Scene();
         ZIL.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
+        ZIL.renderer.autoClear = false;
         ZIL.init_camera();
 
         ZIL.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -702,7 +710,58 @@ var ZIL = {
 //		ZIL.inner.add( ZIL.obj );
         ZIL.init_cursor();
 
-        ZIL.init_light();
+        ZIL.init_light(ZIL.scene);
+
+        // ---------------------
+        // scene2
+        ZIL.scene2 = new THREE.Scene();
+        ZIL.world2 = new THREE.Object3D();
+        ZIL.world2.position.set(ZIL_UTIL.VIEW_WIDTH / 2, ZIL_UTIL.VIEW_HEIGHT / 2, 0);
+        ZIL.world2.scale.z = ZIL.Z_SCALE;
+        ZIL.scene2.add(ZIL.world2);
+
+        ZIL.inner2 = new THREE.Object3D();
+        ZIL.inner2.position.x = -ZIL_UTIL.VIEW_WIDTH / 2;
+        ZIL.inner2.position.y = -ZIL_UTIL.VIEW_HEIGHT / 2;
+        ZIL.world2.add(ZIL.inner2);
+
+        ZIL.rendered_shape2 = new THREE.Object3D();
+        ZIL.inner2.add(ZIL.rendered_shape2);
+        ZIL.init_light(ZIL.scene2);
+
+        // ---------------------
+        // composer
+
+
+        // render just the mobile shapes
+        var render_mobile = new THREE.RenderPass( ZIL.scene2, ZIL.camera );
+        render_mobile.clear = false;
+
+        var rt_parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: true };
+        var target = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, rt_parameters )
+
+        var overlay_composer = new THREE.EffectComposer( ZIL.renderer, target );
+        overlay_composer.addPass( render_mobile );
+        overlay_composer.addPass( new THREE.ShaderPass( THREE.CopyShader ) );
+
+        // blend the mobiles on top of the scene
+        var render_mask = new THREE.MaskPass( ZIL.scene2, ZIL.camera );
+        var clear_mask = new THREE.ClearMaskPass();
+
+        var effectBlend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
+        effectBlend.uniforms[ 'tDiffuse2' ].value = overlay_composer.renderTarget2;
+        effectBlend.uniforms[ 'opacity' ].value = 1;
+        effectBlend.uniforms[ 'mixRatio' ].value = 0.25; // how much of the mobile to show
+
+        var final_effect = new THREE.ShaderPass( THREE.CopyShader );
+        final_effect.renderToScreen = true;
+
+        ZIL.composer = new THREE.EffectComposer( ZIL.renderer, target );
+        ZIL.composer.addPass( new THREE.RenderPass( ZIL.scene, ZIL.camera ) );
+        ZIL.composer.addPass( render_mask );
+        ZIL.composer.addPass( effectBlend );
+        ZIL.composer.addPass( clear_mask );
+        ZIL.composer.addPass( final_effect );
     },
 
     play_intro: function() {
@@ -732,27 +791,27 @@ var ZIL = {
         ZIL.load_game();
     },
 
-	init_light: function() {
+	init_light: function(scene) {
         // credit: https://github.com/jeromeetienne/threex.basiclighting/blob/master/threex.basiclighting.js
         var object3d	= new THREE.AmbientLight(0x101010);
         object3d.name	= 'Ambient light';
-        ZIL.scene.add(object3d);
+        scene.add(object3d);
 
         var object3d	= new THREE.DirectionalLight('white', 0.5);
 //        object3d.position.set(2.6,1,3);
         object3d.position.set(0,3,3);
         object3d.name	= 'Back light';
-        ZIL.scene.add(object3d);
+        scene.add(object3d);
 
         var object3d	= new THREE.DirectionalLight('white', 0.1);
         object3d.position.set(3, 3, 0);
         object3d.name 	= 'Key light';
-        ZIL.scene.add(object3d);
+        scene.add(object3d);
 
         var object3d	= new THREE.DirectionalLight('white', 0.7);
         object3d.position.set(3, 0, 3);
         object3d.name	= 'Fill light';
-        ZIL.scene.add(object3d);
+        scene.add(object3d);
 	},
 
 	init_cursor: function() {
@@ -772,7 +831,8 @@ var ZIL = {
 		ZIL.camera.position.set(p * 1.2, p * 1.2, p * 2);
 		ZIL.camera.up = new THREE.Vector3(0,0,1);
 		ZIL.camera.lookAt(new THREE.Vector3(p * 0.45, p * 0.45, 0));
-		ZIL.projector = new THREE.Projector();
+        ZIL.raycaster = new THREE.Raycaster();
+        ZIL.dir_vector = new THREE.Vector3();
 	},
 
     init_coords: function() {
@@ -865,6 +925,7 @@ var ZIL = {
                 ZIL.player.mobile.y = start_y;
                 ZIL.player.mobile.z = ZIL.shape.get_highest_empty_space(start_x, start_y, ZIL.player.mobile.shape);
                 ZIL.rendered_shape.add(ZIL.player.mobile.shape_obj);
+                ZIL.rendered_shape2.add(ZIL.player.mobile.shape_obj_copy);
                 ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
 
                 ZIL.move_visible_creatures(1000);
@@ -934,7 +995,11 @@ var ZIL = {
 
 		ZIL.game_step(delta_time);
 
-		ZIL.renderer.render(ZIL.scene, ZIL.camera);
+//		ZIL.renderer.render(ZIL.scene, ZIL.camera);
+//        ZIL.renderer.clear(false, true, false);
+//		ZIL.renderer.render(ZIL.scene2, ZIL.camera);
+        ZIL.renderer.clear();
+        ZIL.composer.render();
 
         // draw fps
 		ZIL.fps_counter++;

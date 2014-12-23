@@ -35,6 +35,7 @@ function Mobile(x, y, z, category, shape, parent) {
     this.shape.build_shape_inline();
 
     this.shape_obj = this.shape.render_shape();
+    this.shape_obj_copy = this.shape_obj.clone();
 
     // center the shape's geometry (so rotation works correctly)
     for(var i = 0; i < this.shape_obj.children.length; i++) {
@@ -178,10 +179,12 @@ Mobile.prototype.set_shape = function(dir) {
     this.dir = dir;
 
     this.shape_obj.rotation.set(0, 0, PI/2 * dir);
+    this.shape_obj_copy.rotation.set(0, 0, PI/2 * dir);
 };
 
 Mobile.prototype.move = function(gx, gy, gz) {
     this.shape_obj.position.set(this.x - gx, this.y - gy, this.z - gz);
+    this.shape_obj_copy.position.set(this.x - gx, this.y - gy, this.z - gz);
     this.reposition_divs();
 };
 
@@ -284,8 +287,10 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
         if(!this.is_alive()) {
             if(this.shape_obj.children[0].rotation.y < PI / 2) {
                 this.shape_obj.children[0].rotation.y += delta_time * 0.01;
+                this.shape_obj_copy.children[0].rotation.y += delta_time * 0.01;
             } else if(this.shape_obj.children[0].position.z > -1) {
                 this.shape_obj.children[0].position.z -= delta_time * 0.05;
+                this.shape_obj_copy.children[0].position.z -= delta_time * 0.05;
             } else {
                 this.remove_me = true;
             }
@@ -363,6 +368,7 @@ Mobile.prototype.attack = function(delta_time) {
             var y2 = this.target.mobile.y;
             var zrot = Math.atan2(y2 - this.y, x2 - this.x);
             this.shape_obj.rotation.z = zrot - this.shape.get_rotation() - PI/2;
+            this.shape_obj_copy.rotation.z = zrot - this.shape.get_rotation() - PI/2;
         }
 
         if(this.attack_dir) {
@@ -379,6 +385,7 @@ Mobile.prototype.attack = function(delta_time) {
                 }
             }
             this.shape_obj.children[0].rotation.x = -ZIL_UTIL.angle_to_radians(this.attack_angle);
+            this.shape_obj_copy.children[0].rotation.x = -ZIL_UTIL.angle_to_radians(this.attack_angle);
         } else {
             // last part: wait some time, run encounter and end attack
             this.attack_phase += delta_time;
@@ -388,6 +395,7 @@ Mobile.prototype.attack = function(delta_time) {
                 // end of attack
                 this.attack_phase = null;
                 this.shape_obj.rotation.z = 0;
+                this.shape_obj_copy.rotation.z = 0;
             }
         }
     }

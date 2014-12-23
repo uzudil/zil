@@ -498,6 +498,12 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk) {
     chunk.set_pos(cx * ZIL_UTIL.CHUNK_SIZE, cy * ZIL_UTIL.CHUNK_SIZE, cz * ZIL_UTIL.CHUNK_SIZE, this.expanded_shape);
 	chunk.render(this.use_boxes); // force refresh
+
+    // debug info
+    chunk.shape.userData.name = this.category + "." + this.name;
+    for(var t = 0; t < chunk.shape.children.length; t++) {
+        chunk.shape.children[t].userData.name = this.category + "." + this.name;
+    }
 };
 
 ZilShape.prototype.rotate = function(dir) {
