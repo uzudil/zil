@@ -735,7 +735,6 @@ var ZIL = {
 
         // render just the mobile shapes
         var render_mobile = new THREE.RenderPass( ZIL.scene2, ZIL.camera );
-        render_mobile.clear = false;
 
         var rt_parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: true };
         var target = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, rt_parameters )
@@ -746,12 +745,13 @@ var ZIL = {
 
         // blend the mobiles on top of the scene
         var render_mask = new THREE.MaskPass( ZIL.scene2, ZIL.camera );
+        render_mask.inverse = true;
         var clear_mask = new THREE.ClearMaskPass();
 
-        var effectBlend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
-        effectBlend.uniforms[ 'tDiffuse2' ].value = overlay_composer.renderTarget2;
-        effectBlend.uniforms[ 'opacity' ].value = 1;
-        effectBlend.uniforms[ 'mixRatio' ].value = 0.25; // how much of the mobile to show
+        var effect_blend = new THREE.ShaderPass( THREE.BlendShader, "tDiffuse1" );
+        effect_blend.uniforms[ 'tDiffuse2' ].value = overlay_composer.renderTarget2;
+        effect_blend.uniforms[ 'opacity' ].value = 1;
+        effect_blend.uniforms[ 'mixRatio' ].value = 0.25; // how much of the mobile to show
 
         var final_effect = new THREE.ShaderPass( THREE.CopyShader );
         final_effect.renderToScreen = true;
@@ -759,7 +759,7 @@ var ZIL = {
         ZIL.composer = new THREE.EffectComposer( ZIL.renderer, target );
         ZIL.composer.addPass( new THREE.RenderPass( ZIL.scene, ZIL.camera ) );
         ZIL.composer.addPass( render_mask );
-        ZIL.composer.addPass( effectBlend );
+        ZIL.composer.addPass( effect_blend );
         ZIL.composer.addPass( clear_mask );
         ZIL.composer.addPass( final_effect );
     },
