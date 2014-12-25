@@ -351,7 +351,8 @@ ZilStory.on_convo_render = function(el) {
             var key = a.attr("w") || a.text().trim().toLowerCase();
 //            console.log("convo key=" + key + " click=", a);
             var convo_tree = ZilStory.CONVO[ZilStory.CONVO_KEY[0]][ZilStory.CONVO_KEY[1]];
-            var text = convo_tree[key] || ZilStory.CONVO[ZilStory.CONVO_KEY[0]]["common"][key] || convo_tree[""];
+            var common_tree = ZilStory.CONVO[ZilStory.CONVO_KEY[0]]["common"];
+            var text = convo_tree[key] || (common_tree && common_tree[key]) || convo_tree[""];
             if(typeof text == "function") text = text();
             ZIL.say(ZilStory.CONVO_KEY[2], text, null, ZilStory.on_convo_render);
             return false;

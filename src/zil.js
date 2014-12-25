@@ -37,6 +37,7 @@ var ZIL = {
     quake_step_start: null,
     DEBUG_MODE: false,
     creature_listeners: [],
+    node_debug: null,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -60,6 +61,7 @@ var ZIL = {
 
         var intersections = ZIL.mouse_to_world(event);
         if(intersections && intersections.length > 0) {
+            var position_handled = false;
             for(var i = 0; i < intersections.length; i++) {
                 var intersection = intersections[i];
 
@@ -68,16 +70,10 @@ var ZIL = {
                 // -0.5 seems to make picking more reliable...
                 intersection.point.x -= 0.5;
                 intersection.point.y -= 0.5;
+                intersection.point.x = Math.round(intersection.point.x);
+                intersection.point.y = Math.round(intersection.point.y);
+                intersection.point.z = Math.round(intersection.point.z);
                 var point = intersection.point;
-
-                if(i == 0) {
-                    ZIL.cursor[0] = Math.round(point.x);
-                    ZIL.cursor[1] = Math.round(point.y);
-                    ZIL.cursor[2] = Math.round(point.z);
-
-                    ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
-                    ZIL.show_cursor_pos();
-                }
 
                 // a creature?
                 if (intersection.object && intersection.object.userData) {
@@ -89,22 +85,48 @@ var ZIL = {
                         // tooltip
                         target_creature.mobile.show_above(ZilStory.get_creature_name(ZIL.shape.category, ZIL.shape.name, target_creature), "creature_description");
                         $("body").css("cursor", "pointer");
+                        position_handled = true;
                         break;
                     }
                 }
 
-                var tx = Math.round(point.x) + ZIL.global_pos[0];
-                var ty = Math.round(point.y) + ZIL.global_pos[1];
-                var tz = Math.round(point.z) + ZIL.global_pos[2];
+                var tx = point.x + ZIL.global_pos[0];
+                var ty = point.y + ZIL.global_pos[1];
+                var tz = point.z + ZIL.global_pos[2];
                 ZIL.shape_name_and_location = ZIL.shape.get_shape_at(tx, ty, tz);
                 if (ZIL.shape_name_and_location) {
                     if(ZIL.DEBUG_MODE) console.log(">>> ZIL.shape_name_and_location=", ZIL.shape_name_and_location);
                     var pos = ZIL.shape_name_and_location.slice(1, 4);
                     if(ZilStory.mouseover_location(ZIL.shape.category, ZIL.shape.name, ZIL.shape_name_and_location[0], pos)) {
                         $("body").css("cursor", "pointer");
+                        position_handled = true;
                         break;
                     } else if(ZIL.shape_hover(ZIL.shape_name_and_location[0], pos)) {
                         $("body").css("cursor", "pointer");
+                        position_handled = true;
+                        break;
+                    }
+                }
+            }
+
+            if(!position_handled) {
+//                console.log("Checking:");
+                for(var i = 0; i < intersections.length; i++) {
+                    var intersection = intersections[i];
+
+                    var tx = intersection.point.x + ZIL.global_pos[0];
+                    var ty = intersection.point.y + ZIL.global_pos[1];
+                    var tz = intersection.point.z + ZIL.global_pos[2];
+
+                    var node = ZIL.shape.nodes[(tx / ZilShape.PATH_RES)|0][(ty / ZilShape.PATH_RES)|0];
+//                    console.log("---" + tx + "," + ty + "," + tz + " node=", node);
+                    if(node && node.expanded_node) {
+                        ZIL.cursor[0] = node.expanded_node.x - ZIL.global_pos[0];
+                        ZIL.cursor[1] = node.expanded_node.y - ZIL.global_pos[1];
+                        ZIL.cursor[2] = node.expanded_node.z - ZIL.global_pos[2];
+
+                        ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
+                        ZIL.show_cursor_pos();
                         break;
                     }
                 }
@@ -300,7 +322,7 @@ var ZIL = {
         var xp = x - ZIL.global_pos[0];
         var yp = y - ZIL.global_pos[1];
 
-        var geometry = new THREE.PlaneGeometry(w, h);
+        var geometry = new THREE.PlaneBufferGeometry(w, h);
         ZIL.ground_marker = new THREE.Mesh(geometry, ZIL.target_texture);
         ZIL.ground_marker.position.set(xp, yp,
                 ZIL.shape.get_highest_empty_space(xp + ZIL.global_pos[0], yp + ZIL.global_pos[1]) + 0.1);
@@ -355,11 +377,13 @@ var ZIL = {
         } else if(event.which == 32) {
             ZIL.DEBUG_MODE = !ZIL.DEBUG_MODE;
             if(ZIL.DEBUG_MODE) {
-                ZIL.inner.add( ZIL.coord );
+                ZIL.inner.add( ZIL.node_debug );
+//                ZIL.inner.add( ZIL.coord );
                 ZIL.inner.add( ZIL.obj );
                 $("#debug").show();
             } else {
-                ZIL.inner.remove( ZIL.coord );
+                ZIL.inner.remove( ZIL.node_debug );
+//                ZIL.inner.remove( ZIL.coord );
                 ZIL.inner.remove( ZIL.obj );
                 $("#debug").hide();
             }
@@ -608,11 +632,15 @@ var ZIL = {
             x = ZIL.player.mobile.x;
             y = ZIL.player.mobile.y;
         }
-        ZIL.global_pos[0] = x - ZIL_UTIL.VIEW_WIDTH / 2;
-        ZIL.global_pos[1] = y - ZIL_UTIL.VIEW_HEIGHT / 2;
+        ZIL.set_global_pos(x - ZIL_UTIL.VIEW_WIDTH / 2, y - ZIL_UTIL.VIEW_HEIGHT / 2, ZIL.global_pos[2]);
         ZIL.screen_pos_map = {};
         ZIL.clear_ground_target();
         ZIL.redraw_shape();
+    },
+
+    set_global_pos: function(x, y, z) {
+        ZIL.global_pos = [ x, y, z ];
+        if(ZIL.node_debug) ZIL.node_debug.position.set(-x, -y, -z + 1);
     },
 
     is_near_edge_of_screen: function(x, y) {
@@ -839,7 +867,7 @@ var ZIL = {
 		ZIL_UTIL.clear_node(ZIL.coord);
 
 		// add the x plane
-		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_DEPTH );
+		var geometry = new THREE.PlaneBufferGeometry( ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_DEPTH );
 		var material = new THREE.MeshLambertMaterial( {color: 0x808080, side: THREE.DoubleSide, wireframe: true, transparent: true, opacity: 0.25 } );
 		var plane = new THREE.Mesh( geometry, material );
 		plane.rotation.x = PI / -2;
@@ -849,7 +877,7 @@ var ZIL = {
 		ZIL.coord.add( plane );
 
 		// add the y plane
-		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT, ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT );
+		var geometry = new THREE.PlaneBufferGeometry( ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT, ZIL_UTIL.VIEW_WIDTH, ZIL_UTIL.VIEW_HEIGHT );
 		var material = new THREE.MeshLambertMaterial( {color: 0x80cc80, side: THREE.DoubleSide, wireframe: true, transparent: true, opacity: 0.25 } );
 		var plane = new THREE.Mesh( geometry, material );
 		plane.position.z = -0.5
@@ -858,7 +886,7 @@ var ZIL = {
 		ZIL.coord.add( plane );
 
 		// add the z plane
-		var geometry = new THREE.PlaneGeometry( ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_HEIGHT, ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_HEIGHT );
+		var geometry = new THREE.PlaneBufferGeometry( ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_HEIGHT, ZIL_UTIL.VIEW_DEPTH, ZIL_UTIL.VIEW_HEIGHT );
 		var material = new THREE.MeshLambertMaterial( {color: 0x8080cc, side: THREE.DoubleSide, wireframe: true, transparent: true, opacity: 0.25 } );
 		var plane = new THREE.Mesh( geometry, material );
 		plane.rotation.y = PI / -2;
@@ -897,6 +925,32 @@ var ZIL = {
         });
 	},
 
+    init_node_debug: function() {
+        if(ZIL.node_debug) {
+            if(ZIL.node_debug.parent) ZIL.node_debug.parent.remove(ZIL.node_debug);
+            while(ZIL.node_debug.children().length > 0) ZIL.node_debug.remove(ZIL.node_debug.children()[0])
+        }
+
+        var geo = new THREE.Geometry();
+        for(var x = 0; x < ZIL.shape.nodes.length; x++) {
+            for(var y = 0; y < ZIL.shape.nodes[0].length; y++) {
+                var node = ZIL.shape.nodes[x][y];
+                if(node.expanded_node) {
+                    var sq = ZIL_UTIL.make_square_face(ZilShape.PATH_RES);
+                    var child = new THREE.Mesh(sq, null);
+                    child.position.set(node.x + ZilShape.PATH_RES/2, node.y + ZilShape.PATH_RES/2, node.z);
+                    child.updateMatrix();
+                    geo.merge(child.geometry, child.matrix, x % 2 == y % 2 ? 0 : 1);
+                }
+            }
+        }
+        var materials = new THREE.MeshFaceMaterial([
+            new THREE.MeshLambertMaterial( {color: 0xff0000, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } ),
+            new THREE.MeshLambertMaterial( {color: 0x0000ff, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } )
+        ]);
+        ZIL.node_debug = new THREE.Mesh(geo, materials);
+    },
+
 	load_shape: function(category_name, shape_name, start_x, start_y, on_load) {
         ZIL.LOADING = true;
 
@@ -919,11 +973,16 @@ var ZIL = {
 
                 if(on_load) on_load();
 
-                ZIL.global_pos = [ start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0 ];
+                var start_z = ZIL.shape.get_highest_empty_space(start_x, start_y, ZIL.player.mobile.shape);
+                ZIL.shape.build_nodes(start_x, start_y, start_z);
+
+                ZIL.init_node_debug();
+
+                ZIL.set_global_pos(start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0);
 
                 ZIL.player.mobile.x = start_x;
                 ZIL.player.mobile.y = start_y;
-                ZIL.player.mobile.z = ZIL.shape.get_highest_empty_space(start_x, start_y, ZIL.player.mobile.shape);
+                ZIL.player.mobile.z = start_z;
                 ZIL.rendered_shape.add(ZIL.player.mobile.shape_obj);
                 ZIL.rendered_shape2.add(ZIL.player.mobile.shape_obj_copy);
                 ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);

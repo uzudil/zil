@@ -7,7 +7,6 @@
 // Includes Binary Heap (with modifications) from Marijn Haverbeke.
 // http://eloquentjavascript.net/appendix2.html
 
-ACCURATE_ASTAR = true; // more expensive to run
 ASTAR_TIMEOUT = 1000; // give up after this many millis
 
 (function(definition) {
@@ -155,99 +154,72 @@ var astar = {
 };
 
 ZilShape.prototype.isWall = function(node, creature) {
-
-    if(!ACCURATE_ASTAR) {
-        // test a stick at the center of the shape
-        for (var z = 0; z < creature.mobile.shape.depth; z++) {
-            // it's a wall if there is another node on top of this (z + 1)
-            var k = ZilShape._key(node.x + (creature.mobile.size / 2) | 0, node.y + (creature.mobile.size / 2) | 0, node.z + 1 + z);
-            if (this.expanded_shape[k]) {
-//            console.log("--- wall: " + node.x + "," + node.y + "," + node.z);
-                return true;
-            }
-        }
-    }
-
-    for(var x = 0; x < creature.mobile.size; x++) {
-        for(var y = 0; y < creature.mobile.size; y++) {
-            for(var z = 0; z < creature.mobile.shape.bounds.d; z++) {
-                var px = node.x + x;
-                var py = node.y + y;
-                var pz = node.z + 1 + z;
-
-                if(ACCURATE_ASTAR) {
-                    // can the creature fit at the node's location?
-                    var k = ZilShape._key(px, py, pz);
-                    if (this.expanded_shape[k]) return true;
-                }
-
-                // is there another creature at the node's location?
-                var c = creature.mobile.creature_blocked_at(px, py, pz);
-                if(c) {
-//                    console.log("planner: " + creature.mobile.get_name() + " blocked by: " + c.mobile.get_name() + " at " + px + "," + py + "," + pz);
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
+    return node.expanded_node == null;
 };
 
 ZilShape.prototype.astar_search = function(start, end, creature) {
-    var start_node = this.expanded_shape[ZilShape._key(start[0], start[1], start[2])];
-    var end_node = this.expanded_shape[ZilShape._key(end[0], end[1], end[2])];
-//    console.log("==== start_node=" + start_node + " end_node=" + end_node);
+    if(!start || !end) return [];
+    var start_node = this.nodes[(start[0]/ZilShape.PATH_RES)|0][(start[1]/ZilShape.PATH_RES)|0];
+    var end_node = this.nodes[(end[0]/ZilShape.PATH_RES)|0][(end[1]/ZilShape.PATH_RES)|0];
+//    console.log("==== start_node=" + start_node.x + "," + start_node.y + "," + start_node.z + " end_node=" + end_node.x + "," + end_node.y + "," + end_node.z);
     if(!(start_node && end_node)) return [];
-    return astar.search(this, start_node, end_node, creature, { closest: true });
+    var path = astar.search(this, start_node, end_node, creature, { closest: true });
+
+    // create a real path
+    var p = [];
+    var incomplete = false;
+    for(var i = 0; i < path.length; i++) {
+        var prev = i == 0 ? start_node : path[i - 1];
+        var node = path[i];
+        p.push(prev);
+//        console.log("-" + prev.x + "," + prev.y + "," + prev.z);
+        for(var t = 1; t < ZilShape.PATH_RES; t++) {
+            var x = prev.x + ((node.x - prev.x) * t / ZilShape.PATH_RES)|0;
+            var y = prev.y + ((node.y - prev.y) * t / ZilShape.PATH_RES)|0;
+            var n = this.get_node(x, y, Math.max(node.z, prev.z)); // try higher first
+            if(!n && node.z != prev.z) n = this.get_node(x, y, Math.min(node.z, prev.z));
+            if(n) {
+//                console.log("---" + n.x + "," + n.y + "," + n.z);
+                p.push(n);
+            } else {
+                incomplete = true;
+                break;
+            }
+        }
+    }
+    if(!incomplete && end_node) {
+        p.push(end_node);
+//        console.log("+" + end_node.x + "," + end_node.y + "," + end_node.z);
+    }
+    return p;
 };
 
 ZilShape.prototype.astar_init = function() {
     var t = Date.now();
 //    console.log(">>> Starting astar_init.");
-    for(var k in this.expanded_shape) {
-        var node = this.expanded_shape[k];
-        node.f = 0;
-        node.g = 0;
-        node.h = 0;
-        node.visited = false;
-        node.closed = false;
-        node.parent = null;
+    for(var x = 0; x < this.nodes.length; x++) {
+        for(var y = 0; y < this.nodes[0].length; y++) {
+            var node = this.nodes[x][y];
+            node.f = 0;
+            node.g = 0;
+            node.h = 0;
+            node.visited = false;
+            node.closed = false;
+            node.parent = null;
+        }
     }
 //    console.log(">>> finished astar_init in " + (Date.now() - t));
 };
 
 ZilShape.prototype.neighbors = function(node, creature) {
-    var ret = [], grid = this.expanded_shape;
+    var nx = (node.x / ZilShape.PATH_RES)|0;
+    var ny = (node.y / ZilShape.PATH_RES)|0;
 
-    for(var dx = -1; dx <= 1; dx++) {
-        for(var dy = -1; dy <= 1; dy++) {
-            for(var dz = -1; dz <= 1; dz++) {
-                if(!(dx == 0 && dy == 0 && dz == 0)) {
-                    var k = ZilShape._key(node.x + dx, node.y + dy, node.z + dz);
-                    if(grid[k] != null) {
-                        ret.push(grid[k]);
-                    } else if (ACCURATE_ASTAR) {
-                        // there is nothing at this node, but
-                        // if we put creature here, would it rest on something?
-                        var found = false;
-                        for(var cx = 0; !found && cx < creature.mobile.size; cx++) {
-                            for(var cy = 0; !found && cy < creature.mobile.size; cy++) {
-                                var kk  = ZilShape._key(node.x + dx + cx, node.y + dy + cy, node.z + dz);
-                                if(grid[kk] != null) {
-                                    found = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if(found) {
-                            // add a fake node
-                            ret.push(new ZilNode(node.x + dx, node.y + dy, node.z + dz, 0, node.x + dx, node.y + dy, node.z + dz));
-                        }
-                    }
-                }
-            }
-        }
-    }
+    var ret = [];
+    if(nx > 0 && Math.abs(this.nodes[nx - 1][ny].z - node.z) <= 1) ret.push(this.nodes[nx - 1][ny]);
+    if(ny > 0 && Math.abs(this.nodes[nx][ny - 1].z - node.z) <= 1) ret.push(this.nodes[nx][ny - 1]);
+    if(nx < this.nodes.length - 1 && Math.abs(this.nodes[nx + 1][ny].z - node.z) <= 1) ret.push(this.nodes[nx + 1][ny]);
+    if(ny < this.nodes[0].length - 1 && Math.abs(this.nodes[nx][ny + 1].z - node.z) <= 1) ret.push(this.nodes[nx][ny + 1]);
 
     if (this.diagonal) {
         throw "Not implemented.";

@@ -541,3 +541,188 @@ ZilShape.prototype.get_shape_at = function(x, y, z) {
     }
     return null;
 };
+
+function PathNode(x, y, z, expanded_node) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
+    this.expanded_node = expanded_node;
+}
+
+PathNode.prototype.getCost = function(other_node) {
+    var dz = Math.abs(this.z - other_node.z);
+    return dz <= 1 ? 1 : 100000;
+};
+
+
+// how many steps per node?
+ZilShape.PATH_RES = 4;
+
+// Build a lower resolution map for pathfinding
+ZilShape.prototype.build_nodes = function(x, y, z) {
+    var start_time = Date.now();
+    this.nodes = [];
+    for(var xx = 0; xx < (this.width / ZilShape.PATH_RES)|0; xx++) {
+        var col = [];
+        this.nodes[xx] = col;
+        for(var yy = 0; yy < (this.height / ZilShape.PATH_RES)|0; yy++) {
+            col[yy] = new PathNode(xx * ZilShape.PATH_RES, yy * ZilShape.PATH_RES, null, null);
+        }
+    }
+    this._find_nodes_iterative( ((x / ZilShape.PATH_RES)|0), ((y / ZilShape.PATH_RES)|0), {} );
+    console.log("Built " + (this.nodes.length * this.nodes[0].length) + " nodes in " + (Date.now() - start_time) + " millis.");
+};
+
+ZilShape.prototype._find_nodes_iterative = function(start_nx, start_ny, seen_nodes) {
+    var stack = [{
+        nx: start_nx,
+        ny: start_ny,
+        from_node: null,
+        dir: null
+    }];
+
+    while(stack.length > 0) {
+        var p = stack.pop();
+        var nx = p.nx;
+        var ny = p.ny;
+        var from_node = p.from_node;
+        var dir = p.dir;
+
+        var key = nx + "." + ny;
+        if(seen_nodes[key]) {
+            if(seen_nodes[key][dir]) continue; // seen it from this direction
+        } else {
+            seen_nodes[key] = {}
+        }
+
+        // what is the height of this position?
+        var node = this.nodes[nx][ny];
+        if(node.z == null) {
+            var pos = this._get_map_point_for_node(nx, ny);
+            if(pos) {
+                // store the map position of the highest point and the map node
+                node.z = pos.z;
+                node._tmp_node = pos;
+            } else {
+                node.z = -1;
+                node._tmp_node = null;
+            }
+        }
+
+        // can't step here from this neighbor
+        if(from_node && Math.abs(from_node.z - node.z) > 1) {
+            // can try from other directions
+            seen_nodes[key][dir] = true;
+            continue;
+        } else {
+            // mark all directions seen
+            seen_nodes[key][ZIL_UTIL.N] = seen_nodes[key][ZIL_UTIL.E] = seen_nodes[key][ZIL_UTIL.S] = seen_nodes[key][ZIL_UTIL.W] = true;
+        }
+
+        // is there a place here?
+        if(node.z <= -1) continue;
+
+        // store the real node (voxel) at this node position
+        node.expanded_node = node._tmp_node;
+
+        // evaluate the neighboring nodes
+        if(nx - 1 >= 0)
+            stack.push({
+                nx: nx - 1,
+                ny: ny,
+                from_node: node,
+                dir: ZIL_UTIL.W
+            });
+
+        if(ny - 1 >= 0)
+            stack.push({
+                nx: nx,
+                ny: ny - 1,
+                from_node: node,
+                dir: ZIL_UTIL.N
+            });
+
+        if(nx < this.nodes.length - 1)
+            stack.push({
+                nx: nx + 1,
+                ny: ny,
+                from_node: node,
+                dir: ZIL_UTIL.E
+            });
+
+        if(ny < this.nodes[0].length - 1)
+            stack.push({
+                nx: nx,
+                ny: ny + 1,
+                from_node: node,
+                dir: ZIL_UTIL.S
+            });
+    }
+};
+
+//ZilShape.prototype._find_nodes = function(nx, ny, seen_nodes, from_node, dir) {
+//    // prevent infinite loops
+//    var key = nx + "." + ny;
+//    if(seen_nodes[key]) {
+//        if(seen_nodes[key][dir]) return; // seen it from this direction
+//    } else {
+//        seen_nodes[key] = {}
+//    }
+//
+//    // what is the height of this position?
+//    var node = this.nodes[nx][ny];
+//    if(node.z == null) {
+//        var pos = this._get_map_point_for_node(nx, ny);
+//        if(pos) {
+//            // store the map position of the highest point and the map node
+//            node.z = pos.z;
+//            node._tmp_node = pos;
+//        } else {
+//            node.z = -1;
+//            node._tmp_node = null;
+//        }
+//    }
+//
+//    // can't step here from this neighbor
+//    if(from_node && Math.abs(from_node.z - node.z) > 1) {
+//        // can try from other directions
+//        seen_nodes[key][dir] = true;
+//        return;
+//    } else {
+//        // mark all directions seen
+//        seen_nodes[key][ZIL_UTIL.N] = seen_nodes[key][ZIL_UTIL.E] = seen_nodes[key][ZIL_UTIL.S] = seen_nodes[key][ZIL_UTIL.W] = true;
+//    }
+//
+//    // is there a place here?
+//    if(node.z <= -1) return;
+//
+//    // store the real node (voxel) at this node position
+//    node.expanded_node = node._tmp_node;
+//
+//    // evaluate the neighboring nodes
+//    if(nx - 1 >= 0) this._find_nodes(nx - 1, ny, seen_nodes, node, ZIL_UTIL.W);
+//    if(ny - 1 >= 0) this._find_nodes(nx, ny - 1, seen_nodes, node, ZIL_UTIL.N);
+//    if(nx < this.nodes.length - 1) this._find_nodes(nx + 1, ny, seen_nodes, node, ZIL_UTIL.E);
+//    if(ny < this.nodes[0].length - 1) this._find_nodes(nx, ny + 1, seen_nodes, node, ZIL_UTIL.S);
+//};
+
+ZilShape.prototype._get_map_point_for_node = function(nx, ny) {
+    // get the highest location at this place
+    var max_z = 0;
+    var ex, ey;
+    for(var x = 0; x < ZilShape.PATH_RES; x++) {
+        for(var y = 0; y < ZilShape.PATH_RES; y++) {
+            // todo: handle closed doors
+            var rx = nx * ZilShape.PATH_RES + x;
+            var ry = ny * ZilShape.PATH_RES + y;
+            var z = this.get_highest_empty_space_at_point(rx, ry);
+            if(z >= max_z) {
+                max_z = z;
+                ex = rx;
+                ey = ry;
+            }
+        }
+    }
+    return this.get_node(ex, ey, max_z - 1);
+};
+

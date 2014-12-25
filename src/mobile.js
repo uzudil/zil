@@ -299,7 +299,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
         // look for enemies
         if(this.ai_move && this.is_alive()) {
-            this.look_for_target();
+//            this.look_for_target();
         }
 
         // sleep
