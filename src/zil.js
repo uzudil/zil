@@ -273,6 +273,17 @@ var ZIL = {
             } else {
                 ZIL.replace_shape(pos[0], pos[1], pos[2], split_name[0], split_name[1], 1);
             }
+
+            // rebuild the nodes
+            ZIL.shape.build_nodes(ZIL.player.mobile.x, ZIL.player.mobile.y, ZIL.player.mobile.z);
+            ZIL.init_node_debug();
+
+            // repaint
+            ZIL.set_global_pos(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
+            ZIL.screen_pos_map = {};
+            ZIL.clear_ground_target();
+            ZIL.redraw_shape();
+
             return true;
         }
         return false;
@@ -926,9 +937,11 @@ var ZIL = {
 	},
 
     init_node_debug: function() {
+        var old_parent = null;
         if(ZIL.node_debug) {
-            if(ZIL.node_debug.parent) ZIL.node_debug.parent.remove(ZIL.node_debug);
-            while(ZIL.node_debug.children().length > 0) ZIL.node_debug.remove(ZIL.node_debug.children()[0])
+            old_parent = ZIL.node_debug.parent;
+            if(old_parent) old_parent.remove(ZIL.node_debug);
+            while(ZIL.node_debug.children.length > 0) ZIL.node_debug.remove(ZIL.node_debug.children[0])
         }
 
         var geo = new THREE.Geometry();
@@ -949,6 +962,10 @@ var ZIL = {
             new THREE.MeshLambertMaterial( {color: 0x0000ff, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } )
         ]);
         ZIL.node_debug = new THREE.Mesh(geo, materials);
+
+        if(old_parent) {
+            old_parent.add(ZIL.node_debug);
+        }
     },
 
 	load_shape: function(category_name, shape_name, start_x, start_y, on_load) {
