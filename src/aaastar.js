@@ -159,8 +159,11 @@ ZilShape.prototype.isWall = function(node, creature) {
 
 ZilShape.prototype.astar_search = function(start, end, creature) {
     if(!start || !end) return [];
+    var ex = (end[0]/ZilShape.PATH_RES)|0;
+    var ey = (end[1]/ZilShape.PATH_RES)|0;
+    if(ex < 0 || ex >= this.nodes.length || ey < 0 || ey >= this.nodes[0].length) return [];
     var start_node = this.nodes[(start[0]/ZilShape.PATH_RES)|0][(start[1]/ZilShape.PATH_RES)|0];
-    var end_node = this.nodes[(end[0]/ZilShape.PATH_RES)|0][(end[1]/ZilShape.PATH_RES)|0];
+    var end_node = this.nodes[ex][ey];
 //    console.log("==== start_node=" + start_node.x + "," + start_node.y + "," + start_node.z + " end_node=" + end_node.x + "," + end_node.y + "," + end_node.z);
     if(!(start_node && end_node)) return [];
     var path = astar.search(this, start_node, end_node, creature, { closest: true });

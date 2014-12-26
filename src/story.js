@@ -325,7 +325,7 @@ ZilStory.CONVO = {
         },
         "252,207,2": {
             "_name_": "Narg",
-            "": "Begone you lout, before you <a>break</a> something."
+            "": "Begone lout, before you <a>break</a> something."
         }
     }
 };

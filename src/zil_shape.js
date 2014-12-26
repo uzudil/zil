@@ -256,6 +256,19 @@ ZilShape._pos = function(key) {
     return [x, y, k];
 };
 
+ZilShape.prototype.check_shape_fits = function(x, y, z, child_shape, check_fx) {
+    for(var child_key in child_shape.expanded_shape) {
+        var child_pos = ZilShape._pos(child_key);
+        var nx = x + child_pos[0];
+        var ny = y + child_pos[1];
+        var nz = z + child_pos[2];
+        var new_key = ZilShape._key(nx, ny, nz);
+        if(this.expanded_shape[new_key]) return false;
+        if(check_fx && check_fx(nx, ny, nz)) return false;
+    }
+    return true;
+};
+
 ZilShape.prototype.set_shape = function(x, y, z, child_shape, options) {
 	var key = ZilShape._key(x, y, z);
 	this.shape[key] = { name: child_shape.category + "." + child_shape.name, rot: child_shape.rotation, options: options ? options : null };
@@ -287,12 +300,14 @@ ZilShape.prototype.del_position = function(x, y, z) {
             var s = s_val.name.split(".");
             var child_shape = ZilShape.load_shape(s[0], s[1], s_val.rot);
             this.del_shape(p.origin_x, p.origin_y, p.origin_z, child_shape);
+            return child_shape;
         } else {
             delete this.shape[key];
             delete this.expanded_shape[key];
             this.mark_chunk_updated(key);
         }
     }
+    return null;
 };
 
 ZilShape.prototype.set_position = function(x, y, z, value) {

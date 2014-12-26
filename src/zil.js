@@ -245,7 +245,7 @@ var ZIL = {
 
     replace_shape: function(x, y, z, cat, name, rot, nx, ny, nz) {
         // remove the current shape
-        ZIL.shape.del_position(x, y, z);
+        var old_shape = ZIL.shape.del_position(x, y, z);
 
         // add new shape
         var s = ZilShape.load_shape(cat, name, rot);
@@ -255,9 +255,26 @@ var ZIL = {
             ny = y;
             nz = z;
         }
+        if(!ZIL.shape.check_shape_fits(nx, ny, nz, s, function(x, y, z) {
+            var cx = (x / ZIL_UTIL.CHUNK_SIZE)|0;
+            var cy = (y / ZIL_UTIL.CHUNK_SIZE)|0;
+            var creatures = Mobile.get_for_chunk(cx, cy);
+            for(var i = 0; i < creatures.length; i++) {
+                if(creatures[i].mobile.contains_point(x, y, z)) return true;
+            }
+            return false;
+        })) {
+            // reset the old shape
+            ZIL.shape.set_shape(x, y, z, old_shape);
+            ZIL.redraw_shape();
+            return false;
+        }
+
         ZIL.shape.set_shape(nx, ny, nz, s);
 
         ZIL.redraw_shape();
+
+        return true;
     },
 
     shape_hover: function(shape_name, pos) {
@@ -268,10 +285,17 @@ var ZIL = {
         var split_name = shape_name.split(".");
         if(shape_name.indexOf("doors.") == 0) {
             var shape = ZIL.shape.get_shape(pos[0], pos[1], pos[2]);
+            var fits;
             if(shape.rot == 1 || shape.rot == 3) {
-                ZIL.replace_shape(pos[0], pos[1], pos[2], split_name[0], split_name[1], 0);
+                fits = ZIL.replace_shape(pos[0], pos[1], pos[2], split_name[0], split_name[1], 0);
             } else {
-                ZIL.replace_shape(pos[0], pos[1], pos[2], split_name[0], split_name[1], 1);
+                fits = ZIL.replace_shape(pos[0], pos[1], pos[2], split_name[0], split_name[1], 1);
+            }
+
+            // is there something in the way?
+            if(!fits) {
+                ZIL.show_forbidden();
+                return false;
             }
 
             // rebuild the nodes
