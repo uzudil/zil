@@ -569,6 +569,10 @@ PathNode.prototype.getCost = function(other_node) {
     return dz <= 1 ? 1 : 100000;
 };
 
+PathNode.prototype.clone = function() {
+    return new PathNode(this.x, this.y, this.z, this.expanded_node);
+};
+
 
 // how many steps per node?
 ZilShape.PATH_RES = 4;

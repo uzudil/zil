@@ -38,6 +38,7 @@ var ZIL = {
     DEBUG_MODE: false,
     creature_listeners: [],
     node_debug: null,
+    combat_range: null,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -118,6 +119,7 @@ var ZIL = {
                     var ty = intersection.point.y + ZIL.global_pos[1];
                     var tz = intersection.point.z + ZIL.global_pos[2];
 
+                    if(!ZIL.shape.nodes[(tx / ZilShape.PATH_RES)|0]) continue;
                     var node = ZIL.shape.nodes[(tx / ZilShape.PATH_RES)|0][(ty / ZilShape.PATH_RES)|0];
 //                    console.log("---" + tx + "," + ty + "," + tz + " node=", node);
                     if(node && node.expanded_node) {
@@ -197,14 +199,19 @@ var ZIL = {
                         if(in_range || ZIL.player.mobile.is_target_in_range_on_path()) {
                             message = "Attack! AP: 0"
                         } else {
-                            var ap = ZIL.player.mobile.ap - ZIL.player.mobile.move_path.length;
+                            var ap = ZIL.player.mobile.ap - (ZIL.player.mobile.move_path.length / ZilShape.PATH_RES)|0;
                             message = "AP: <span class='" + (ap >= 0 ? "ap_cost_ok" : "ap_cost_error") + "'>" + ap + "/" + ZIL.player.mobile.max_ap + "</span>";
                         }
                         ZIL.player.mobile.show_above(message, "player_plan");
+
+                        // show range tiles on floor
+                        ZIL.show_combat_range(ZIL.player);
+
                     } else {
                         // can't move there
                         ZIL.show_forbidden();
                         ZIL.player.mobile.remove_divs("player_plan");
+                        if(ZIL.combat_range) ZIL.inner.remove(ZIL.combat_range);
                     }
                 } else {
                     ZIL.combat_selected_creature = null;
@@ -470,13 +477,26 @@ var ZIL = {
         var remove_ids = [];
         for(var creature_id in ZIL.shown_creatures) {
             if(drawn_creatures[creature_id] == null) {
-                ZIL.rendered_shape.remove(ZIL.creatures_map[creature_id].mobile.shape_obj);
-                ZIL.rendered_shape2.remove(ZIL.creatures_map[creature_id].mobile.shape_obj_copy);
-                ZIL.creatures_map[creature_id].mobile.remove_divs();
                 remove_ids.push(creature_id);
             }
         }
-        for(var i = 0; i < remove_ids.length; i++) delete ZIL.shown_creatures[remove_ids[i]];
+        ZIL.remove_creatures(remove_ids);
+    },
+
+    remove_creatures: function(creature_ids) {
+        for(var i = 0;  i < creature_ids.length; i++) {
+            var creature_id = creature_ids[i];
+            var creature = ZIL.creatures_map[creature_id];
+            ZIL.rendered_shape.remove(creature.mobile.shape_obj);
+            ZIL.rendered_shape2.remove(creature.mobile.shape_obj_copy);
+            creature.mobile.remove_divs();
+
+            // don't show again
+            if(creature.mobile.remove_me) creature.mobile.remove_creature();
+
+            delete ZIL.shown_creatures[creature_id];
+            console.log("Removed id " + creature_id + " remaining: ", Object.keys(ZIL.shown_creatures));
+        }
     },
 
     show_cursor: function() {
@@ -558,6 +578,7 @@ var ZIL = {
             ZIL.center_screen_at(ZIL.player.mobile.x, ZIL.player.mobile.y);
             ZIL.clear_ground_target();
             ZIL.player.mobile.remove_divs("player_plan");
+            if(ZIL.combat_range) ZIL.inner.remove(ZIL.combat_range);
             $("body").css("cursor", "default");
             ZIL.mouse_position_event(); // reselect creature under mouse
             return;
@@ -567,6 +588,7 @@ var ZIL = {
         if(ZIL.combat_creature.mobile.ap > 0 && (ZIL.combat_creature != ZIL.player || ZIL.combat_action_click_count > 1)) {
 
             ZIL.player.mobile.remove_divs("player_plan");
+            if(ZIL.combat_range) ZIL.inner.remove(ZIL.combat_range);
 
             // make sure the combat is visible
             ZIL.recenter_screen(ZIL.combat_creature.mobile.x, ZIL.combat_creature.mobile.y);
@@ -584,9 +606,15 @@ var ZIL = {
                 }
             } else {
                 // take a step
+                var cx = (ZIL.combat_creature.mobile.x / ZilShape.PATH_RES)|0;
+                var cy = (ZIL.combat_creature.mobile.y / ZilShape.PATH_RES)|0;
                 if (ZIL.combat_creature.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
                     // a step taken
-                    ZIL.combat_ap_dec(1);
+                    var nx = (ZIL.combat_creature.mobile.x / ZilShape.PATH_RES)|0;
+                    var ny = (ZIL.combat_creature.mobile.y / ZilShape.PATH_RES)|0;
+                    if(Math.abs(nx - cx) >= 1 || Math.abs(ny - cy) >= 1) {
+                        ZIL.combat_ap_dec(1);
+                    }
                     if(!ZIL.player.mobile.is_moving()) {
                         ZIL.clear_ground_target();
                     }
@@ -629,6 +657,8 @@ var ZIL = {
             }
             if(ZIL.combat_creatures[ZIL.combat_creature_index].mobile.remove_me) {
                 // remove dead creature
+                console.log("--- remove " + ZIL.combat_creatures[ZIL.combat_creature_index].id);
+                ZIL.remove_creatures([ZIL.combat_creatures[ZIL.combat_creature_index].id]);
                 ZIL.combat_creatures.splice(ZIL.combat_creature_index, 1);
                 ZIL.combat_creature_index--;
             } else {
@@ -1187,5 +1217,52 @@ var ZIL = {
             alert("Player dies.");
             // game over
         }
+    },
+
+    show_combat_range: function(creature) {
+
+        // find the nodes
+        var nodes = [];
+        var cx = (creature.mobile.x / ZilShape.PATH_RES)|0;
+        var cy = (creature.mobile.y / ZilShape.PATH_RES)|0;
+        var start = ZIL.shape.nodes[cx][cy];
+        var range = creature.mobile.ap;
+        for(var x = -range; x < range; x++) {
+            for(var y = -range; y < range; y++) {
+                if((x == 0 && y == 0) || !ZIL.shape.nodes[cx + x] || ZIL_UTIL.get_distance(0, 0, x, y) > range) continue;
+                var end = ZIL.shape.nodes[cx + x][cy + y];
+                if(end && end.expanded_node && ZIL.shape.can_reach(range, start, end, creature)) {
+                    nodes.push(end);
+                }
+            }
+        }
+//        console.log("nodes=", $.map(nodes, function(n) { return [(n.x/ZilShape.PATH_RES)|0, (n.y/ZilShape.PATH_RES)|0]; }));
+
+        // draw
+        var old_parent = null;
+        if(ZIL.combat_range) {
+            old_parent = ZIL.combat_range.parent;
+            if(old_parent) old_parent.remove(ZIL.combat_range);
+            while(ZIL.combat_range.children.length > 0) ZIL.combat_range.remove(ZIL.combat_range.children[0])
+        }
+
+        var geo = new THREE.Geometry();
+        for(var i = 0; i < nodes.length; i++) {
+            var node = nodes[i];
+            if(node.expanded_node) {
+                var sq = ZIL_UTIL.make_square_face(ZilShape.PATH_RES - 0.1);
+                var child = new THREE.Mesh(sq, null);
+                child.position.set(node.x + ZilShape.PATH_RES/2, node.y + ZilShape.PATH_RES/2, node.z);
+                child.updateMatrix();
+                geo.merge(child.geometry, child.matrix, 0);
+            }
+        }
+        var materials = new THREE.MeshFaceMaterial([
+            new THREE.MeshLambertMaterial( {color: 0xffffff, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.75 } )
+        ]);
+        ZIL.combat_range = new THREE.Mesh(geo, materials);
+        ZIL.combat_range.position.set(-ZIL.global_pos[0], -ZIL.global_pos[1], -ZIL.global_pos[2] + 1);
+
+        ZIL.inner.add(ZIL.combat_range);
     }
 };

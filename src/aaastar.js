@@ -154,7 +154,20 @@ var astar = {
 };
 
 ZilShape.prototype.isWall = function(node, creature) {
-    return node.expanded_node == null;
+    if(node.expanded_node == null) return true;
+
+    if(creature.mobile.creature_blocked(node.x, node.y, node.z)) return true;
+
+    return false;
+};
+
+ZilShape.prototype.can_reach = function(max_steps, start_node, end_node, creature) {
+    if(!(start_node && end_node)) return [];
+    var path = astar.search(this, start_node, end_node, creature);
+//    console.log(">>> from=" + start_node.x + "," + start_node.y +
+//        " end=" + end_node.x + "," + end_node.y +
+//        " path=" + path.length + " vs " + max_steps, path);
+    return path && path.length <= max_steps;
 };
 
 ZilShape.prototype.astar_search = function(start, end, creature) {
@@ -190,7 +203,7 @@ ZilShape.prototype.astar_search = function(start, end, creature) {
             }
         }
     }
-    if(!incomplete && end_node) {
+    if(!incomplete && end_node && path.length > 0) {
         p.push(end_node);
 //        console.log("+" + end_node.x + "," + end_node.y + "," + end_node.z);
     }

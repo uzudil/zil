@@ -97,6 +97,15 @@ Mobile.clear_chunk_map = function() {
     Mobile.CHUNK_MAP = {};
 };
 
+Mobile.prototype.remove_creature = function() {
+    var key = "" + ((this.x / ZIL_UTIL.CHUNK_SIZE) | 0) + "," + ((this.y / ZIL_UTIL.CHUNK_SIZE) | 0);
+
+    if (Mobile.CHUNK_MAP[key]) {
+        var idx = Mobile.CHUNK_MAP[key].indexOf(this.parent);
+        if (idx >= 0) Mobile.CHUNK_MAP[key].splice(idx, 1);
+    }
+};
+
 Mobile.prototype._set_chunk_pos = function(force) {
     // remove the previous pos
     var last_key = "" + ((this.last_x / ZIL_UTIL.CHUNK_SIZE) | 0) + "," + ((this.last_y / ZIL_UTIL.CHUNK_SIZE) | 0);
@@ -135,15 +144,11 @@ Mobile.prototype.creature_blocked_at = function(x, y, z) {
 };
 
 Mobile.prototype.creature_blocked = function(nx, ny, nz) {
-    for(var x = 0; x < this.size; x++) {
-        for (var y = 0; y < this.size; y++) {
-            for (var z = 0; z < this.shape.depth; z++) {
-                var c = this.creature_blocked_at(nx + x, ny + y, nz + 1 + z);
-                if (c) return c;
-            }
-        }
-    }
-    return null;
+    // should also check points at z = nz + 1 + this.shape.depth - 1
+    return this.creature_blocked_at(nx, ny, nz + 1) ||
+        this.creature_blocked_at(nx + this.size - 1, ny, nz + 1) ||
+        this.creature_blocked_at(nx + this.size - 1, ny + this.size - 1, nz + 1) ||
+        this.creature_blocked_at(nx, ny + this.size - 1, nz + 1);
 };
 
 Mobile.prototype.move_to = function(nx, ny, nz, gx, gy, gz) {
@@ -299,7 +304,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
         // look for enemies
         if(this.ai_move && this.is_alive()) {
-//            this.look_for_target();
+            this.look_for_target();
         }
 
         // sleep
