@@ -250,7 +250,7 @@ var ZIL = {
         return false;
     },
 
-    replace_shape: function(x, y, z, cat, name, rot, nx, ny, nz) {
+    replace_shape: function(x, y, z, cat, name, rot, nx, ny, nz, skip_check) {
         // remove the current shape
         var old_shape = ZIL.shape.del_position(x, y, z);
 
@@ -262,7 +262,7 @@ var ZIL = {
             ny = y;
             nz = z;
         }
-        if(!ZIL.shape.check_shape_fits(nx, ny, nz, s, function(x, y, z) {
+        if(!skip_check && !ZIL.shape.check_shape_fits(nx, ny, nz, s, function(x, y, z) {
             var cx = (x / ZIL_UTIL.CHUNK_SIZE)|0;
             var cy = (y / ZIL_UTIL.CHUNK_SIZE)|0;
             var creatures = Mobile.get_for_chunk(cx, cy);

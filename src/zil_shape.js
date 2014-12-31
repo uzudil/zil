@@ -12,6 +12,12 @@ ZilNode.prototype.set_value = function(value, origin_x, origin_y, origin_z) {
     this.origin_z = origin_z;
 };
 
+ZilNode.prototype.next_to = function(other_node) {
+    return Math.abs(this.x - other_node.x) <= 1 &&
+        Math.abs(this.y - other_node.y) &&
+        Math.abs(this.z - other_node.z);
+};
+
 ZilNode.prototype.toString = function() {
     return "[" + this.x + " " + this.y + " " + this.z + "]";
 };

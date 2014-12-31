@@ -183,7 +183,6 @@ ZilShape.prototype.astar_search = function(start, end, creature) {
 
     // create a real path
     var p = [];
-    var incomplete = false;
     for(var i = 0; i < path.length; i++) {
         var prev = i == 0 ? start_node : path[i - 1];
         var node = path[i];
@@ -198,12 +197,11 @@ ZilShape.prototype.astar_search = function(start, end, creature) {
 //                console.log("---" + n.x + "," + n.y + "," + n.z);
                 p.push(n);
             } else {
-                incomplete = true;
                 break;
             }
         }
     }
-    if(!incomplete && end_node && path.length > 0) {
+    if(end_node && p.length > 0 && p[p.length - 1].next_to(end_node)) {
         p.push(end_node);
 //        console.log("+" + end_node.x + "," + end_node.y + "," + end_node.z);
     }
