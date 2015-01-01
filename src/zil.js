@@ -195,23 +195,12 @@ var ZIL = {
                     if(ZIL.player.mobile.is_moving() || in_range) {
                         ZIL.show_ground_target(x, y);
 
-                        var message;
-                        if(in_range || ZIL.player.mobile.is_target_in_range_on_path()) {
-                            message = "Attack! AP: 0"
-                        } else {
-                            var ap = ZIL.player.mobile.ap - (ZIL.player.mobile.move_path.length / ZilShape.PATH_RES)|0;
-                            message = "AP: <span class='" + (ap >= 0 ? "ap_cost_ok" : "ap_cost_error") + "'>" + ap + "/" + ZIL.player.mobile.max_ap + "</span>";
-                        }
-                        ZIL.player.mobile.show_above(message, "player_plan");
-
-                        // show range tiles on floor
-                        ZIL.show_combat_range(ZIL.player);
+                        ZIL.toggle_player_combat_indicators(true);
 
                     } else {
                         // can't move there
                         ZIL.show_forbidden();
-                        ZIL.player.mobile.remove_divs("player_plan");
-                        if(ZIL.combat_range) ZIL.inner.remove(ZIL.combat_range);
+                        ZIL.toggle_player_combat_indicators(false);
                     }
                 } else {
                     ZIL.combat_selected_creature = null;
@@ -248,6 +237,29 @@ var ZIL = {
             }
         }
         return false;
+    },
+
+    toggle_player_combat_indicators: function(enabled) {
+        if(enabled) {
+            var message;
+            if(ZIL.player.mobile.is_target_in_range() || ZIL.player.mobile.is_target_in_range_on_path()) {
+                message = "Attack! AP: 0"
+            } else {
+                var ap = ZIL.player.mobile.ap - ((ZIL.player.mobile.move_path ? ZIL.player.mobile.move_path.length : 0) / ZilShape.PATH_RES)|0;
+                message = "AP: <span class='" + (ap >= 0 ? "ap_cost_ok" : "ap_cost_error") + "'>" + ap + "/" + ZIL.player.mobile.max_ap + "</span>";
+            }
+            ZIL.player.mobile.show_above(message, "player_plan");
+
+            // show range tiles on floor
+            ZIL.show_combat_range(ZIL.player);
+        } else {
+            ZIL.player.mobile.remove_divs("player_plan");
+            if(ZIL.combat_range) ZIL.inner.remove(ZIL.combat_range);
+        }
+    },
+
+    force_replace_shape: function(x, y, z, cat, name, rot, nx, ny, nz) {
+        return ZIL.replace_shape(x, y, z, cat, name, rot, nx, ny, nz, true);
     },
 
     replace_shape: function(x, y, z, cat, name, rot, nx, ny, nz, skip_check) {
@@ -546,18 +558,18 @@ var ZIL = {
     combat_step: function(delta_time) {
 
         // hide creature selection
-        if(!ZIL.is_waiting_for_player()) {
+        if(ZIL.is_waiting_for_player()) {
+            if($("body").css("cursor") == "progress") {
+                $("body").css("cursor", "default");
+                ZIL.mouse_position_event(); // reselect creature under mouse
+            }
+        } else {
             if(ZIL.selected_creature) {
                 ZIL.selected_creature.mobile.set_selected(false);
                 $(".creature_description").remove();
                 ZIL.selected_creature = null;
             }
             $("body").css("cursor", "progress");
-        } else {
-            if($("body").css("cursor") == "progress") {
-                $("body").css("cursor", "default");
-                ZIL.mouse_position_event(); // reselect creature under mouse
-            }
         }
 
         // init combat or select next creature
@@ -577,8 +589,7 @@ var ZIL = {
             ZIL.in_combat = false;
             ZIL.center_screen_at(ZIL.player.mobile.x, ZIL.player.mobile.y);
             ZIL.clear_ground_target();
-            ZIL.player.mobile.remove_divs("player_plan");
-            if(ZIL.combat_range) ZIL.inner.remove(ZIL.combat_range);
+            ZIL.toggle_player_combat_indicators(false);
             $("body").css("cursor", "default");
             ZIL.mouse_position_event(); // reselect creature under mouse
             return;
@@ -587,8 +598,7 @@ var ZIL = {
         // combat move
         if(ZIL.combat_creature.mobile.ap > 0 && (ZIL.combat_creature != ZIL.player || ZIL.combat_action_click_count > 1)) {
 
-            ZIL.player.mobile.remove_divs("player_plan");
-            if(ZIL.combat_range) ZIL.inner.remove(ZIL.combat_range);
+            ZIL.toggle_player_combat_indicators(false);
 
             // make sure the combat is visible
             ZIL.recenter_screen(ZIL.combat_creature.mobile.x, ZIL.combat_creature.mobile.y);
@@ -608,6 +618,7 @@ var ZIL = {
                 // take a step
                 var cx = (ZIL.combat_creature.mobile.x / ZilShape.PATH_RES)|0;
                 var cy = (ZIL.combat_creature.mobile.y / ZilShape.PATH_RES)|0;
+//                console.log("0 id=" + ZIL.combat_creature.id + " ap=" + ZIL.combat_creature.mobile.ap + " path=", ZIL.combat_creature.mobile.move_path);
                 if (ZIL.combat_creature.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
                     // a step taken
                     var nx = (ZIL.combat_creature.mobile.x / ZilShape.PATH_RES)|0;
@@ -615,8 +626,18 @@ var ZIL = {
                     if(Math.abs(nx - cx) >= 1 || Math.abs(ny - cy) >= 1) {
                         ZIL.combat_ap_dec(1);
                     }
+//                    console.log("A ap=" + ZIL.combat_creature.mobile.ap);
                     if(!ZIL.player.mobile.is_moving()) {
                         ZIL.clear_ground_target();
+
+                        // done moving, but the player still has ap
+//                        console.log("B");
+                        if(ZIL.combat_creature.id == ZIL.player.id && ZIL.player.mobile.ap > 0) {
+//                            console.log("C");
+                            ZIL.combat_action_click_count = 0;
+                            $("body").css("cursor", "default");
+                            ZIL.toggle_player_combat_indicators(true);
+                        }
                     }
                 }
             }
@@ -675,6 +696,7 @@ var ZIL = {
             if(!ZIL.combat_creature.mobile.ai_move) {
                 ZIL.combat_creature.mobile.reset_move();
                 ZIL.combat_action_click_count = 0;
+                ZIL.toggle_player_combat_indicators(true);
             }
             $("#combatant").html(ZIL.combat_creature.mobile.to_string());
             ZIL.recenter_screen(ZIL.combat_creature.mobile.x, ZIL.combat_creature.mobile.y);

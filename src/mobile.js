@@ -320,7 +320,8 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
             // blocked by another creature? Just wait (this won't happen during combat)
             var c = this.creature_blocked(node.x, node.y, node.z);
             if (c) {
-//                console.log("waiting in move: " + this.get_name() + " vs " + c.mobile.get_name());
+//                console.log("waiting in move: " + this.get_name() + " vs " + c.mobile.get_name() +
+//                    " at " + node.x + "," + node.y + "," + node.z);
                 // end move
                 this.move_path_index = 0;
                 this.move_path = null;
@@ -417,7 +418,7 @@ Mobile.prototype.is_target_in_range = function(x, y) {
 
 Mobile.prototype.is_target_in_range_on_path = function() {
     var current_ap = this.ap;
-    for(var i = 0; current_ap > 0 && i < this.move_path.length; i++, current_ap--) {
+    for(var i = 0; this.move_path && current_ap > 0 && i < this.move_path.length; i++, current_ap--) {
         var node = this.move_path[i];
         if(this.is_target_in_range(node.x, node.y)) {
             return true;

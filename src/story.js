@@ -31,7 +31,7 @@ ZilStory.MAPS = {
                 }
 
                 if(ZIL_UTIL.game_state["opened_ante_gate"]) {
-                    ZIL.replace_shape(74, 22, 2, "doors", "gate-open", 0, 74, 22, 2, true);
+                    ZIL.force_replace_shape(74, 22, 2, "doors", "gate-open");
                 }
             }
         },
@@ -54,7 +54,7 @@ ZilStory.MAPS = {
                                 ZIL.say(ZIL.player, "I'm sure this is complete nonsense.<br>I'll never open these... what?!", function () {
                                     Mobile.hide_convos();
                                     ZIL.quake();
-                                    ZIL.replace_shape(74, 22, 2, "doors", "gate-open", 0, 74, 22, 2, true);
+                                    ZIL.force_replace_shape(74, 22, 2, "doors", "gate-open");
                                     ZIL_UTIL.game_state["opened_ante_gate"] = true;
                                     ZIL_UTIL.save_config();
                                     return true;
@@ -110,7 +110,7 @@ ZilStory.MAPS = {
         events: {
             on_load: function() {
                 if (ZIL_UTIL.game_state["opened_skrit_gate"]) {
-                    ZIL.replace_shape(19, 195, 8, "doors", "gate-open", 3, 19, 195, 8, true);
+                    ZIL.force_replace_shape(19, 195, 8, "doors", "gate-open", 3);
                 }
             }
         },

@@ -156,7 +156,11 @@ var astar = {
 ZilShape.prototype.isWall = function(node, creature) {
     if(node.expanded_node == null) return true;
 
-    if(creature.mobile.creature_blocked(node.x, node.y, node.z)) return true;
+    for(var dx = 0; dx < ZilShape.PATH_RES; dx++) {
+        for(var dy = 0; dy < ZilShape.PATH_RES; dy++) {
+            if(creature.mobile.creature_blocked(node.x + dx, node.y + dy, node.z)) return true;
+        }
+    }
 
     return false;
 };
