@@ -499,8 +499,8 @@ var ZIL = {
         for(var i = 0;  i < creature_ids.length; i++) {
             var creature_id = creature_ids[i];
             var creature = ZIL.creatures_map[creature_id];
-            ZIL.rendered_shape.remove(creature.mobile.shape_obj);
-            ZIL.rendered_shape2.remove(creature.mobile.shape_obj_copy);
+            if(creature.mobile.shape_obj && creature.mobile.shape_obj.parent) ZIL.rendered_shape.remove(creature.mobile.shape_obj);
+            if(creature.mobile.shape_obj_copy && creature.mobile.shape_obj_copy.parent) ZIL.rendered_shape2.remove(creature.mobile.shape_obj_copy);
             creature.mobile.remove_divs();
 
             // don't show again

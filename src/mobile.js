@@ -297,6 +297,8 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
                 this.shape_obj.children[0].position.z -= delta_time * 0.05;
                 this.shape_obj_copy.children[0].position.z -= delta_time * 0.05;
             } else {
+                this.shape_obj.parent.remove(this.shape_obj);
+                this.shape_obj_copy.parent.remove(this.shape_obj_copy);
                 this.remove_me = true;
             }
             return true;
