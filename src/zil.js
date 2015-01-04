@@ -1,3 +1,9 @@
+jQuery.fn.redraw = function() {
+    return this.hide(0, function() {
+        $(this).show();
+    });
+};
+
 var ZIL = {
 
 	scene: null,
@@ -216,6 +222,7 @@ var ZIL = {
                 if (ZIL.selected_creature.mobile.alignment == ZIL.player.mobile.alignment) {
                     ZIL.start_convo();
                 } else {
+                    ZIL.player.mobile.set_target(ZIL.selected_creature);
                     ZIL.start_combat();
                 }
                 click_handled = true;
@@ -659,9 +666,9 @@ var ZIL = {
         ZIL.combat_creature_index = 0;
         ZIL.combat_creatures = _.filter($.map(Object.keys(ZIL.shown_creatures), function(id) {
             return ZIL.creatures_map[id];
-        }), function(c) { return c.mobile.is_alive() && c.mobile.is_interested_in_combat(); });
+        }), function(c) { return c.mobile.is_alive(); });
         ZIL.combat_creatures.push(ZIL.player);
-        if(ZIL.combat_creatures.length > 0) {
+        if(ZIL.combatants_exists()) {
             ZIL.combat_creatures.sort(function(a, b) {
                 return a.mobile.initiative - b.mobile.initiative;
             });
@@ -671,10 +678,11 @@ var ZIL = {
 
     next_combat_creature: function() {
         // select next live combatant
-        while(ZIL.combat_creatures.length > 1) {
+        while(ZIL.combatants_exists()) {
             ZIL.combat_creature_index++;
             if(ZIL.combat_creature_index >= ZIL.combat_creatures.length) {
-                ZIL.combat_creature_index = 0;
+//                ZIL.combat_creature_index = 0;
+                ZIL.init_combat_turn();
             }
             if(ZIL.combat_creatures[ZIL.combat_creature_index].mobile.remove_me) {
                 // remove dead creature
@@ -690,7 +698,7 @@ var ZIL = {
     },
 
     init_combat_creature: function() {
-        if(ZIL.combat_creatures.length > 1) {
+        if(ZIL.combatants_exists()) {
             ZIL.combat_creature = ZIL.combat_creatures[ZIL.combat_creature_index];
             ZIL.combat_creature.mobile.ap = ZIL.combat_creature.mobile.max_ap;
             if(!ZIL.combat_creature.mobile.ai_move) {
@@ -705,6 +713,13 @@ var ZIL = {
             $("#combatant").empty();
         }
         ZIL.clear_ground_target();
+    },
+
+    combatants_exists: function() {
+        return _.filter(ZIL.combat_creatures, function(c) {
+            return c.mobile.target != null;
+//            return c.mobile.alignment != ZIL.player.alignment;
+        }).length > 0;
     },
 
     recenter_screen: function(x, y) {
@@ -1124,6 +1139,7 @@ var ZIL = {
             });
         } else {
             $("#game_paused").fadeOut();
+            if($("#message").is(":visible")) $("#message").fadeOut();
         }
         ZIL.GAME_PAUSED = b;
 
@@ -1286,5 +1302,16 @@ var ZIL = {
         ZIL.combat_range.position.set(-ZIL.global_pos[0], -ZIL.global_pos[1], -ZIL.global_pos[2] + 1);
 
         ZIL.inner.add(ZIL.combat_range);
+    },
+
+    show_message: function(title, text) {
+        $("#message .title").html(title);
+        $("#message .body").html(text);
+        $("#message").fadeIn();
+        ZIL.set_paused(true);
+    },
+
+    show_sign: function(text) {
+        ZIL.show_message("The sign reads:", text);
     }
 };

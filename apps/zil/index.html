@@ -111,6 +111,35 @@
                 /*font-family: 'BenchNine', sans-serif;*/
             }
 
+            #message {
+                display: none;
+                position: fixed;
+                z-index: 100;
+                width: 320px;
+                height: 200px;
+                top: 50%;
+                left: 50%;
+                margin-top: -100px;
+                margin-left: -150px;
+                background: #222;
+                border: 2px solid #222;
+                font-family: 'Roboto Condensed', sans-serif;
+                font-size: 12px;
+                border-radius: 5px;
+            }
+
+            #message .title {
+                padding: 5px;
+                font-size: 16px;
+            }
+
+            #message .body {
+                padding: 5px;
+                overflow: auto;
+                height: 155px;
+                background: black;
+            }
+
 		</style>
 	</head>
 	<body>
@@ -160,6 +189,11 @@
 
         <div id="game_paused">
             <button onclick="ZIL.set_paused(false);">Continue</button>
+        </div>
+
+        <div id="message">
+            <div class="title"></div>
+            <div class="body"></div>
         </div>
 
         <canvas id="view"></canvas>

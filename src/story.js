@@ -147,7 +147,18 @@ ZilStory.MAPS = {
     },
     "maps.westvein": {
         events: {
-
+            on_load: function() {
+                ZIL.add_creature_listener(function(map_cat, map_name, creature) {
+                    if(creature.mobile.get_name() == "Fire Imp") {
+                        if(ZIL_UTIL.game_state["lift_operator_saved"] == null) {
+                            ZIL_UTIL.game_state["lift_operator_saved"] = 0;
+                        } else {
+                            ZIL_UTIL.game_state["lift_operator_saved"] = ZIL_UTIL.game_state["lift_operator_saved"] + 1;
+                        }
+                        ZIL_UTIL.save_config();
+                    }
+                });
+            }
         },
         locations: {
             "333,81,1": {
@@ -155,6 +166,29 @@ ZilStory.MAPS = {
                 },
                 on_mouseclick: function () {
                     ZIL.load_shape("maps", "skrit", 27, 195);
+                }
+            },
+            "281,81,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Welcome, O Traveler to the holy temple of <i>Srag the Adjudicator.</i><br><br>" +
+                        "If you seek other lands, see <i>the lift operator to the east.</i><br><br>" +
+                        "May you leave your wordly cares outside our gates and rest safely in the celestial sanctuary " +
+                        "of undisturbed peace and...<br><br>" +
+                        "<i>(Here the text becomes illegible. The wood looks to have been destroyed by claw marks.)</i>");
+                }
+            },
+            "154,78,2": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("This way to the lift operator.<br><br>" +
+                        "Lift costs:<br>" +
+                        "&nbsp;&nbsp;&nbsp;5CP up to Mihyr and beyond.<br>" +
+                        "&nbsp;&nbsp;&nbsp;10CP to the Dahrhyr and lower realms.<br>" +
+                        "<br>" +
+                        "<i>(You can barely make out the hastily added note at the bottom:<br>Save me!)</i>");
                 }
             }
         }
@@ -256,6 +290,33 @@ ZilStory.CONVO = {
             },
             "peaks": "But, beware of depths child... There are things<br>in the darkness that aren't what they <a>seem</a>.",
             "seem": "Use your wits and might if you can.<br>The seer <a>Gav</a> only helps those who walk the right path."
+        }
+    },
+    "maps.westvein": {
+        "common": {
+
+        },
+        "11,45,2": {
+            "_name_": "Lift Operator",
+            "": function() {
+                var n = ZIL_UTIL.game_state["lift_operator_saved"];
+                if(n == null) {
+                    return "Oh good you're here! The <a>imps</a> have been terrorizing me for far too long. Please be as kind as to <a>dispatch</a> them!";
+                } else if(n < 4) {
+                    return "You're doing a great job, but be sure to kill all four <a>imps</a>. That's the only way they will ever learn.";
+                } else {
+                    return "Thank you so much for getting rid of those pesky <a>imps</a>. They have been a source of pain for far too long.";
+                }
+            },
+            "imps": function() {
+                var n = ZIL_UTIL.game_state["lift_operator_saved"];
+                if(n && n == 4) {
+                    return "I'm not sure how they got here... They just appeared one day, probably from <a>Dahrhyr</a>. It's not a good omen, that I can tell you!";
+                } else {
+                    return "The little red gremlins outside my house. Kill them for me!";
+                }
+            },
+            "dahrhyr": ""
         }
     },
     "maps.skrit": {
@@ -367,6 +428,8 @@ ZilStory.start_conversation = function(map_category, map_name, creature) {
     if(m && m[pos_key]) {
         // show the default/intro convo
         ZilStory.CONVO_KEY = [map_category + "." + map_name, pos_key, creature];
-        ZIL.say(creature, m[pos_key][""], null, ZilStory.on_convo_render);
+        var text = m[pos_key][""];
+        if(typeof text == "function") text = text();
+        ZIL.say(creature, text, null, ZilStory.on_convo_render);
     }
 };

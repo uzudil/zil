@@ -563,6 +563,8 @@ ZilShape.prototype.get_shape_at = function(x, y, z) {
     return null;
 };
 
+
+// todo: same as ZilNode?
 function PathNode(x, y, z, expanded_node) {
     this.x = x;
     this.y = y;
@@ -577,6 +579,12 @@ PathNode.prototype.getCost = function(other_node) {
 
 PathNode.prototype.clone = function() {
     return new PathNode(this.x, this.y, this.z, this.expanded_node);
+};
+
+PathNode.prototype.next_to = function(other_node) {
+    return Math.abs(this.x - other_node.x) <= 1 &&
+        Math.abs(this.y - other_node.y) &&
+        Math.abs(this.z - other_node.z);
 };
 
 
