@@ -788,8 +788,35 @@ var ZIL = {
     },
 
 	start_game: function() {
+        $("#menu a").click(function(event) {
+            var id = $(event.target).attr("id");
+            if(id == "new_game" && !confirm("Erase saved game?")) {
+                return false;
+            }
+            $("#menu").hide();
+            ZIL[id]();
+            return false;
+        });
+    },
+
+    new_game: function() {
+        ZIL.run_game(true);
+    },
+
+    continue_game: function() {
+        ZIL.run_game();
+    },
+
+    quit_game: function() {
+        ZIL_UTIL.exit();
+    },
+
+    run_game: function(force_new) {
         // do this first
         ZIL_UTIL.load_config(320, 240);
+        if(force_new) {
+            ZIL_UTIL.new_game();
+        }
 
         $("canvas").hide();
         $("#debug").hide();
@@ -815,7 +842,6 @@ var ZIL = {
         ZIL.canvas_edge_percent_x = window.innerWidth * 0.1;
         ZIL.canvas_edge_percent_y = window.innerHeight * 0.1;
         ZIL.canvas_offset = $("canvas").offset();
-        document.body.appendChild(ZIL.renderer.domElement);
         ZIL.offset_x = 0;
         ZIL.offset_y = 0;
 

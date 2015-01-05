@@ -165,6 +165,10 @@ ZIL_UTIL.rand_int = function(a, b) {
 var fs = require('fs');
 var gui = require('nw.gui');
 
+ZIL_UTIL.exit = function() {
+    gui.App.quit();
+};
+
 ZIL_UTIL.load_config = function(mini_x, mini_y) {
 
     // mini mode
@@ -191,9 +195,13 @@ ZIL_UTIL.load_config = function(mini_x, mini_y) {
     ZIL_UTIL.player_stats = config["player_stats"] || {};
 
     if(gui.App.argv.indexOf("--force_new") >= 0) {
-        ZIL_UTIL.game_state = {};
-        ZIL_UTIL.game_events = {};
+        ZIL_UTIL.new_game();
     }
+};
+
+ZIL_UTIL.new_game = function() {
+    ZIL_UTIL.game_state = {};
+    ZIL_UTIL.game_events = {};
 };
 
 ZIL_UTIL.save_config = function() {

@@ -140,6 +140,46 @@
                 background: black;
             }
 
+            #menu {
+                background: transparent;
+                color: #888;
+                width: 100%;
+                height: 100%;
+                position: fixed;
+                z-index: 1000;
+                top: 0; left: 0;
+                font-size: 24px;
+                font-family: 'Roboto Condensed', sans-serif;
+                margin: 50px;
+            }
+
+            #menu .title {
+                font-family: 'Sue Ellen Francisco', cursive;
+                font-size: 52px;
+                font-weight: bold;
+            }
+
+            #menu .cr {
+                font-size: 10px;
+                padding-bottom: 30px;
+                margin-top: -20px;
+            }
+
+            #menu a {
+                color: #888;
+                text-decoration: none;
+            }
+
+            #menu a:hover {
+                color: #ff8;
+                text-shadow: 2px 2px #000;
+                font-size: 28px;
+            }
+
+            #progress, #progress_overlay {
+                display: none;
+            }
+
 		</style>
 	</head>
 	<body>
@@ -176,6 +216,14 @@
         <script src="../../src/player.js"></script>
 		<script src="../../src/zil.js"></script>
 		<script src="../../src/story.js"></script>
+
+        <div id="menu">
+            <div class="title">Z.I.L.</div>
+            <div class="cr">2015 (c) Gabor Torok</div>
+            <div><a href="#" id="new_game">New Game</a></div>
+            <div><a href="#" id="continue_game">Continue Game</a></div>
+            <div><a href="#" id="quit_game">Quit</a></div>
+        </div>
 
         <div id="debug" class="group">
             <div>Cursor: <span id="cursor_pos"></span></div>
