@@ -91,6 +91,19 @@ ZIL_UTIL.contains = function(x, a, b) {
     return x >= a && x < b;
 };
 
+/**
+ * Is point a in the box b?
+ * @param a - test point
+ * @param b - start of box
+ * @param size - dimensions of box
+ * @returns {*}
+ */
+ZIL_UTIL.contains_box = function(a, b, size) {
+    return ZIL_UTIL.contains(a[0], b[0], b[0] + size[0]) &&
+            ZIL_UTIL.contains(a[1], b[1], b[1] + size[1]) &&
+            ZIL_UTIL.contains(a[2], b[2], b[2] + size[2]);
+};
+
 ZIL_UTIL.clear_node = function(node) {
 	while(node.children && node.children.length != 0) {
 		node.remove(node.children[0]);
@@ -169,16 +182,18 @@ ZIL_UTIL.exit = function() {
     gui.App.quit();
 };
 
+ZIL_UTIL.is_mini_mode = function() {
+    return gui.App.argv && gui.App.argv.indexOf("--mini") >= 0;
+};
+
 ZIL_UTIL.load_config = function(mini_x, mini_y) {
 
     // mini mode
-    if (gui.App.argv) {
-        if(gui.App.argv.indexOf("--mini") >= 0) {
-            var win = gui.Window.get();
-            if (win.width > mini_x) {
-                win.resizeTo(mini_x, mini_y);
-                location.reload();
-            }
+    if (ZIL_UTIL.is_mini_mode()) {
+        var win = gui.Window.get();
+        if (win.width > mini_x) {
+            win.resizeTo(mini_x, mini_y);
+            location.reload();
         }
     }
 

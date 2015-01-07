@@ -715,11 +715,11 @@ var ZIL = {
         ZIL.clear_ground_target();
     },
 
+    // Anybody still fighting?
     combatants_exists: function() {
-        return _.filter(ZIL.combat_creatures, function(c) {
-            return c.mobile.target != null;
-//            return c.mobile.alignment != ZIL.player.alignment;
-        }).length > 0;
+        return _.any(ZIL.combat_creatures, function(c) {
+            return c.mobile.is_alive() && c.mobile.target != null && c.mobile.target.mobile.is_alive();
+        });
     },
 
     recenter_screen: function(x, y) {
@@ -788,6 +788,12 @@ var ZIL = {
     },
 
 	start_game: function() {
+        // skip menu when in mini mode
+        if(ZIL_UTIL.is_mini_mode()) {
+            $("#menu").hide();
+            ZIL.continue_game();
+        }
+
         $("#menu a").click(function(event) {
             var id = $(event.target).attr("id");
             if(id == "new_game" && !confirm("Erase saved game?")) {

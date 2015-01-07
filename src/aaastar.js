@@ -167,11 +167,19 @@ ZilShape.prototype.isWall = function(node, creature) {
 
 ZilShape.prototype.can_reach = function(max_steps, start_node, end_node, creature) {
     if(!(start_node && end_node)) return [];
+
     var path = astar.search(this, start_node, end_node, creature);
-//    console.log(">>> from=" + start_node.x + "," + start_node.y +
-//        " end=" + end_node.x + "," + end_node.y +
-//        " path=" + path.length + " vs " + max_steps, path);
-    return path && path.length <= max_steps;
+
+    var success = false;
+    if(path && path.length > 0 && path.length <= max_steps) {
+        var last_node = path[path.length - 1];
+        // start_node, end_node have no z coord., so check all z values.
+        // todo: maybe add a more specific check here for can_reach_creature?
+        success = ZIL_UTIL.contains_box([end_node.x, end_node.y, 0],
+            [last_node.x, last_node.y, 0],
+            [ZilShape.PATH_RES, ZilShape.PATH_RES, ZIL_UTIL.DEPTH]);
+    }
+    return success;
 };
 
 ZilShape.prototype.astar_search = function(start, end, creature) {

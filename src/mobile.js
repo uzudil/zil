@@ -86,9 +86,9 @@ Mobile.prototype.make_glow = function(obj3d) {
 
 Mobile.prototype.contains_point = function(x, y, z, buffer) {
     if(buffer == null) buffer = 0;
-    return ZIL_UTIL.contains(x, this.x - buffer, this.x + this.size + buffer) &&
-        ZIL_UTIL.contains(y, this.y - buffer, this.y + this.size + buffer) &&
-        ZIL_UTIL.contains(z, this.z - buffer, this.z + this.shape.depth + buffer);
+    return ZIL_UTIL.contains_box([x, y, z],
+        [this.x-buffer, this.y-buffer, this.z-buffer],
+        [this.size + buffer, this.size + buffer, this.shape.depth + buffer]);
 };
 
 Mobile.CHUNK_MAP = {};
@@ -199,13 +199,24 @@ Mobile.prototype.creature_move_plan = function(map_shape) {
         if(this.target) {
             this.plan_move_to(map_shape, this.target.mobile.x, this.target.mobile.y, this.target.mobile.z - 1);
 //            console.log(">>> creature " + this.get_name() + " planned move to " + this.target.mobile.get_name() + " success?:", this.is_moving());
-            if(!this.is_moving()) {
+
+            // did the plan work?
+            var moving = false;
+            if(this.is_moving()) {
+                var last_node = this.move_path[this.move_path.length - 1];
+                moving = this.target.mobile.contains_point(last_node.x, last_node.y, last_node.z);
+            }
+
+            // if not, reset
+            if(!moving) {
 //                console.log("\tcan't move there... abandoning target.");
                 // can't move there, forget the target
                 this.target = null;
                 this.target_action = null;
             }
-        } else {
+        }
+
+         if(!this.target) {
             var dir = (Math.random() * 4) | 0;
             var dx = this.x;
             var dy = this.y;
@@ -247,6 +258,9 @@ Mobile.prototype.creature_move_plan = function(map_shape) {
                     if(this.monster.loiter_radius && ZIL_UTIL.get_distance(this.origin_x, this.origin_y, dx, dy) >= this.monster.loiter_radius) {
                         break;
                     }
+                    if(this.creature_blocked(node.x, node.y, node.z)) {
+                        break;
+                    }
                     this.move_path.push(node);
                 }
                 if (this.move_path.length == 0) this.move_path = null;
@@ -280,6 +294,11 @@ Mobile.prototype.plan_move_to = function(map_shape, x, y, z) {
  * @returns {boolean}
  */
 Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
+
+    // if we can no longer get to the target, forget it
+    if(this.ai_move && this.target && !this.can_reach_creature(this.target)) {
+        this.reset_move();
+    }
 
     if(this.ai_move && this.is_alive()) {
         this.creature_move_plan(map_shape);
@@ -563,6 +582,24 @@ Mobile.prototype.look_for_target = function() {
     }
 };
 
+Mobile.prototype.can_reach_creature = function(creature) {
+
+    var cx = (this.x / ZilShape.PATH_RES)|0;
+    var cy = (this.y / ZilShape.PATH_RES)|0;
+    var start = ZIL.shape.nodes[cx][cy];
+
+    cx = (creature.mobile.x / ZilShape.PATH_RES)|0;
+    cy = (creature.mobile.y / ZilShape.PATH_RES)|0;
+    var end = ZIL.shape.nodes[cx][cy];
+
+    var old_target = this.target;
+    this.target = creature;
+    var success = ZIL.shape.can_reach(10000, start, end, this.parent);
+    this.target = old_target;
+
+    return success;
+};
+
 Mobile.prototype.find_target = function(force_action) {
     var cx = (this.x / ZIL_UTIL.CHUNK_SIZE)|0;
     var cy = (this.y / ZIL_UTIL.CHUNK_SIZE)|0;
@@ -577,6 +614,10 @@ Mobile.prototype.find_target = function(force_action) {
                 // attack foes
                 if(c.mobile.alignment != this.alignment) {
                     if(force_action || 50 < Math.random() * 100) {
+
+                        // expensive check so only run if needed
+                        if(!this.can_reach_creature(c)) continue;
+
                         return c;
                     }
                 }
