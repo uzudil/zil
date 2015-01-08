@@ -671,6 +671,28 @@ var ZIL_BUILD = {
 	},
 
 	init_dom: function() {
+        $("#generate_map").click(function(event) {
+            $("#generate_map_dialog").fadeIn();
+            return false;
+        });
+        $("#gen_go").click(function(event) {
+            $("#generate_map_dialog").fadeOut();
+
+            var builder = MapBuilder.create(
+                parseInt($("#gen_w").val(), 10),
+                parseInt($("#gen_h").val(), 10),
+                $("#gen_type").val());
+
+            ZIL_BUILD.shape.clear_shape(ZIL_BUILD.rendered_shape);
+            ZilShape.reset_cache();
+            builder.build(ZIL_BUILD.shape);
+            ZIL_BUILD.shape.build_shape(ZIL_UTIL.update_progress, function() {
+                ZIL_BUILD.redraw_shape();
+                ZIL_BUILD.render();
+            });
+
+            return false;
+        });
         $("#help").click(function(event) {
             $("#help_info").fadeIn();
             return false;

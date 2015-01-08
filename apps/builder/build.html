@@ -56,8 +56,9 @@
             .message2 {
                 top: 40px;
             }
-			#help_info {
-				position: fixed;
+
+            .popup {
+                position: fixed;
 				top: 15px;
 				left: 50%;
 				margin-left: -100px;
@@ -66,6 +67,9 @@
 				border: 1px solid #888;
 				padding: 5px;
 				border-radius: 5px;
+            }
+
+			#help_info {
 			}
 
             #help_info ul {
@@ -99,7 +103,8 @@
 				<div><label for="color">Color:</label><select size=4 id="color"></select><span id="sample"></span></div>
                 <div><input class="color" style="width: 50px;"> <button id="add_color">Add</button></div>
                 <div><label for="clear">New shape:</label><button id="clear">Clear</button></div>
-                <div><label for="clear">Remove unseen:</label><button id="compress">Compress</button></div>
+                <div><label for="compress">Remove unseen:</label><button id="compress">Compress</button></div>
+                <div><label for="generate_map">Generate Map:</label><button id="generate_map">Generate</button></div>
 			</div>
             <div class="group">
                 <label>Creatures:<br>
@@ -116,7 +121,33 @@
 			</div>
 		</div>
 
-        <div id="help_info">
+        <div id="generate_map_dialog" class="popup">
+            <h2>Map Generator Settings</h2>
+            <div>
+                <label>Type:
+                    <select id="gen_type">
+                        <option>maze_divide_walls</option>
+                        <option>maze_divide_rock</option>
+                        <option>maze_icey_walls</option>
+                        <option>maze_icey_rock</option>
+                        <option>maze_eller_walls</option>
+                        <option>maze_eller_rock</option>
+                        <option>dungeon_digger_walls</option>
+                        <option>dungeon_digger_rock</option>
+                        <option>dungeon_uniform_walls</option>
+                        <option>dungeon_uniform_rock</option>
+                        <!--<option>dungeon_rogue_walls</option>-->
+                        <!--<option>dungeon_rogue_rock</option>-->
+                        <option>cave</option>
+                    </select>
+                </label>
+                </div>
+            <div><label>width: <input id="gen_w" value="15" type="number" step="1" min="3" max="15"></label></div>
+            <div><label>height: <input id="gen_h" value="15" type="number" step="1" min="3" max="15"></label></div>
+            <div><button id="gen_go">Go!</button></div>
+        </div>
+
+        <div id="help_info" class="popup">
             <p><b>ZIL Builder</b></p>
 
             <p>
@@ -190,10 +221,12 @@
 			</div>
 		</div>
 		<script src="../../lib/three.min.js"></script>
+		<script src="../../lib/rot.js"></script>
 		<script src="../../src/zil_util.js"></script>
 		<script src="../../src/monsters.js"></script>
 		<script src="../../src/chunk.js"></script>
 		<script src="../../src/zil_shape.js"></script>
+		<script src="../../src/map_builder.js"></script>
 		<script src="../../src/rocks.js"></script>
 		<script src="../../src/zil_build.js"></script>
 		<script>
