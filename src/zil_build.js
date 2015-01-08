@@ -396,7 +396,6 @@ var ZIL_BUILD = {
     attach_rocks: function() {
         if(ZIL_BUILD.rocks_obj) ZIL_BUILD.obj.remove(ZIL_BUILD.rocks_obj);
 
-        ZIL_BUILD.rocks.shape_obj.build_shape_inline();
         ZIL_BUILD.rocks_obj = ZIL_BUILD.rocks.shape_obj.render_shape();
         ZIL_BUILD.obj.add(ZIL_BUILD.rocks_obj);
     },
@@ -686,10 +685,8 @@ var ZIL_BUILD = {
             ZIL_BUILD.shape.clear_shape(ZIL_BUILD.rendered_shape);
             ZilShape.reset_cache();
             builder.build(ZIL_BUILD.shape);
-            ZIL_BUILD.shape.build_shape(ZIL_UTIL.update_progress, function() {
-                ZIL_BUILD.redraw_shape();
-                ZIL_BUILD.render();
-            });
+            ZIL_BUILD.redraw_shape();
+            ZIL_BUILD.render();
 
             return false;
         });
@@ -843,12 +840,10 @@ var ZIL_BUILD = {
 
             // load this shape and add it to the cursor
             ZIL_BUILD.include_shape = ZilShape.load_shape(category, shape_name, rotation);
-            ZIL_BUILD.include_shape.build_shape(ZIL_UTIL.update_progress, function() {
 //                console.log("Including shape: ", ZIL_BUILD.include_shape);
-                ZIL_BUILD.include_shape_obj = ZIL_BUILD.include_shape.render_shape();
-                ZIL_BUILD.obj.add(ZIL_BUILD.include_shape_obj);
-                $("#include_message").fadeIn();
-            });
+            ZIL_BUILD.include_shape_obj = ZIL_BUILD.include_shape.render_shape();
+            ZIL_BUILD.obj.add(ZIL_BUILD.include_shape_obj);
+            $("#include_message").fadeIn();
         }
     },
 
@@ -932,10 +927,8 @@ var ZIL_BUILD = {
 
         ZilShape.reset_cache();
 		ZIL_BUILD.shape = ZilShape.load_shape(category_name, shape_name);
-        ZIL_BUILD.shape.build_shape(ZIL_UTIL.update_progress, function() {
-            ZIL_BUILD.redraw_shape();
-            ZIL_BUILD.render();
-        });
+        ZIL_BUILD.redraw_shape();
+        ZIL_BUILD.render();
 	},
 
 	render: function() {

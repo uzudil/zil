@@ -32,7 +32,6 @@ function Mobile(x, y, z, category, shape, parent) {
     this.remove_me = false;
 
     this.shape = ZilShape.load_shape(category, shape, 0, null, true);
-    this.shape.build_shape_inline();
 
     this.shape_obj = this.shape.render_shape();
     this.shape_obj_copy = this.shape_obj.clone();
