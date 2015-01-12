@@ -203,7 +203,7 @@ Mobile.prototype.creature_move_plan = function(map_shape) {
             var moving = false;
             if(this.is_moving()) {
                 var last_node = this.move_path[this.move_path.length - 1];
-                moving = this.target.mobile.contains_point(last_node.x, last_node.y, last_node.z);
+                moving = this.target.mobile.contains_point(last_node[0], last_node[1], last_node[2]);
             }
 
             // if not, reset
@@ -250,17 +250,17 @@ Mobile.prototype.creature_move_plan = function(map_shape) {
                     if (dz == 0 || Math.abs(dz - pz) > 1) {
                         break;
                     }
-                    var node = map_shape.get_node(dx, dy, dz - 1);
+                    var node = map_shape.find_color_at(dx, dy, dz - 1);
                     if(node == null) {
                         break;
                     }
                     if(this.monster.loiter_radius && ZIL_UTIL.get_distance(this.origin_x, this.origin_y, dx, dy) >= this.monster.loiter_radius) {
                         break;
                     }
-                    if(this.creature_blocked(node.x, node.y, node.z)) {
+                    if(this.creature_blocked(dx, dy, dz - 1)) {
                         break;
                     }
-                    this.move_path.push(node);
+                    this.move_path.push([dx, dy, dz - 1]);
                 }
                 if (this.move_path.length == 0) this.move_path = null;
             }
@@ -338,7 +338,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
             var node = this.move_path[this.move_path_index];
 
             // blocked by another creature? Just wait (this won't happen during combat)
-            var c = this.creature_blocked(node.x, node.y, node.z);
+            var c = this.creature_blocked(node[0], node[1], node[2]);
             if (c) {
 //                console.log("waiting in move: " + this.get_name() + " vs " + c.mobile.get_name() +
 //                    " at " + node.x + "," + node.y + "," + node.z);
@@ -348,7 +348,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
                 return true;
             }
 
-            this.move_to(node.x, node.y, node.z + 1, gx, gy, gz);
+            this.move_to(node[0], node[1], node[2] + 1, gx, gy, gz);
 
             this.move_path_index++;
             if(this.move_path_index >= this.move_path.length) {
@@ -440,7 +440,7 @@ Mobile.prototype.is_target_in_range_on_path = function() {
     var current_ap = this.ap;
     for(var i = 0; this.move_path && current_ap > 0 && i < this.move_path.length; i++, current_ap--) {
         var node = this.move_path[i];
-        if(this.is_target_in_range(node.x, node.y)) {
+        if(this.is_target_in_range(node[0], node[1])) {
             return true;
         }
     }

@@ -128,10 +128,10 @@ var ZIL = {
                     if(!ZIL.shape.nodes[(tx / ZilShape.PATH_RES)|0]) continue;
                     var node = ZIL.shape.nodes[(tx / ZilShape.PATH_RES)|0][(ty / ZilShape.PATH_RES)|0];
 //                    console.log("---" + tx + "," + ty + "," + tz + " node=", node);
-                    if(node && node.expanded_node) {
-                        ZIL.cursor[0] = node.expanded_node.x - ZIL.global_pos[0];
-                        ZIL.cursor[1] = node.expanded_node.y - ZIL.global_pos[1];
-                        ZIL.cursor[2] = node.expanded_node.z - ZIL.global_pos[2];
+                    if(node && !node.is_empty) {
+                        ZIL.cursor[0] = node.x - ZIL.global_pos[0];
+                        ZIL.cursor[1] = node.y - ZIL.global_pos[1];
+                        ZIL.cursor[2] = node.z - ZIL.global_pos[2];
 
                         ZIL.obj.position.set(ZIL.cursor[0], ZIL.cursor[1], ZIL.cursor[2]);
                         ZIL.show_cursor_pos();
@@ -1070,7 +1070,7 @@ var ZIL = {
         for(var x = 0; x < ZIL.shape.nodes.length; x++) {
             for(var y = 0; y < ZIL.shape.nodes[0].length; y++) {
                 var node = ZIL.shape.nodes[x][y];
-                if(node.expanded_node) {
+                if(!node.is_empty) {
                     var sq = ZIL_UTIL.make_square_face(ZilShape.PATH_RES);
                     var child = new THREE.Mesh(sq, null);
                     child.position.set(node.x + ZilShape.PATH_RES/2, node.y + ZilShape.PATH_RES/2, node.z);
@@ -1299,7 +1299,7 @@ var ZIL = {
             for(var y = -range; y < range; y++) {
                 if((x == 0 && y == 0) || !ZIL.shape.nodes[cx + x] || ZIL_UTIL.get_distance(0, 0, x, y) > range) continue;
                 var end = ZIL.shape.nodes[cx + x][cy + y];
-                if(end && end.expanded_node && ZIL.shape.can_reach(range, start, end, creature)) {
+                if(end && !end.is_empty && ZIL.shape.can_reach(range, start, end, creature)) {
                     nodes.push(end);
                 }
             }
@@ -1317,7 +1317,7 @@ var ZIL = {
         var geo = new THREE.Geometry();
         for(var i = 0; i < nodes.length; i++) {
             var node = nodes[i];
-            if(node.expanded_node) {
+            if(!node.is_empty) {
                 var sq = ZIL_UTIL.make_square_face(ZilShape.PATH_RES - 0.1);
                 var child = new THREE.Mesh(sq, null);
                 child.position.set(node.x + ZilShape.PATH_RES/2, node.y + ZilShape.PATH_RES/2, node.z);

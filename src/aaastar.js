@@ -154,7 +154,7 @@ var astar = {
 };
 
 ZilShape.prototype.isWall = function(node, creature) {
-    if(node.expanded_node == null) return true;
+    if(node.is_empty) return true;
 
     for(var dx = 0; dx < ZilShape.PATH_RES; dx++) {
         for(var dy = 0; dy < ZilShape.PATH_RES; dy++) {
@@ -198,24 +198,22 @@ ZilShape.prototype.astar_search = function(start, end, creature) {
     for(var i = 0; i < path.length; i++) {
         var prev = i == 0 ? start_node : path[i - 1];
         var node = path[i];
-        p.push(prev);
-//        console.log("-" + prev.x + "," + prev.y + "," + prev.z);
+        p.push([prev.x, prev.y, prev.z]);
         for(var t = 1; t < ZilShape.PATH_RES; t++) {
             var x = prev.x + ((node.x - prev.x) * t / ZilShape.PATH_RES)|0;
             var y = prev.y + ((node.y - prev.y) * t / ZilShape.PATH_RES)|0;
-            var n = this.get_node(x, y, Math.max(node.z, prev.z)); // try higher first
-            if(!n && node.z != prev.z) n = this.get_node(x, y, Math.min(node.z, prev.z));
-            if(n) {
-//                console.log("---" + n.x + "," + n.y + "," + n.z);
-                p.push(n);
-            } else {
-                break;
+            var z = Math.max(node.z, prev.z);
+            var n = this.find_color_at(x, y, z); // try higher first
+            if(n == null && node.z != prev.z) {
+                z = Math.min(node.z, prev.z);
+                n = this.find_color_at(x, y, z);
             }
+            if(n == null) break;
+            p.push([x, y, z]);
         }
     }
-    if(end_node && p.length > 0 && p[p.length - 1].next_to(end_node)) {
-        p.push(end_node);
-//        console.log("+" + end_node.x + "," + end_node.y + "," + end_node.z);
+    if(end_node && p.length > 0 && end_node.next_to(p[p.length - 1], p[p.length - 1], p[p.length - 1])) {
+        p.push([end_node.x, end_node.y, end_node.z]);
     }
     return p;
 };
