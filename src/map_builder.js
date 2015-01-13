@@ -7,6 +7,21 @@ function MazeHelper(maze, use_walls, extras) {
     this.long_wall = ZilShape.load_shape("walls", "stone");
     this.short_wall = ZilShape.load_shape("walls", "stone2");
     this.long_wall_ns = ZilShape.load_shape("walls", "stone", 1);
+    this.door = ZilShape.load_shape("doors", "simple");
+    this.door_ns = ZilShape.load_shape("doors", "simple", 1);
+
+    this.decorations = [
+        this.short_wall,
+        ZilShape.load_shape("objects", "bookshelf", 1),
+        ZilShape.load_shape("objects", "candelabra"),
+        ZilShape.load_shape("objects", "chair", 1),
+        ZilShape.load_shape("objects", "column"),
+        ZilShape.load_shape("objects", "column-wood"),
+        ZilShape.load_shape("objects", "urn"),
+    ];
+    this.decorations_ns = _.map(this.decorations, function(shape) {
+        return shape.width == shape.height ? shape : ZilShape.load_shape(shape.category, shape.name, shape.rotation + 1);
+    });
 }
 
 MazeHelper.prototype.generate = function(w, h, callback) {
@@ -50,6 +65,38 @@ MazeHelper.prototype.draw_wall = function(shape, x, y, n, s, e, w) {
         } else {
             shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + 8, 1, this.long_wall);
         }
+    }
+};
+
+MazeHelper.prototype.draw_decoration = function(shape, x, y, n, s, e, w) {
+    var index = (Math.random() * this.decorations.length)|0;
+    var d =  n || s ? this.decorations_ns[index] : this.decorations[index];
+    var width = d.width;
+    var height = d.height;
+    if(n) {
+        shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - ((width/ 2)|0), y + 4, 1, d);
+    }
+    if(s) {
+        shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - ((width / 2)|0), y + ZIL_UTIL.CHUNK_SIZE - 4 - height, 1, d);
+    }
+    if(w) {
+        shape.set_shape(x + 4, y + ZIL_UTIL.CHUNK_SIZE - ((height / 2)|0), 1, d);
+    }
+    if(e) {
+        shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4 - width, y + ZIL_UTIL.CHUNK_SIZE - ((height / 2)|0), 1, d);
+    }
+};
+
+MazeHelper.prototype.draw_door = function(shape, x, y, n, s, e, w) {
+    if(n && s) {
+        shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.door);
+        shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 2, y + 4, 1, this.long_wall);
+        shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 2, y + ZIL_UTIL.CHUNK_SIZE + 4, 1, this.long_wall);
+
+    } else {
+        shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + ZIL_UTIL.CHUNK_SIZE, 1, this.door_ns);
+        shape.set_shape(x + 4, y + ZIL_UTIL.CHUNK_SIZE - 2, 1, this.long_wall_ns);
+        shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE + 4, y + ZIL_UTIL.CHUNK_SIZE - 2, 1, this.long_wall_ns);
     }
 };
 
@@ -178,4 +225,47 @@ MapBuilder.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw
     else if(s) this.map_helper.draw_wall(shape, x, y, false, true, false, false);
     else if(e) this.map_helper.draw_wall(shape, x, y, false, false, true, false);
     if(se && !s && !e) this.map_helper.draw_corner(shape, x, y, false, true, true, false);
+
+    // doors
+    if(n && s && !w && !e && ZIL_UTIL.on_chance(85)) {
+        x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+        y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+        this.map_helper.draw_door(shape, x, y, true, true, false, false);
+    } else if (w && e && !n && !s && ZIL_UTIL.on_chance(85)) {
+        x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+        y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+        this.map_helper.draw_door(shape, x, y, false, false, true, true);
+    } else {
+        // decoration
+        if (n) {
+            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            if (ZIL_UTIL.on_chance(65)) {
+                this.map_helper.draw_decoration(shape, x, y, true, false, false, false);
+
+            }
+        }
+        if (s) {
+            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
+            if (ZIL_UTIL.on_chance(65)) {
+                this.map_helper.draw_decoration(shape, x, y, false, true, false, false);
+            }
+        }
+        if (w) {
+            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            if (ZIL_UTIL.on_chance(65)) {
+                this.map_helper.draw_decoration(shape, x, y, false, false, false, true);
+
+            }
+        }
+        if (e) {
+            x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            if (ZIL_UTIL.on_chance(65)) {
+                this.map_helper.draw_decoration(shape, x, y, false, false, true, false);
+            }
+        }
+    }
 };
