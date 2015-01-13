@@ -50,7 +50,7 @@ Chunk.prototype.render = function(use_boxes) {
 			for(var z = 0; z < ZIL_UTIL.CHUNK_SIZE; z++) {
 
 				var block = this.get_block(x, y, z);
-				if(block) {
+				if(block != null) {
                     this.render_block(x, y, z, block, materials, material_index_map, use_boxes);
 				}
 			}

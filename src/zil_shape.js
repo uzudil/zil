@@ -1,27 +1,3 @@
-var ZilNode = function(x, y, z, value, origin_x, origin_y, origin_z) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.set_value(value, origin_x, origin_y, origin_z);
-};
-
-ZilNode.prototype.set_value = function(value, origin_x, origin_y, origin_z) {
-    this.value = value;
-    this.origin_x = origin_x;
-    this.origin_y = origin_y;
-    this.origin_z = origin_z;
-};
-
-ZilNode.prototype.toString = function() {
-    return "[" + this.x + " " + this.y + " " + this.z + "]";
-};
-
-ZilNode.prototype.getCost = function(other_node) {
-    var dz = Math.abs(this.z - other_node.z);
-    return dz <= 1 ? 1 : 100000;
-};
-
-
 var ZilShape = function(category, name, shape, width, height, depth, rotation, loading_delegate, use_boxes) {
 	this.category = category;
 	this.name = name;
