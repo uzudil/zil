@@ -56,6 +56,25 @@ MazeHelper.prototype.random_short_wall = function() {
     return ZIL_UTIL.random_pick(this.short_walls);
 };
 
+MazeHelper.prototype.draw_map = function(shape, map, width, height) {
+    for(var x = 0; x < width; x++) {
+        for (var y = 0; y < height; y++) {
+            if(map[x] && map[x][y] == 0) {
+                var n = y <= 0 || map[x][y - 1];
+                var s = y >= height - 1 || map[x][y + 1];
+                var w = x <= 0 || map[x - 1][y];
+                var e = x >= width - 1 || map[x + 1][y];
+                var nw = (x <= 0 || y <= 0) || map[x - 1][y - 1];
+                var ne = (x >= width - 1 || y <= 0) || map[x + 1][y - 1];
+                var sw = (x <= 0 || y >= height - 1) || map[x - 1][y + 1];
+                var se = (x >= width - 1 || y >= height - 1) || map[x + 1][y + 1];
+
+                this.draw_map_pos(shape, x, y, n, s, e, w, nw, ne, sw, se);
+            }
+        }
+    }
+};
+
 MazeHelper.prototype.draw_wall = function(shape, x, y, n, s, e, w) {
     if(n) {
         shape.set_shape(x, y, 1, this.random_long_wall_ns());
@@ -133,7 +152,52 @@ MazeHelper.prototype.draw_corner = function(shape, x, y, n, s, e, w) {
 function CaveHelper() {
 }
 
+CaveHelper.RES = 8;
+
 CaveHelper.prototype.generate = function(w, h, callback) {
+    var map = new ROT.Map.Cellular(w, h, { connected: true });
+    map.randomize(0.5);
+    for(var i = 0; i < 3; i++) map.create();
+    map.create(callback);
+};
+
+CaveHelper.prototype.draw_map = function(shape, map, width, height) {
+    var color1 = $("#color option:selected").index() || ZIL_BUILD.add_color(0x888888);
+    var c = ZIL_UTIL.palette[color1];
+    var c2 = ZIL_UTIL.shade_color(c, 0.9);
+    var color2 = ZIL_BUILD.add_color(c2);
+    var rocks = [];
+    for(var i = 0; i < 10; i++) rocks.push(new Rocks(color1, color2, 12, 12, 12, { erode_count: 4 }).shape_obj);
+
+    color1 = ZIL_BUILD.add_color(0xcccccc);
+    c = ZIL_UTIL.palette[color1];
+    c2 = ZIL_UTIL.shade_color(c, 0.9);
+    color2 = ZIL_BUILD.add_color(c2);
+    var floors = [];
+    for(var i = 0; i < 5; i++) floors.push(new Rocks(color1, color2, 16, 16, 4, { erode_count: 2 }).shape_obj);
+
+    // the maze
+    for(var x = 0; x < width; x++) {
+        for (var y = 0; y < height; y++) {
+            if(map[x] && map[x][y] == 1) {
+                shape.include_shape(x * CaveHelper.RES + CaveHelper.RES, y * CaveHelper.RES + CaveHelper.RES, 0, ZIL_UTIL.random_pick(rocks));
+            } else {
+                shape.include_shape(x * CaveHelper.RES + CaveHelper.RES, y * CaveHelper.RES + CaveHelper.RES, 0, ZIL_UTIL.random_pick(floors));
+            }
+        }
+    }
+
+    // border
+    for(var x = 0; x < width + 2; x++) {
+        for (var y = 0; y < height + 2; y++) {
+            if(x == 0 || y == 0 || x == width + 2 - 1 || y == height + 2 - 1) {
+                shape.include_shape(x * CaveHelper.RES, y * CaveHelper.RES, 0, ZIL_UTIL.random_pick(rocks));
+            }
+        }
+    }
+
+    // compress
+    shape.remove_unseen();
 };
 
 function MapBuilder(w, h, map_helper) {
@@ -190,26 +254,19 @@ MapBuilder.prototype.build = function(shape) {
         map[x][y] = is_wall;
     });
 
+    // debug
+    for (var y = 0; y < this.h; y++) {
+        s = "";
+        for(var x = 0; x < this.w; x++) {
+            s += map[x][y] ? "*" : ".";
+        }
+        console.log(s);
+    }
+
     // fix the map so it's not moved
     shape.set_position(0, 0, 0, 0);
 
-    // draw
-    for(var x = 0; x < this.w; x++) {
-        for (var y = 0; y < this.h; y++) {
-            if(map[x][y] == 0) {
-                var n = y < 0 || map[x][y - 1];
-                var s = y >= this.h || map[x][y + 1];
-                var w = x < 0 || map[x - 1][y];
-                var e = x >= this.w || map[x + 1][y];
-                var nw = (x < 0 && y < 0) || map[x - 1][y - 1];
-                var ne = (x >= this.w && y < 0) || map[x + 1][y - 1];
-                var sw = (x < 0 && y >= this.h) || map[x - 1][y + 1];
-                var se = (x >= this.w && y >= this.h) || map[x + 1][y + 1];
-
-                this.draw_map_pos(shape, x, y, n, s, e, w, nw, ne, sw, se);
-            }
-        }
-    }
+    this.map_helper.draw_map(shape, map, this.w, this.h);
 };
 
 MapBuilder.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw, ne, sw, se) {

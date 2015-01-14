@@ -785,7 +785,7 @@ var ZIL_BUILD = {
 		});
 		$("#compress").click(function(event) {
 			if(confirm("Are you sure?")) {
-				ZIL_BUILD.shape.remove_unseen(ZIL_BUILD.rendered_shape, this.global_pos);
+				ZIL_BUILD.shape.remove_unseen();
 				ZIL_BUILD.redraw_shape();
 				ZIL_BUILD.save_shape();
 				$("#compress").blur();

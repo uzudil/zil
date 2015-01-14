@@ -1,13 +1,14 @@
-function Rocks(color1, color2, width, height, depth) {
-    this.recreate_shape(color1, color2, width, height, depth);
+function Rocks(color1, color2, width, height, depth, options) {
+    this.recreate_shape(color1, color2, width, height, depth, options);
 }
 
-Rocks.prototype.recreate_shape = function(color1, color2, width, height, depth) {
+Rocks.prototype.recreate_shape = function(color1, color2, width, height, depth, options) {
     this.width = width ? width : ZIL_UTIL.CHUNK_SIZE;
     this.height = height ? height : ZIL_UTIL.CHUNK_SIZE;
     this.depth = depth ? depth : ZIL_UTIL.CHUNK_SIZE;
     this.color1 = color1;
     this.color2 = color2;
+    this.options = options;
     this.regen();
 };
 
@@ -23,7 +24,7 @@ Rocks.prototype.regen = function() {
             }
         }
     }
-    for(var i = 0; i < 5; i++) {
+    for(var i = 0; i < (this.options["erode_count"] || 5); i++) {
         this.erode_shape();
     }
     this.apply_gravity();

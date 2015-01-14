@@ -95,7 +95,7 @@ ZilShape.load_shape = function(category_name, shape_name, rotation, loading_dele
 	return shape_obj;
 };
 
-ZilShape.prototype.remove_unseen = function(parent_shape) {
+ZilShape.prototype.remove_unseen = function() {
     // remove shapes not visible to the user
     var remove = [];
     for(var k in this.shape) {
