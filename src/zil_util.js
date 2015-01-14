@@ -172,7 +172,7 @@ ZIL_UTIL.bind = function(callerObj, method) {
 };
 
 ZIL_UTIL.random_pick = function(list) {
-    return list[ZIL_UTIL.rand_int(0, list.length)];
+    return list[(Math.random() * list.length)|0];
 };
 
 ZIL_UTIL.on_chance = function(x) {

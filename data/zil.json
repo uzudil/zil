@@ -56,12 +56,13 @@
     16646092,
     15066597,
     1778405,
-    12369084
+    12369084,
+    12340480
   ],
-  "shape_name": "maps.westvein",
+  "shape_name": "walls.stone_2",
   "shortcuts": [
     "objects.candelabra",
-    "objects.column",
+    "objects.column-wood",
     "floor.stone",
     "floors.wood",
     "doors.iron",

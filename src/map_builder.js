@@ -7,6 +7,17 @@ function MazeHelper(maze, use_walls, extras) {
     this.long_wall = ZilShape.load_shape("walls", "stone");
     this.short_wall = ZilShape.load_shape("walls", "stone2");
     this.long_wall_ns = ZilShape.load_shape("walls", "stone", 1);
+    if(use_walls) {
+        this.long_walls = [ this.long_wall ];
+        this.long_walls_ns = [ this.long_wall_ns ];
+        this.short_walls = [ this.short_wall ];
+    } else {
+        this.long_walls = [ ZilShape.load_shape("rocks", "long"), ZilShape.load_shape("rocks", "long2"), ZilShape.load_shape("rocks", "long3") ];
+        this.long_walls_ns = _.map(this.long_walls, function(e) {
+            return ZilShape.load_shape(e.category, e.name, e.rotation + 1);
+        });
+        this.short_walls = [ ZilShape.load_shape("rocks", "short") ];
+    }
     this.door = ZilShape.load_shape("doors", "simple");
     this.door_ns = ZilShape.load_shape("doors", "simple", 1);
 
@@ -33,37 +44,49 @@ MazeHelper.prototype.draw_floor = function(shape, x, y) {
     shape.set_shape(x, y, 0, this.rock_floor);
 };
 
+MazeHelper.prototype.random_long_wall = function() {
+    return ZIL_UTIL.random_pick(this.long_walls);
+};
+
+MazeHelper.prototype.random_long_wall_ns = function() {
+    return ZIL_UTIL.random_pick(this.long_walls_ns);
+};
+
+MazeHelper.prototype.random_short_wall = function() {
+    return ZIL_UTIL.random_pick(this.short_walls);
+};
+
 MazeHelper.prototype.draw_wall = function(shape, x, y, n, s, e, w) {
     if(n) {
-        shape.set_shape(x, y, 1, this.long_wall_ns);
-        shape.set_shape(x + 8, y, 1, this.long_wall_ns);
+        shape.set_shape(x, y, 1, this.random_long_wall_ns());
+        shape.set_shape(x + 8, y, 1, this.random_long_wall_ns());
     }
     if(s) {
-        shape.set_shape(x, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.long_wall_ns);
-        shape.set_shape(x + 8, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.long_wall_ns);
+        shape.set_shape(x, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.random_long_wall_ns());
+        shape.set_shape(x + 8, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.random_long_wall_ns());
     }
     if(w) {
         if(n) {
-            shape.set_shape(x, y + 4, 1, this.short_wall);
+            shape.set_shape(x, y + 4, 1, this.random_short_wall());
         } else {
-            shape.set_shape(x, y, 1, this.long_wall);
+            shape.set_shape(x, y, 1, this.random_long_wall());
         }
         if(s) {
-            shape.set_shape(x, y + 8, 1, this.short_wall);
+            shape.set_shape(x, y + 8, 1, this.random_short_wall());
         } else {
-            shape.set_shape(x, y + 8, 1, this.long_wall);
+            shape.set_shape(x, y + 8, 1, this.random_long_wall());
         }
     }
     if(e) {
         if(n) {
-            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + 4, 1, this.short_wall);
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + 4, 1, this.random_short_wall());
         } else {
-            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y, 1, this.long_wall);
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y, 1, this.random_long_wall());
         }
         if(s) {
-            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + 8, 1, this.short_wall);
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + 8, 1, this.random_short_wall());
         } else {
-            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + 8, 1, this.long_wall);
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + 8, 1, this.random_long_wall());
         }
     }
 };
@@ -101,10 +124,10 @@ MazeHelper.prototype.draw_door = function(shape, x, y, n, s, e, w) {
 };
 
 MazeHelper.prototype.draw_corner = function(shape, x, y, n, s, e, w) {
-    if(n && w) shape.set_shape(x, y, 1, this.short_wall);
-    else if(n && e) shape.set_shape(x + 12, y, 1, this.short_wall);
-    else if(s && w) shape.set_shape(x, y + 12, 1, this.short_wall);
-    else if(s && e) shape.set_shape(x + 12, y + 12, 1, this.short_wall);
+    if(n && w) shape.set_shape(x, y, 1, this.random_short_wall());
+    else if(n && e) shape.set_shape(x + 12, y, 1, this.random_short_wall());
+    else if(s && w) shape.set_shape(x, y + 12, 1, this.random_short_wall());
+    else if(s && e) shape.set_shape(x + 12, y + 12, 1, this.random_short_wall());
 };
 
 function CaveHelper() {
