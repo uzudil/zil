@@ -234,7 +234,7 @@ MazeHelper.prototype.draw_corner = function(shape, x, y, n, s, e, w) {
 function CaveHelper() {
 }
 
-CaveHelper.RES = 8;
+CaveHelper.RES = 16;
 
 CaveHelper.prototype.generate = function(w, h, callback) {
     var map = new ROT.Map.Cellular(w, h, { connected: true });
@@ -249,14 +249,9 @@ CaveHelper.prototype.draw_map = function(shape, map, width, height) {
     var c2 = ZIL_UTIL.shade_color(c, 0.9);
     var color2 = ZIL_BUILD.add_color(c2);
     var rocks = [];
-    for(var i = 0; i < 10; i++) rocks.push(new Rocks(color1, color2, 12, 12, 12, { erode_count: 4 }).shape_obj);
+    for(var i = 0; i < 10; i++) rocks.push(new Rocks(color1, color2, 24, 24, 20, { erode_count: 5 }).shape_obj);
 
-    color1 = ZIL_BUILD.add_color(0xcccccc);
-    c = ZIL_UTIL.palette[color1];
-    c2 = ZIL_UTIL.shade_color(c, 0.9);
-    color2 = ZIL_BUILD.add_color(c2);
-    var floors = [];
-    for(var i = 0; i < 5; i++) floors.push(new Rocks(color1, color2, 16, 16, 4, { erode_count: 2 }).shape_obj);
+    this.rock_floor = ZilShape.load_shape("floor", "stone");
 
     // the maze
     for(var x = 0; x < width; x++) {
@@ -264,7 +259,7 @@ CaveHelper.prototype.draw_map = function(shape, map, width, height) {
             if(map[x] && map[x][y] == 1) {
                 shape.include_shape(x * CaveHelper.RES + CaveHelper.RES, y * CaveHelper.RES + CaveHelper.RES, 0, ZIL_UTIL.random_pick(rocks));
             } else {
-                shape.include_shape(x * CaveHelper.RES + CaveHelper.RES, y * CaveHelper.RES + CaveHelper.RES, 0, ZIL_UTIL.random_pick(floors));
+                shape.set_shape(x * CaveHelper.RES + CaveHelper.RES, y * CaveHelper.RES + CaveHelper.RES, 0, this.rock_floor);
             }
         }
     }
