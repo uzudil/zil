@@ -248,8 +248,9 @@ function CaveHelper() {
         var c = ZIL_UTIL.palette[color1];
         var c2 = ZIL_UTIL.shade_color(c, 0.9);
         var color2 = ZIL_BUILD.add_color(c2);
+        var base_color = ZIL_BUILD.add_color(0xd1d1d1);
         for (var i = 0; i < 10; i++) {
-            var shape = new Rocks(color1, color2, 24, 24, 20, { erode_count: 5 }).shape_obj;
+            var shape = new Rocks(color1, color2, 24, 24, 24, { erode_count: 8, base_color: base_color }).shape_obj;
             shape.category = "rocks";
             shape.name = "cave" + i + "-" + color1;
             shape.remove_unseen();
@@ -341,7 +342,7 @@ MapBuilder.create = function(w, h, type) {
     return new MapBuilder(w, h, map_helper);
 };
 
-MapBuilder.prototype.build = function(shape) {
+MapBuilder.prototype.build = function(shape, on_complete) {
     // generate
     var map = [];
     for(var x = 0; x < this.w; x++) {
@@ -370,11 +371,11 @@ MapBuilder.prototype.build = function(shape) {
     var pos = this.map_helper.get_pos(this.w, this.h);
     ZIL_UTIL.update_progress(0);
     setTimeout(ZIL_UTIL.bind(this, function() {
-        this.draw_map(pos, 0, shape, map, this.w, this.h);
+        this.draw_map(pos, 0, shape, map, this.w, this.h, on_complete);
     }), 100);
 };
 
-MapBuilder.prototype.draw_map = function(pos, pos_index, shape, map, width, height) {
+MapBuilder.prototype.draw_map = function(pos, pos_index, shape, map, width, height, on_complete) {
     ZIL_UTIL.update_progress(pos_index / pos.length);
 
     var n = Math.min(pos_index + (pos.length / 10)|0, pos.length);
@@ -385,11 +386,12 @@ MapBuilder.prototype.draw_map = function(pos, pos_index, shape, map, width, heig
 
     if(n < pos.length) {
         setTimeout(ZIL_UTIL.bind(this, function() {
-            this.draw_map(pos, n, shape, map, width, height);
+            this.draw_map(pos, n, shape, map, width, height, on_complete);
         }), 100);
     } else {
         ZIL_UTIL.update_progress(1);
         this.map_helper.post_draw_map(shape, map, width, height);
+        on_complete();
     }
 };
 

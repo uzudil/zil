@@ -684,9 +684,10 @@ var ZIL_BUILD = {
 
             ZIL_BUILD.shape.clear_shape(ZIL_BUILD.rendered_shape);
             ZilShape.reset_cache();
-            builder.build(ZIL_BUILD.shape);
-            ZIL_BUILD.redraw_shape();
-            ZIL_BUILD.render();
+            builder.build(ZIL_BUILD.shape, function() {
+                ZIL_BUILD.redraw_shape();
+                ZIL_BUILD.render();
+            });
 
             return false;
         });

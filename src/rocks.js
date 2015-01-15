@@ -30,7 +30,20 @@ Rocks.prototype.regen = function() {
     this.apply_gravity();
     this.implode();
     this.ensure_wall();
+    if(this.options && this.options["base_color"] != null) {
+        this.set_base_color(this.options["base_color"]);
+    }
     this.shape_obj = new ZilShape("rocks", "rock", this.shape, this.width, this.height, this.depth);
+};
+
+Rocks.prototype.set_base_color = function(base_color) {
+    for(var x = 0; x < this.width; x++) {
+        for (var y = 0; y < this.height; y++) {
+            if (this.shape[ZilShape._key(x, y, 0)] == null) {
+                this.shape[ZilShape._key(x, y, 0)] = base_color;
+            }
+        }
+    }
 };
 
 // make sure around the base of the rock is high enough so pathfinding avoids climbing onto the wall.
