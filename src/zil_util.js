@@ -265,6 +265,11 @@ ZIL_UTIL.set_shape = function(category_name, shape_name, shape_obj) {
     fs.writeFileSync(path, JSON.stringify(shape_obj));
 };
 
+ZIL_UTIL.shape_exists = function(category_name, shape_name) {
+    var dir = "../../data/shapes/" + category_name + "/" + shape_name;
+    return fs.existsSync(dir);
+};
+
 ZIL_UTIL.delete_shape = function(name) {
     throw "Implement me: delete shape " + name;
 };

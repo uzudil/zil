@@ -56,23 +56,34 @@ MazeHelper.prototype.random_short_wall = function() {
     return ZIL_UTIL.random_pick(this.short_walls);
 };
 
-MazeHelper.prototype.draw_map = function(shape, map, width, height) {
-    for(var x = 0; x < width; x++) {
+MazeHelper.prototype.get_pos = function(width, height) {
+    var pos = [];
+    for (var x = 0; x < width; x++) {
         for (var y = 0; y < height; y++) {
-            if(map[x] && map[x][y] == 0) {
-                var n = y <= 0 || map[x][y - 1];
-                var s = y >= height - 1 || map[x][y + 1];
-                var w = x <= 0 || map[x - 1][y];
-                var e = x >= width - 1 || map[x + 1][y];
-                var nw = (x <= 0 || y <= 0) || map[x - 1][y - 1];
-                var ne = (x >= width - 1 || y <= 0) || map[x + 1][y - 1];
-                var sw = (x <= 0 || y >= height - 1) || map[x - 1][y + 1];
-                var se = (x >= width - 1 || y >= height - 1) || map[x + 1][y + 1];
-
-                this.draw_map_pos(shape, x, y, n, s, e, w, nw, ne, sw, se);
-            }
+            pos.push([x, y]);
         }
     }
+    return pos;
+};
+
+MazeHelper.prototype.draw_pos = function(x, y, shape, map, width, height) {
+    if(map[x] && map[x][y] == 0) {
+        var n = y <= 0 || map[x][y - 1];
+        var s = y >= height - 1 || map[x][y + 1];
+        var w = x <= 0 || map[x - 1][y];
+        var e = x >= width - 1 || map[x + 1][y];
+        var nw = (x <= 0 || y <= 0) || map[x - 1][y - 1];
+        var ne = (x >= width - 1 || y <= 0) || map[x + 1][y - 1];
+        var sw = (x <= 0 || y >= height - 1) || map[x - 1][y + 1];
+        var se = (x >= width - 1 || y >= height - 1) || map[x + 1][y + 1];
+
+        this.draw_map_pos(shape, x, y, n, s, e, w, nw, ne, sw, se);
+    }
+};
+
+MazeHelper.prototype.post_draw_map = function(shape, map, width, height) {
+    // compress
+//    shape.remove_unseen();
 };
 
 MazeHelper.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw, ne, sw, se) {
@@ -232,6 +243,22 @@ MazeHelper.prototype.draw_corner = function(shape, x, y, n, s, e, w) {
 };
 
 function CaveHelper() {
+    var color1 = $("#color option:selected").index() || ZIL_BUILD.add_color(0x888888);
+    if(!ZIL_UTIL.shape_exists("rocks", "cave0-" + color1)) {
+        var c = ZIL_UTIL.palette[color1];
+        var c2 = ZIL_UTIL.shade_color(c, 0.9);
+        var color2 = ZIL_BUILD.add_color(c2);
+        for (var i = 0; i < 10; i++) {
+            var shape = new Rocks(color1, color2, 24, 24, 20, { erode_count: 5 }).shape_obj;
+            shape.category = "rocks";
+            shape.name = "cave" + i + "-" + color1;
+            shape.remove_unseen();
+            shape.save_shape()
+        }
+    }
+    this.rocks = [];
+    for (var i = 0; i < 10; i++) this.rocks.push(ZilShape.load_shape("rocks", "cave" + i + "-" + color1));
+    this.rock_floor = ZilShape.load_shape("floor", "stone");
 }
 
 CaveHelper.RES = 16;
@@ -243,38 +270,35 @@ CaveHelper.prototype.generate = function(w, h, callback) {
     map.create(callback);
 };
 
-CaveHelper.prototype.draw_map = function(shape, map, width, height) {
-    var color1 = $("#color option:selected").index() || ZIL_BUILD.add_color(0x888888);
-    var c = ZIL_UTIL.palette[color1];
-    var c2 = ZIL_UTIL.shade_color(c, 0.9);
-    var color2 = ZIL_BUILD.add_color(c2);
-    var rocks = [];
-    for(var i = 0; i < 10; i++) rocks.push(new Rocks(color1, color2, 24, 24, 20, { erode_count: 5 }).shape_obj);
-
-    this.rock_floor = ZilShape.load_shape("floor", "stone");
-
-    // the maze
-    for(var x = 0; x < width; x++) {
-        for (var y = 0; y < height; y++) {
-            if(map[x] && map[x][y] == 1) {
-                shape.include_shape(x * CaveHelper.RES + CaveHelper.RES, y * CaveHelper.RES + CaveHelper.RES, 0, ZIL_UTIL.random_pick(rocks));
-            } else {
-                shape.set_shape(x * CaveHelper.RES + CaveHelper.RES, y * CaveHelper.RES + CaveHelper.RES, 0, this.rock_floor);
-            }
-        }
-    }
-
-    // border
-    for(var x = 0; x < width + 2; x++) {
+CaveHelper.prototype.get_pos = function(width, height) {
+    var pos = [];
+    for (var x = 0; x < width + 2; x++) {
         for (var y = 0; y < height + 2; y++) {
-            if(x == 0 || y == 0 || x == width + 2 - 1 || y == height + 2 - 1) {
-                shape.include_shape(x * CaveHelper.RES, y * CaveHelper.RES, 0, ZIL_UTIL.random_pick(rocks));
-            }
+            pos.push([x, y]);
         }
     }
+    return pos;
+};
 
+CaveHelper.prototype.draw_pos = function(x, y, shape, map, width, height) {
+    if (x == 0 || y == 0 || x == width + 2 - 1 || y == height + 2 - 1) {
+        // border
+        shape.include_shape(x * CaveHelper.RES, y * CaveHelper.RES, 0, ZIL_UTIL.random_pick(this.rocks));
+    } else {
+        // the maze
+        var rx = x - 1;
+        var ry = y - 1;
+        if (map[rx] && map[rx][ry] == 1) {
+            shape.set_shape(x * CaveHelper.RES, y * CaveHelper.RES, 0, ZIL_UTIL.random_pick(this.rocks));
+        } else {
+            shape.set_shape(x * CaveHelper.RES, y * CaveHelper.RES, 0, this.rock_floor);
+        }
+    }
+};
+
+CaveHelper.prototype.post_draw_map = function(shape, map, width, height) {
     // compress
-    shape.remove_unseen();
+//    shape.remove_unseen();
 };
 
 function MapBuilder(w, h, map_helper) {
@@ -343,6 +367,30 @@ MapBuilder.prototype.build = function(shape) {
     // fix the map so it's not moved
     shape.set_position(0, 0, 0, 0);
 
-    this.map_helper.draw_map(shape, map, this.w, this.h);
+    var pos = this.map_helper.get_pos(this.w, this.h);
+    ZIL_UTIL.update_progress(0);
+    setTimeout(ZIL_UTIL.bind(this, function() {
+        this.draw_map(pos, 0, shape, map, this.w, this.h);
+    }), 100);
 };
+
+MapBuilder.prototype.draw_map = function(pos, pos_index, shape, map, width, height) {
+    ZIL_UTIL.update_progress(pos_index / pos.length);
+
+    var n = Math.min(pos_index + (pos.length / 10)|0, pos.length);
+    for(var i = pos_index; i < n; i++) {
+        var p = pos[i];
+        this.map_helper.draw_pos(p[0], p[1], shape, map, width, height);
+    }
+
+    if(n < pos.length) {
+        setTimeout(ZIL_UTIL.bind(this, function() {
+            this.draw_map(pos, n, shape, map, width, height);
+        }), 100);
+    } else {
+        ZIL_UTIL.update_progress(1);
+        this.map_helper.post_draw_map(shape, map, width, height);
+    }
+};
+
 
