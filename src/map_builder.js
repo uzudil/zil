@@ -75,6 +75,88 @@ MazeHelper.prototype.draw_map = function(shape, map, width, height) {
     }
 };
 
+MazeHelper.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw, ne, sw, se) {
+    // nw
+    var x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+    var y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+    this.draw_floor(shape, x, y);
+    if(n && w) this.draw_wall(shape, x, y, true, false, false, true);
+    else if(n) this.draw_wall(shape, x, y, true, false, false, false);
+    else if(w) this.draw_wall(shape, x, y, false, false, false, true);
+    if(nw && !n && !w) this.draw_corner(shape, x, y, true, false, false, true);
+
+    // ne
+    x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
+    y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+    this.draw_floor(shape, x, y);
+    if(n && e) this.draw_wall(shape, x, y, true, false, true, false);
+    else if(n) this.draw_wall(shape, x, y, true, false, false, false);
+    else if(e) this.draw_wall(shape, x, y, false, false, true, false);
+    if(ne && !n && !e) this.draw_corner(shape, x, y, true, false, true, false);
+
+    // sw
+    x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+    y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
+    this.draw_floor(shape, x, y);
+    if(s && w) this.draw_wall(shape, x, y, false, true, false, true);
+    else if(s) this.draw_wall(shape, x, y, false, true, false, false);
+    else if(w) this.draw_wall(shape, x, y, false, false, false, true);
+    if(sw && !s && !w) this.draw_corner(shape, x, y, false, true, false, true);
+
+    // se
+    x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
+    y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
+    this.draw_floor(shape, x, y);
+    if(s && e) this.draw_wall(shape, x, y, false, true, true, false);
+    else if(s) this.draw_wall(shape, x, y, false, true, false, false);
+    else if(e) this.draw_wall(shape, x, y, false, false, true, false);
+    if(se && !s && !e) this.draw_corner(shape, x, y, false, true, true, false);
+
+    // doors
+    if(n && s && !w && !e && ZIL_UTIL.on_chance(85)) {
+        x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+        y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+        this.draw_door(shape, x, y, true, true, false, false);
+    } else if (w && e && !n && !s && ZIL_UTIL.on_chance(85)) {
+        x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+        y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+        this.draw_door(shape, x, y, false, false, true, true);
+    } else {
+        // decoration
+        if (n) {
+            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            if (ZIL_UTIL.on_chance(65)) {
+                this.draw_decoration(shape, x, y, true, false, false, false);
+
+            }
+        }
+        if (s) {
+            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
+            if (ZIL_UTIL.on_chance(65)) {
+                this.draw_decoration(shape, x, y, false, true, false, false);
+            }
+        }
+        if (w) {
+            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            if (ZIL_UTIL.on_chance(65)) {
+                this.draw_decoration(shape, x, y, false, false, false, true);
+
+            }
+        }
+        if (e) {
+            x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            if (ZIL_UTIL.on_chance(65)) {
+                this.draw_decoration(shape, x, y, false, false, true, false);
+            }
+        }
+    }
+};
+
+
 MazeHelper.prototype.draw_wall = function(shape, x, y, n, s, e, w) {
     if(n) {
         shape.set_shape(x, y, 1, this.random_long_wall_ns());
@@ -269,83 +351,3 @@ MapBuilder.prototype.build = function(shape) {
     this.map_helper.draw_map(shape, map, this.w, this.h);
 };
 
-MapBuilder.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw, ne, sw, se) {
-    // nw
-    var x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-    var y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-    this.map_helper.draw_floor(shape, x, y);
-    if(n && w) this.map_helper.draw_wall(shape, x, y, true, false, false, true);
-    else if(n) this.map_helper.draw_wall(shape, x, y, true, false, false, false);
-    else if(w) this.map_helper.draw_wall(shape, x, y, false, false, false, true);
-    if(nw && !n && !w) this.map_helper.draw_corner(shape, x, y, true, false, false, true);
-
-    // ne
-    x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
-    y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-    this.map_helper.draw_floor(shape, x, y);
-    if(n && e) this.map_helper.draw_wall(shape, x, y, true, false, true, false);
-    else if(n) this.map_helper.draw_wall(shape, x, y, true, false, false, false);
-    else if(e) this.map_helper.draw_wall(shape, x, y, false, false, true, false);
-    if(ne && !n && !e) this.map_helper.draw_corner(shape, x, y, true, false, true, false);
-
-    // sw
-    x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-    y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
-    this.map_helper.draw_floor(shape, x, y);
-    if(s && w) this.map_helper.draw_wall(shape, x, y, false, true, false, true);
-    else if(s) this.map_helper.draw_wall(shape, x, y, false, true, false, false);
-    else if(w) this.map_helper.draw_wall(shape, x, y, false, false, false, true);
-    if(sw && !s && !w) this.map_helper.draw_corner(shape, x, y, false, true, false, true);
-
-    // se
-    x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
-    y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
-    this.map_helper.draw_floor(shape, x, y);
-    if(s && e) this.map_helper.draw_wall(shape, x, y, false, true, true, false);
-    else if(s) this.map_helper.draw_wall(shape, x, y, false, true, false, false);
-    else if(e) this.map_helper.draw_wall(shape, x, y, false, false, true, false);
-    if(se && !s && !e) this.map_helper.draw_corner(shape, x, y, false, true, true, false);
-
-    // doors
-    if(n && s && !w && !e && ZIL_UTIL.on_chance(85)) {
-        x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-        y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-        this.map_helper.draw_door(shape, x, y, true, true, false, false);
-    } else if (w && e && !n && !s && ZIL_UTIL.on_chance(85)) {
-        x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-        y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-        this.map_helper.draw_door(shape, x, y, false, false, true, true);
-    } else {
-        // decoration
-        if (n) {
-            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-            if (ZIL_UTIL.on_chance(65)) {
-                this.map_helper.draw_decoration(shape, x, y, true, false, false, false);
-
-            }
-        }
-        if (s) {
-            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-            y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
-            if (ZIL_UTIL.on_chance(65)) {
-                this.map_helper.draw_decoration(shape, x, y, false, true, false, false);
-            }
-        }
-        if (w) {
-            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-            if (ZIL_UTIL.on_chance(65)) {
-                this.map_helper.draw_decoration(shape, x, y, false, false, false, true);
-
-            }
-        }
-        if (e) {
-            x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
-            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-            if (ZIL_UTIL.on_chance(65)) {
-                this.map_helper.draw_decoration(shape, x, y, false, false, true, false);
-            }
-        }
-    }
-};

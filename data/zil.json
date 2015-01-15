@@ -57,9 +57,11 @@
     15066597,
     1778405,
     12369084,
-    12340480
+    12340480,
+    13421772,
+    12040119
   ],
-  "shape_name": "walls.stone_2",
+  "shape_name": "maps.westvein2",
   "shortcuts": [
     "objects.candelabra",
     "objects.column-wood",
@@ -77,23 +79,17 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "westvein",
-      311,
-      82
+      "skrit",
+      136,
+      310
     ],
     "has_password": true,
     "opened_ante_gate": true,
-    "skrit_intro": true,
-    "has_map": true,
-    "quests": [],
-    "opened_skrit_gate": true,
-    "completed_quests": [
-      "sewers"
-    ]
+    "skrit_intro": true
   },
   "player_stats": {
     "hp": 77,
-    "exp": 4900,
+    "exp": 5150,
     "level": 6
   }
 }
