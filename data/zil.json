@@ -61,15 +61,15 @@
     13421772,
     12040119
   ],
-  "shape_name": "maps.westvein2",
+  "shape_name": "doors.gate-open",
   "shortcuts": [
-    "objects.candelabra",
-    "objects.column-wood",
+    "objects.sign",
+    "objects.chair",
     "floor.stone",
     "floors.wood",
     "doors.iron",
-    "walls.stone2",
     "walls.stone",
+    "walls.stone2",
     "walls.stone-ruin",
     "walls.window",
     "objects.mushroom2"
@@ -79,17 +79,22 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "skrit",
-      136,
-      310
+      "abandoned_temple_1",
+      580,
+      570
     ],
     "has_password": true,
     "opened_ante_gate": true,
-    "skrit_intro": true
+    "skrit_intro": true,
+    "quests": [],
+    "opened_skrit_gate": true,
+    "completed_quests": [
+      "sewers"
+    ]
   },
   "player_stats": {
-    "hp": 77,
-    "exp": 5150,
-    "level": 6
+    "hp": 76,
+    "exp": null,
+    "level": null
   }
 }

@@ -9,8 +9,8 @@ function MazeHelper(maze, use_walls, extras) {
     this.short_wall = ZilShape.load_shape("walls", "stone2");
     this.long_wall_ns = ZilShape.load_shape("walls", "stone", 1);
     if(use_walls) {
-        this.long_walls = [ this.long_wall ];
-        this.long_walls_ns = [ this.long_wall_ns ];
+        this.long_walls = [ this.long_wall, ZilShape.load_shape("walls", "stone_2") ];
+        this.long_walls_ns = [ this.long_wall_ns, ZilShape.load_shape("walls", "stone_2", 1) ];
         this.short_walls = [ this.short_wall ];
     } else {
         this.long_walls = [ ZilShape.load_shape("rocks", "long"), ZilShape.load_shape("rocks", "long2"), ZilShape.load_shape("rocks", "long3") ];
@@ -141,11 +141,11 @@ MazeHelper.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw
 
     // room doors
     var room = this.in_room(map_x, map_y);
+    var room_n = this.in_room(map_x, map_y - 1);
+    var room_s = this.in_room(map_x, map_y + 1);
+    var room_w = this.in_room(map_x - 1, map_y);
+    var room_e = this.in_room(map_x + 1, map_y);
     if(room) {
-        var room_n = this.in_room(map_x, map_y - 1);
-        var room_s = this.in_room(map_x, map_y + 1);
-        var room_w = this.in_room(map_x - 1, map_y);
-        var room_e = this.in_room(map_x + 1, map_y);
         if(!n && !room_n) {
             x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
             y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
@@ -158,7 +158,7 @@ MazeHelper.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw
         if(!s && !room_s) {
             x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
             y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
-            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + ZIL_UTIL.CHUNK_SIZE - 3, 1, this.room_door_ns);
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + ZIL_UTIL.CHUNK_SIZE - 2, 1, this.room_door_ns);
             shape.set_shape(x + 4, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.long_wall_ns);
             shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE + 4, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.long_wall_ns);
             if(!e && room_e) shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE * 2 - 4, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.short_wall);
@@ -176,18 +176,18 @@ MazeHelper.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw
         if(!e && !room_e) {
             x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
             y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 3, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.room_door);
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 2, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.room_door);
             shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + 4, 1, this.long_wall);
             shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + ZIL_UTIL.CHUNK_SIZE + 4, 1, this.long_wall);
             if(!s && room_s) shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + ZIL_UTIL.CHUNK_SIZE * 2 - 4, 1, this.short_wall);
             if(!n && room_n) shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y, 1, this.short_wall);
         }
-    } else if(n && s && !w && !e && ZIL_UTIL.on_chance(85)) {
+    } else if(!room_e && !room_w && n && s && !w && !e && ZIL_UTIL.on_chance(85)) {
         // doors
         x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
         y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
         this.draw_door(shape, x, y, true, true, false, false);
-    } else if (w && e && !n && !s && ZIL_UTIL.on_chance(85)) {
+    } else if (!room_n && !room_s && w && e && !n && !s && ZIL_UTIL.on_chance(85)) {
         // doors
         x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
         y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
@@ -372,13 +372,13 @@ MapBuilder.create = function(w, h, type) {
     var map_helper = null;
 
     if(type == "dungeon_digger_walls") {
-        map_helper = new MazeHelper(ROT.Map.Digger, true, { roomWidth: [2, 4], roomHeight: [2, 4] });
+        map_helper = new MazeHelper(ROT.Map.Digger, true, { roomWidth: [2, 3], roomHeight: [2, 3] });
     } else if(type == "dungeon_digger_rock") {
-        map_helper = new MazeHelper(ROT.Map.Digger, false, { roomWidth: [2, 4], roomHeight: [2, 4] });
+        map_helper = new MazeHelper(ROT.Map.Digger, false, { roomWidth: [2, 3], roomHeight: [2, 3] });
     } else if(type == "dungeon_uniform_walls") {
-        map_helper = new MazeHelper(ROT.Map.Uniform, true, { roomWidth: [2, 4], roomHeight: [2, 4] });
+        map_helper = new MazeHelper(ROT.Map.Uniform, true, { roomWidth: [2, 3], roomHeight: [2, 3] });
     } else if(type == "dungeon_uniform_rock") {
-        map_helper = new MazeHelper(ROT.Map.Uniform, false, { roomWidth: [2, 4], roomHeight: [2, 4] });
+        map_helper = new MazeHelper(ROT.Map.Uniform, false, { roomWidth: [2, 3], roomHeight: [2, 3] });
     } else if(type == "dungeon_rogue_walls") {
         map_helper = new MazeHelper(ROT.Map.Rogue, true);
     } else if(type == "dungeon_rogue_rock") {

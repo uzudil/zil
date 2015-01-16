@@ -140,7 +140,25 @@ ZilStory.MAPS = {
                 on_mouseover: function () {
                 },
                 on_mouseclick: function () {
-                    ZIL.load_shape("maps", "westvein", 311, 82);
+                    if(ZIL_UTIL.game_state["opened_skrit_gate"]) {
+                        ZIL.load_shape("maps", "abandoned_temple_1", 580, 570);
+                    } else {
+                        ZIL.say(ZIL.player, "Looks like the gate to an <b>old ruin</b>. However, the gates are <b>locked</b> and I can't get in.");
+                    }
+                }
+            }
+        }
+    },
+    "maps.abandoned_temple_1": {
+        events: {
+
+        },
+        locations: {
+            "605,568,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "skrit", 27, 195);
                 }
             }
         }
