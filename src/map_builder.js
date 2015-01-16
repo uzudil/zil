@@ -3,6 +3,7 @@ function MazeHelper(maze, use_walls, extras) {
     this.use_walls = use_walls;
     this.extras = extras;
 
+    this.room_floor = ZilShape.load_shape("floors", "wood");
     this.rock_floor = ZilShape.load_shape("floor", "stone");
     this.long_wall = ZilShape.load_shape("walls", "stone");
     this.short_wall = ZilShape.load_shape("walls", "stone2");
@@ -20,6 +21,8 @@ function MazeHelper(maze, use_walls, extras) {
     }
     this.door = ZilShape.load_shape("doors", "simple");
     this.door_ns = ZilShape.load_shape("doors", "simple", 1);
+    this.room_door = ZilShape.load_shape("doors", "iron");
+    this.room_door_ns = ZilShape.load_shape("doors", "iron", 1);
 
     this.decorations = [
         this.short_wall,
@@ -36,12 +39,25 @@ function MazeHelper(maze, use_walls, extras) {
 }
 
 MazeHelper.prototype.generate = function(w, h, callback) {
-    var g = new this.maze(w, h, this.extras);
-    g.create(callback);
+    this.maze_instance = new this.maze(w, h, this.extras);
+    this.maze_instance.create(callback);
 };
 
-MazeHelper.prototype.draw_floor = function(shape, x, y) {
-    shape.set_shape(x, y, 0, this.rock_floor);
+MazeHelper.prototype.in_room = function(x, y) {
+    if(this.maze_instance["getRooms"]) {
+        var rooms = this.maze_instance.getRooms();
+        for(var i = 0; i < rooms.length; i++) {
+            if(ZIL_UTIL.contains(x, rooms[i].getLeft(), rooms[i].getRight() + 1) &&
+                ZIL_UTIL.contains(y, rooms[i].getTop(), rooms[i].getBottom() + 1)) {
+                return true;
+            }
+        }
+    }
+    return false;
+};
+
+MazeHelper.prototype.draw_floor = function(shape, x, y, map_x, map_y) {
+    shape.set_shape(x, y, 0, this.in_room(map_x, map_y) ? this.room_floor : this.rock_floor);
 };
 
 MazeHelper.prototype.random_long_wall = function() {
@@ -90,7 +106,7 @@ MazeHelper.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw
     // nw
     var x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
     var y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-    this.draw_floor(shape, x, y);
+    this.draw_floor(shape, x, y, map_x, map_y);
     if(n && w) this.draw_wall(shape, x, y, true, false, false, true);
     else if(n) this.draw_wall(shape, x, y, true, false, false, false);
     else if(w) this.draw_wall(shape, x, y, false, false, false, true);
@@ -99,7 +115,7 @@ MazeHelper.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw
     // ne
     x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
     y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
-    this.draw_floor(shape, x, y);
+    this.draw_floor(shape, x, y, map_x, map_y);
     if(n && e) this.draw_wall(shape, x, y, true, false, true, false);
     else if(n) this.draw_wall(shape, x, y, true, false, false, false);
     else if(e) this.draw_wall(shape, x, y, false, false, true, false);
@@ -108,7 +124,7 @@ MazeHelper.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw
     // sw
     x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
     y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
-    this.draw_floor(shape, x, y);
+    this.draw_floor(shape, x, y, map_x, map_y);
     if(s && w) this.draw_wall(shape, x, y, false, true, false, true);
     else if(s) this.draw_wall(shape, x, y, false, true, false, false);
     else if(w) this.draw_wall(shape, x, y, false, false, false, true);
@@ -117,18 +133,62 @@ MazeHelper.prototype.draw_map_pos = function(shape, map_x, map_y, n, s, e, w, nw
     // se
     x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
     y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
-    this.draw_floor(shape, x, y);
+    this.draw_floor(shape, x, y, map_x, map_y);
     if(s && e) this.draw_wall(shape, x, y, false, true, true, false);
     else if(s) this.draw_wall(shape, x, y, false, true, false, false);
     else if(e) this.draw_wall(shape, x, y, false, false, true, false);
     if(se && !s && !e) this.draw_corner(shape, x, y, false, true, true, false);
 
-    // doors
-    if(n && s && !w && !e && ZIL_UTIL.on_chance(85)) {
+    // room doors
+    var room = this.in_room(map_x, map_y);
+    if(room) {
+        var room_n = this.in_room(map_x, map_y - 1);
+        var room_s = this.in_room(map_x, map_y + 1);
+        var room_w = this.in_room(map_x - 1, map_y);
+        var room_e = this.in_room(map_x + 1, map_y);
+        if(!n && !room_n) {
+            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + 2, 1, this.room_door_ns);
+            shape.set_shape(x + 4, y, 1, this.long_wall_ns);
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE + 4, y, 1, this.long_wall_ns);
+            if(!e && room_e) shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE * 2 - 4, y, 1, this.short_wall);
+            if(!w && room_w) shape.set_shape(x, y, 1, this.short_wall);
+        }
+        if(!s && !room_s) {
+            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + ZIL_UTIL.CHUNK_SIZE - 3, 1, this.room_door_ns);
+            shape.set_shape(x + 4, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.long_wall_ns);
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE + 4, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.long_wall_ns);
+            if(!e && room_e) shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE * 2 - 4, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.short_wall);
+            if(!w && room_w) shape.set_shape(x, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.short_wall);
+        }
+        if(!w && !room_w) {
+            x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            shape.set_shape(x + 2, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.room_door);
+            shape.set_shape(x, y + 4, 1, this.long_wall);
+            shape.set_shape(x, y + ZIL_UTIL.CHUNK_SIZE + 4, 1, this.long_wall);
+            if(!s && room_s) shape.set_shape(x, y + ZIL_UTIL.CHUNK_SIZE * 2 - 4, 1, this.short_wall);
+            if(!n && room_n) shape.set_shape(x, y, 1, this.short_wall);
+        }
+        if(!e && !room_e) {
+            x = (map_x * 2 + 1) * ZIL_UTIL.CHUNK_SIZE;
+            y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 3, y + ZIL_UTIL.CHUNK_SIZE - 4, 1, this.room_door);
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + 4, 1, this.long_wall);
+            shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + ZIL_UTIL.CHUNK_SIZE + 4, 1, this.long_wall);
+            if(!s && room_s) shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y + ZIL_UTIL.CHUNK_SIZE * 2 - 4, 1, this.short_wall);
+            if(!n && room_n) shape.set_shape(x + ZIL_UTIL.CHUNK_SIZE - 4, y, 1, this.short_wall);
+        }
+    } else if(n && s && !w && !e && ZIL_UTIL.on_chance(85)) {
+        // doors
         x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
         y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
         this.draw_door(shape, x, y, true, true, false, false);
     } else if (w && e && !n && !s && ZIL_UTIL.on_chance(85)) {
+        // doors
         x = (map_x * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
         y = (map_y * 2 + 0) * ZIL_UTIL.CHUNK_SIZE;
         this.draw_door(shape, x, y, false, false, true, true);
