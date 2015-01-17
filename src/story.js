@@ -160,6 +160,23 @@ ZilStory.MAPS = {
                 on_mouseclick: function () {
                     ZIL.load_shape("maps", "skrit", 27, 195);
                 }
+            },
+            "162,36,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "maps.abandoned_temple_2", 27, 195);
+                }
+            },
+            "539,582,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Welcome, O Traveler to the holy temple of <i>Srag the Adjudicator.</i><br><br>" +
+                        "May you leave your worldly cares outside our gates and rest safely in the celestial sanctuary " +
+                        "of undisturbed peace and...<br><br>" +
+                        "<i>(Here the text becomes illegible. The wood looks to have been destroyed by claw marks.)</i>");
+                }
             }
         }
     },

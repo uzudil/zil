@@ -87,7 +87,7 @@ var astar = {
             for (var i = 0, il = neighbors.length; i < il; ++i) {
                 var neighbor = neighbors[i];
 
-                if (neighbor.closed || graph.isWall(neighbor, creature)) {
+                if (neighbor.closed || graph.isWall(neighbor, creature, options["ignore_creatures"])) {
                     // Not a valid node to process, skip to next neighbor.
                     continue;
                 }
@@ -153,22 +153,24 @@ var astar = {
     }
 };
 
-ZilShape.prototype.isWall = function(node, creature) {
+ZilShape.prototype.isWall = function(node, creature, ignore_creatures) {
     if(node.is_empty) return true;
 
-    for(var dx = 0; dx < ZilShape.PATH_RES; dx++) {
-        for(var dy = 0; dy < ZilShape.PATH_RES; dy++) {
-            if(creature.mobile.creature_blocked(node.x + dx, node.y + dy, node.z)) return true;
+    if(!ignore_creatures) {
+        for (var dx = 0; dx < ZilShape.PATH_RES; dx++) {
+            for (var dy = 0; dy < ZilShape.PATH_RES; dy++) {
+                if (creature.mobile.creature_blocked(node.x + dx, node.y + dy, node.z)) return true;
+            }
         }
     }
 
     return false;
 };
 
-ZilShape.prototype.can_reach = function(max_steps, start_node, end_node, creature) {
+ZilShape.prototype.can_reach = function(max_steps, start_node, end_node, creature, ignore_creatures) {
     if(!(start_node && end_node)) return [];
 
-    var path = astar.search(this, start_node, end_node, creature);
+    var path = astar.search(this, start_node, end_node, creature, { ignore_creatures: ignore_creatures } );
 
     var success = false;
     if(path && path.length > 0 && path.length <= max_steps) {

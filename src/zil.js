@@ -625,6 +625,7 @@ var ZIL = {
                 var cx = (ZIL.combat_creature.mobile.x / ZilShape.PATH_RES)|0;
                 var cy = (ZIL.combat_creature.mobile.y / ZilShape.PATH_RES)|0;
 //                console.log("0 id=" + ZIL.combat_creature.id + " ap=" + ZIL.combat_creature.mobile.ap + " path=", ZIL.combat_creature.mobile.move_path);
+                var old_index = ZIL.combat_creature.mobile.move_path_index;
                 if (ZIL.combat_creature.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
                     // a step taken
                     var nx = (ZIL.combat_creature.mobile.x / ZilShape.PATH_RES)|0;
@@ -632,6 +633,13 @@ var ZIL = {
                     if(Math.abs(nx - cx) >= 1 || Math.abs(ny - cy) >= 1) {
                         ZIL.combat_ap_dec(1);
                     }
+
+                    // monster couldn't move (blocked by creature?)
+                    if(ZIL.combat_creature.id != ZIL.player.id && old_index == ZIL.combat_creature.mobile.move_path_index) {
+                        // end turn
+                        ZIL.combat_creature.mobile.ap = 0;
+                    }
+
 //                    console.log("A ap=" + ZIL.combat_creature.mobile.ap);
                     if(!ZIL.player.mobile.is_moving()) {
                         ZIL.clear_ground_target();
@@ -1299,7 +1307,7 @@ var ZIL = {
             for(var y = -range; y < range; y++) {
                 if((x == 0 && y == 0) || !ZIL.shape.nodes[cx + x] || ZIL_UTIL.get_distance(0, 0, x, y) > range) continue;
                 var end = ZIL.shape.nodes[cx + x][cy + y];
-                if(end && !end.is_empty && ZIL.shape.can_reach(range, start, end, creature)) {
+                if(end && !end.is_empty && ZIL.shape.can_reach(range, start, end, creature, true)) {
                     nodes.push(end);
                 }
             }

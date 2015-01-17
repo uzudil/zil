@@ -192,79 +192,93 @@ Mobile.prototype.move = function(gx, gy, gz) {
     this.reposition_divs();
 };
 
+Mobile.prototype.creature_move_to_target_plan = function(map_shape) {
+    this.plan_move_to(map_shape, this.target.mobile.x, this.target.mobile.y, this.target.mobile.z - 1);
+//    console.log(">>> creature " + this.get_name() + " planned move to " + this.target.mobile.get_name() + " success?:", this.is_moving());
+
+    // did the plan work? Check that it includes the target.
+    var moving = false;
+    if(this.is_moving()) {
+        for(var i = this.move_path.length - 1; i >= Math.max(this.move_path.length - 8, 0); i--) {
+            var last_node = this.move_path[i];
+            var p = this.target.mobile;
+//            console.log("Checking " + i + "th node " + last_node[0] + "," + last_node[1] + "," + last_node[2] + " vs target at " + p.x + "," + p.y + "," + p.z + " size=" + p.size + " depth=" + p.shape.depth);
+            moving = this.target.mobile.contains_point(last_node[0], last_node[1], last_node[2], this.size);
+            if(moving) break;
+        }
+    }
+
+    // if not, reset
+    if(!moving) {
+//                console.log("\tcan't move there... abandoning target.");
+        // can't move there, forget the target
+        this.target = null;
+        this.target_action = null;
+    }
+
+    return moving;
+};
+
+// random movement plan
+Mobile.prototype.creature_loiter_plan = function(map_shape) {
+    var dir = (Math.random() * 4) | 0;
+    var dx = this.x;
+    var dy = this.y;
+    var dz = this.z;
+    var dist = (Math.random() * 48) | 0;
+
+    if (dir > ZIL_UTIL.W) {
+        this.move_path = null;
+        this.move_path_index = 0;
+        this.sleep_turns = dist;
+    } else {
+        this.move_path = [];
+        this.move_path_index = 0;
+        this.sleep_turns = null;
+        for (var i = 0; i < dist; i++) {
+            switch (dir) {
+                case ZIL_UTIL.N:
+                    dy--;
+                    break;
+                case ZIL_UTIL.E:
+                    dx++;
+                    break;
+                case ZIL_UTIL.S:
+                    dy++;
+                    break;
+                case ZIL_UTIL.W:
+                    dx--;
+                    break;
+            }
+            var pz = dz;
+            dz = map_shape.get_highest_empty_space_at_point(dx, dy);
+            if (dz == 0 || Math.abs(dz - pz) > 1) {
+                break;
+            }
+            var node = map_shape.find_color_at(dx, dy, dz - 1);
+            if(node == null) {
+                break;
+            }
+            if(this.monster.loiter_radius && ZIL_UTIL.get_distance(this.origin_x, this.origin_y, dx, dy) >= this.monster.loiter_radius) {
+                break;
+            }
+            if(this.creature_blocked(dx, dy, dz - 1)) {
+                break;
+            }
+            this.move_path.push([dx, dy, dz - 1]);
+        }
+        if (this.move_path.length == 0) this.move_path = null;
+    }
+};
+
 Mobile.prototype.creature_move_plan = function(map_shape) {
     if(this.move_path == null && this.sleep_turns == null) {
 
-        if(this.target) {
-            this.plan_move_to(map_shape, this.target.mobile.x, this.target.mobile.y, this.target.mobile.z - 1);
-//            console.log(">>> creature " + this.get_name() + " planned move to " + this.target.mobile.get_name() + " success?:", this.is_moving());
+        // move to target plan; if this fails the target is null-ed
+        if(this.target) this.creature_move_to_target_plan(map_shape);
 
-            // did the plan work?
-            var moving = false;
-            if(this.is_moving()) {
-                var last_node = this.move_path[this.move_path.length - 1];
-                moving = this.target.mobile.contains_point(last_node[0], last_node[1], last_node[2]);
-            }
-
-            // if not, reset
-            if(!moving) {
-//                console.log("\tcan't move there... abandoning target.");
-                // can't move there, forget the target
-                this.target = null;
-                this.target_action = null;
-            }
-        }
-
-         if(!this.target) {
-            var dir = (Math.random() * 4) | 0;
-            var dx = this.x;
-            var dy = this.y;
-            var dz = this.z;
-            var dist = (Math.random() * 48) | 0;
-
-            if (dir > ZIL_UTIL.W) {
-                this.move_path = null;
-                this.move_path_index = 0;
-                this.sleep_turns = dist;
-            } else {
-                this.move_path = [];
-                this.move_path_index = 0;
-                this.sleep_turns = null;
-                for (var i = 0; i < dist; i++) {
-                    switch (dir) {
-                        case ZIL_UTIL.N:
-                            dy--;
-                            break;
-                        case ZIL_UTIL.E:
-                            dx++;
-                            break;
-                        case ZIL_UTIL.S:
-                            dy++;
-                            break;
-                        case ZIL_UTIL.W:
-                            dx--;
-                            break;
-                    }
-                    var pz = dz;
-                    dz = map_shape.get_highest_empty_space_at_point(dx, dy);
-                    if (dz == 0 || Math.abs(dz - pz) > 1) {
-                        break;
-                    }
-                    var node = map_shape.find_color_at(dx, dy, dz - 1);
-                    if(node == null) {
-                        break;
-                    }
-                    if(this.monster.loiter_radius && ZIL_UTIL.get_distance(this.origin_x, this.origin_y, dx, dy) >= this.monster.loiter_radius) {
-                        break;
-                    }
-                    if(this.creature_blocked(dx, dy, dz - 1)) {
-                        break;
-                    }
-                    this.move_path.push([dx, dy, dz - 1]);
-                }
-                if (this.move_path.length == 0) this.move_path = null;
-            }
-        }
+        // if we can't get to or there is no target
+        if(!this.target) this.creature_loiter_plan(map_shape);
 //        console.log(">>> creature " + this.parent.id + " sleep_turns=" + this.sleep_turns  + " move_path=", this.move_path);
     }
 };
@@ -334,36 +348,49 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
             return true;
         }
 
-        if(this.move_path) {
-            var node = this.move_path[this.move_path_index];
+//        if (ZIL.in_combat) console.log("*** step move start!");
+        var retry_count = 0;
+        do {
+            if (this.move_path) {
+                var node = this.move_path[this.move_path_index];
 
-            // blocked by another creature? Just wait (this won't happen during combat)
-            var c = this.creature_blocked(node[0], node[1], node[2]);
-            if (c) {
-//                console.log("waiting in move: " + this.get_name() + " vs " + c.mobile.get_name() +
-//                    " at " + node.x + "," + node.y + "," + node.z);
-                // end move
-                this.move_path_index = 0;
-                this.move_path = null;
+                // blocked by another creature? Just wait (this won't happen during combat)
+                var c = this.creature_blocked(node[0], node[1], node[2]);
+                if (c) {
+//                    console.log("waiting in move: " + this.get_name() + " vs " + c.mobile.get_name() +
+//                        " at " + node.x + "," + node.y + "," + node.z);
+                    if (ZIL.in_combat) {
+                        // re-plan now
+                        if(this.ai_move && this.target && retry_count < 3 && this.creature_move_to_target_plan(map_shape)) {
+                            retry_count++;
+                            // success
+//                            console.log("*** replanning success: retry_count=" + retry_count);
+                            continue;
+                        } else {
+                            // can't get there; give up
+//                            console.log("*** replanning failed; giving up");
+                            return true;
+                        }
+                    } else {
+                        // end move
+                        this.move_path_index = 0;
+                        this.move_path = null;
+                        return true;
+                    }
+                }
+
+                this.move_to(node[0], node[1], node[2] + 1, gx, gy, gz);
+
+                this.move_path_index++;
+                if (this.move_path_index >= this.move_path.length) {
+                    this.move_path_index = 0;
+                    this.move_path = null;
+                }
                 return true;
             }
-
-            this.move_to(node[0], node[1], node[2] + 1, gx, gy, gz);
-
-            this.move_path_index++;
-            if(this.move_path_index >= this.move_path.length) {
-                this.move_path_index = 0;
-                this.move_path = null;
-            }
-            return true;
-        }
+        } while(retry_count > 0);
     }
     return false;
-};
-
-Mobile.prototype.is_interested_in_combat = function() {
-    var c = this.find_target(true);
-    return c != null;
 };
 
 Mobile.prototype.is_alive = function() {
@@ -591,19 +618,14 @@ Mobile.prototype.can_reach_creature = function(creature) {
     cy = (creature.mobile.y / ZilShape.PATH_RES)|0;
     var end = ZIL.shape.nodes[cx][cy];
 
-    var old_target = this.target;
-    this.target = creature;
-    var success = ZIL.shape.can_reach(10000, start, end, this.parent);
-    this.target = old_target;
-
-    return success;
+    return ZIL.shape.can_reach(10000, start, end, this.parent, true);
 };
 
 Mobile.prototype.find_target = function(force_action) {
     var cx = (this.x / ZIL_UTIL.CHUNK_SIZE)|0;
     var cy = (this.y / ZIL_UTIL.CHUNK_SIZE)|0;
-    for(var dx = -2; dx <= 2; dx++) {
-        for(var dy = -2; dy <= 2; dy++) {
+    for(var dx = -8; dx <= 8; dx++) {
+        for(var dy = -8; dy <= 8; dy++) {
             var creatures = Mobile.get_for_chunk(cx + dx, cy + dy);
             for(var i = 0; i < creatures.length; i++) {
                 var c = creatures[i];
@@ -612,11 +634,9 @@ Mobile.prototype.find_target = function(force_action) {
 
                 // attack foes
                 if(c.mobile.alignment != this.alignment) {
-                    if(force_action || 50 < Math.random() * 100) {
-
+                    if(ZIL.in_combat || force_action || 50 < Math.random() * 100) {
                         // expensive check so only run if needed
                         if(!this.can_reach_creature(c)) continue;
-
                         return c;
                     }
                 }
