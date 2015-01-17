@@ -207,6 +207,7 @@ var ZIL = {
                         // can't move there
                         ZIL.show_forbidden();
                         ZIL.toggle_player_combat_indicators(false);
+                        ZIL.combat_action_click_count = -1;
                     }
                 } else {
                     ZIL.combat_selected_creature = null;
