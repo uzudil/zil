@@ -1116,36 +1116,38 @@ var ZIL = {
 
         $("body").css("cursor", "progress");
         setTimeout(ZIL_UTIL.bind(this, function() {
-            ZIL.shape = ZilShape.load_shape(category_name, shape_name, 0, this);
+            ZilShape.load_shape_async(category_name, shape_name, 0, this, false, ZIL_UTIL.update_progress, function(shape) {
+                ZIL.shape = shape;
 
-            if(on_load) on_load();
+                if(on_load) on_load();
 
-            var start_z = ZIL.shape.get_highest_empty_space(start_x, start_y, ZIL.player.mobile.shape);
-            ZIL.shape.build_nodes(start_x, start_y, start_z);
+                var start_z = ZIL.shape.get_highest_empty_space(start_x, start_y, ZIL.player.mobile.shape);
+                ZIL.shape.build_nodes(start_x, start_y, start_z);
 
-            ZIL.init_node_debug();
+                ZIL.init_node_debug();
 
-            ZIL.set_global_pos(start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0);
+                ZIL.set_global_pos(start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0);
 
-            ZIL.player.mobile.x = start_x;
-            ZIL.player.mobile.y = start_y;
-            ZIL.player.mobile.z = start_z;
-            ZIL.rendered_shape.add(ZIL.player.mobile.shape_obj);
-            ZIL.rendered_shape2.add(ZIL.player.mobile.shape_obj_copy);
-            ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
+                ZIL.player.mobile.x = start_x;
+                ZIL.player.mobile.y = start_y;
+                ZIL.player.mobile.z = start_z;
+                ZIL.rendered_shape.add(ZIL.player.mobile.shape_obj);
+                ZIL.rendered_shape2.add(ZIL.player.mobile.shape_obj_copy);
+                ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
 
-            ZIL.move_visible_creatures(1000);
+                ZIL.move_visible_creatures(1000);
 
-            ZIL.redraw_shape();
-            ZIL.render();
+                ZIL.redraw_shape();
+                ZIL.render();
 
-            ZIL.LOADING = false;
+                ZIL.LOADING = false;
 
-            ZilStory.on_map_load(category_name, shape_name);
+                ZilStory.on_map_load(category_name, shape_name);
 
-            ZIL_UTIL.game_state["player_start"] = [category_name, shape_name, start_x, start_y];
-            ZIL_UTIL.save_config();
-            $("body").css("cursor", "default");
+                ZIL_UTIL.game_state["player_start"] = [category_name, shape_name, start_x, start_y];
+                ZIL_UTIL.save_config();
+                $("body").css("cursor", "default");
+            });
         }), 500);
 	},
 

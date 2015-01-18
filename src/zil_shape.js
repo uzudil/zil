@@ -1,4 +1,4 @@
-var ZilShape = function(category, name, shape, width, height, depth, rotation, loading_delegate, use_boxes) {
+var ZilShape = function(category, name, shape, width, height, depth, rotation, loading_delegate, use_boxes, progress_update, on_load) {
 	this.category = category;
 	this.name = name;
     this.use_boxes = use_boxes;
@@ -28,11 +28,67 @@ var ZilShape = function(category, name, shape, width, height, depth, rotation, l
 
 	this.invalidate();
     this.calculate_bounds();
-    this.load_all_shapes(); // load included shapes
 
-    for(var i = 0; i < this.rotation; i++) this.rotate(1);
-    this._index_shapes();
+    this.loaded_shapes = {};
+    this.shape_index = [];
 
+    if(progress_update) {
+
+        // part 1: load shapes
+        var tasks = [];
+        this.shape_keys = Object.keys(this.shape);
+        for(var i = 0; i < this.shape_keys.length; i++) {
+            tasks.push(ZIL_UTIL.bind(this, function(index) {
+                var key = this.shape_keys[index];
+                this.loaded_shapes[key] = this._get_shape_value(key);
+            }));
+        }
+
+        this.run_tasks(tasks, 0, progress_update, "Loading map: " + this.name + "...", ZIL_UTIL.bind(this, function() {
+            for(var i = 0; i < this.rotation; i++) this.rotate(1);
+
+            // part 2: index shapes
+            var tasks = [];
+            this.shape_keys = Object.keys(this.loaded_shapes);
+            for(var i = 0; i < this.shape_keys.length; i++) {
+                tasks.push(ZIL_UTIL.bind(this, function(index) {
+                    var key = this.shape_keys[index];
+                    this._index_shape(key);
+                }));
+            }
+
+            // done!
+            this.run_tasks(tasks, 0, progress_update, "Indexing map: " + this.name + "...", ZIL_UTIL.bind(this, on_load));
+        }));
+    } else {
+        this.load_all_shapes(); // load included shapes
+        for(var i = 0; i < this.rotation; i++) this.rotate(1);
+        this._index_shapes();
+    }
+};
+
+ZilShape.LOAD_STEPS = 5;
+ZilShape.t = 0;
+
+ZilShape.prototype.run_tasks = function(tasks, task_index, progress_update, progress_title, on_complete) {
+    progress_update(task_index / tasks.length, progress_title);
+    setTimeout(ZIL_UTIL.bind(this, function() {
+        var next_index = Math.min(task_index + ((tasks.length / ZilShape.LOAD_STEPS)|0), tasks.length);
+
+//        var n = Date.now();
+//        console.log("---" + task_index + "-" + next_index + " millis:" + (ZilShape.t == 0 ? 0 : (n - ZilShape.t)));
+//        ZilShape.t = n;
+
+        for(var i = task_index; i < next_index; i++) {
+            tasks[i](i);
+        }
+        if(next_index >= tasks.length) {
+            progress_update(1, progress_title);
+            on_complete();
+        } else {
+            this.run_tasks(tasks, next_index, progress_update, progress_title, on_complete);
+        }
+    }), 100);
 };
 
 ZilShape.prototype.get_rotation = function() {
@@ -93,6 +149,25 @@ ZilShape.load_shape = function(category_name, shape_name, rotation, loading_dele
 	}
     shape_obj.invalidate();
 	return shape_obj;
+};
+
+ZilShape.load_shape_async = function(category_name, shape_name, rotation, loading_delegate, use_boxes, progress_update, on_load) {
+	var name = category_name + "." + shape_name;
+    if(rotation == null) rotation = 0;
+    var cache_name = name + "." + rotation;
+	var shape_obj = ZilShape.SHAPE_CACHE[cache_name];
+    if(shape_obj) {
+        shape_obj.invalidate();
+        on_load(shape_obj);
+    } else {
+		var js = ZIL_UTIL.get_shape(category_name, shape_name);
+		var shape = js ? js : { width: ZIL_UTIL.WIDTH, height: ZIL_UTIL.HEIGHT, depth: ZIL_UTIL.DEPTH, shape: {} };
+		shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth, rotation, loading_delegate, use_boxes, progress_update, function() {
+            ZilShape.SHAPE_CACHE[cache_name] = shape_obj;
+            shape_obj.invalidate();
+        	on_load(shape_obj);
+        });
+	}
 };
 
 ZilShape.prototype.remove_unseen = function() {

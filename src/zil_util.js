@@ -110,7 +110,7 @@ ZIL_UTIL.clear_node = function(node) {
 	}
 };
 
-ZIL_UTIL.update_progress = function(percent) {
+ZIL_UTIL.update_progress = function(percent, title) {
     if(percent >= 1) {
         $("#progress").hide();
         $("#progress_overlay").hide();
@@ -120,6 +120,7 @@ ZIL_UTIL.update_progress = function(percent) {
         if ($("#progress").length == 0) {
             $("body").append("" +
                 "<div id='progress'>" +
+                "   <div id='progress_title'></div>" +
                 "   <div id='progress_bar_container'>" +
                 "      <div id='progress_bar'></div>" +
                 "   </div>" +
@@ -156,6 +157,11 @@ ZIL_UTIL.update_progress = function(percent) {
             "opacity": "0.75",
             "z-index": "100"
         });
+        $("#progress_title").css({
+            color: "#ccc",
+            "padding-bottom": "5px"
+        });
+        $("#progress_title").text(title ? title : "");
     }
 };
 
