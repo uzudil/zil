@@ -122,7 +122,8 @@ ZilShape.prototype.undo = function() {
 			this.shape[k] = this.undo_shape[k];
 		}
         this.load_all_shapes();
-		this._index_shape();
+		this._index_shapes();
+        this.all_chunks_updated = true;
 	}
 };
 
