@@ -304,12 +304,16 @@ var ZIL = {
     },
 
     shape_hover: function(shape_name, pos) {
-        return shape_name.indexOf("doors.") == 0;
+        return shape_name.indexOf("doors.") == 0 || shape_name.indexOf("objects.mlord_banner") == 0;
     },
 
     shape_clicked: function(shape_name, pos) {
         var split_name = shape_name.split(".");
-        if(shape_name.indexOf("doors.") == 0) {
+        console.log("+++ " + shape_name);
+        if(shape_name.indexOf("objects.mlord_banner") == 0) {
+            ZIL.show_sign("You see the banner of the <i>Mountain Lord</i> - the deity worshipped on the upper levels of the mountain.");
+            return true;
+        } else if(shape_name.indexOf("doors.") == 0) {
             var shape = ZIL.shape.get_shape(pos[0], pos[1], pos[2]);
             var fits;
             if(shape.rot == 1 || shape.rot == 3) {

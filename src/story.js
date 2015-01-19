@@ -179,9 +179,9 @@ ZilStory.MAPS = {
                 on_mouseover: function () {
                 },
                 on_mouseclick: function () {
-                    ZIL.show_sign("Welcome, O Traveler to the holy temple of <i>Srag the Adjudicator.</i><br><br>" +
-                        "May you leave your worldly cares outside our gates and rest safely in the celestial sanctuary " +
-                        "of undisturbed peace and...<br><br>" +
+                    ZIL.show_sign("Welcome, O Traveler to the holy temple of the <i>Mountain Lord.</i><br><br>" +
+                        "May you leave your worldly cares outside our gates and rest safely in our robust granite halls " +
+                        "in peace and...<br><br>" +
                         "<i>(Here the text becomes illegible. The wood looks to have been destroyed by claw marks.)</i>");
                 }
             },
@@ -464,6 +464,23 @@ ZilStory.CONVO = {
         "252,207,2": {
             "_name_": "Narg",
             "": "Begone lout, before you <a>break</a> something."
+        }
+    },
+    "maps.abandoned_temple_2": {
+        "common": {
+            "keepers": "We are former acolytes of the <a w='mlord'>Mountain Lord</a>.<br><br>For our lifetime of service and devotion, our deity granted us eternal existance - which we spend here in his halls, tending to the remains of the <a>temple</a>.",
+            "mlord": "May his granite roots be our haven and life energy!<br><br>We worship the Mountain Lord, the creator of the universe, who is all around us.<br><br>His benevolent breath is what you breathe, and the strength of his rocks encircle and protect us from the wanton chaos of the outside.",
+            "temple": "All about you is what remains of one of the great temples of the <a w='mlord'>Mountain Lord</a>. Time and human reconing are a cruel pairing, yet we <a>keepers</a> never forget.<br><br>The Mountain Lord is <a>embodied</a> by the mountain for they are one and the same.<br><br>Robust and undieing they stand as sentinels, marking the passage of eons.<br><br>Although, once grand this place has fallen to ruin and most of the halls are now home to creatures of darkness.",
+            "embodied": "One of the codes of the <a w='mlord'>Mountain Lord's</a> parables is the <a>mountain</a>.<br><br> Is it a place only in our imagination?<br><br>Only those studying its deepest <a>mysteries</a> can know for sure.",
+            "mountain": "Home of the <a w='mlord'>Mountain Lord</a> and center of our universe.<br><br>There is more to the mountain than the pile of rock it seems to be.<br>To learn more find the Seer <a>Gav</a>.",
+            "mysteries": "You seek <a>Gav</a> the Seer, I can tell. To reach him, you must travel through the <a>temple</a> and up into the higher levels of the <a>mountain</a>.<br><br>But beware traveler! Few are the safe spaces of this <a>temple</a>.",
+            "gav": "The seer Gav makes his home in the <a>Observatory</a>, high in the crown of the <a>mountain</a>.<br>No one knows where he came from or how long he's lived here.<br>He is a mystic and an oracle who only appears to those he finds worthy.",
+            "observatory": "The Observatory is an ancient citadel built by the <a>Fehrr</a> on a remote outcropping near the top of the <a>mountain</a>.<br>It is here that <a>Gav</a> meditates and studies the heavens.<br>To reach him, you must travel through this <a>temple</a> and then up towards the peaks.",
+            "fehrr": "The Fehrr are an ancient race, now extinct. Little is known of them, other than that they inhabited the <a>mountain</a> before humankind.<br><br>If books still exist about them, you may find them on the third level of this <a>temple</a>."
+        },
+        "548,116,1": {
+            "_name_": "Father Theo",
+            "": "Welcome seeker, I am Father Theo. I am one of the <a>keepers</a> of <a>temple</a> of the <a w='mlord'>Mountain Lord</a>."
         }
     }
 };
