@@ -722,6 +722,9 @@ ZilShape.prototype._find_nodes_iterative = function(start_nx, start_ny, seen_nod
         var from_node = p.from_node;
         var dir = p.dir;
 
+        // bad node?
+        if(nx < 0 || nx >= this.nodes.length || ny < 0 || ny >= this.nodes[0].length) continue;
+
         var key = nx + "." + ny;
         if(seen_nodes[key]) {
             if(seen_nodes[key][dir]) continue; // seen it from this direction

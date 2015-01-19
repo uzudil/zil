@@ -165,7 +165,14 @@ ZilStory.MAPS = {
                 on_mouseover: function () {
                 },
                 on_mouseclick: function () {
-                    ZIL.load_shape("maps", "maps.abandoned_temple_2", 27, 195);
+                    ZIL.load_shape("maps", "abandoned_temple_2", 528, 108);
+                }
+            },
+            "228,40,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "abandoned_temple_2", 108, 424);
                 }
             },
             "539,582,1": {
@@ -176,6 +183,41 @@ ZilStory.MAPS = {
                         "May you leave your worldly cares outside our gates and rest safely in the celestial sanctuary " +
                         "of undisturbed peace and...<br><br>" +
                         "<i>(Here the text becomes illegible. The wood looks to have been destroyed by claw marks.)</i>");
+                }
+            },
+            "248,38,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Down to the monks' quarters.");
+                }
+            },
+            "154,36,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Down to the beast handler's quarters.");
+                }
+            }
+        }
+    },
+    "maps.abandoned_temple_2": {
+        events: {
+
+        },
+        locations: {
+            "100,426,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "abandoned_temple_1", 248,44);
+                }
+            },
+            "528,101,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "abandoned_temple_1", 154,42);
                 }
             }
         }
