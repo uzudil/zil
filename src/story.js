@@ -468,19 +468,53 @@ ZilStory.CONVO = {
     },
     "maps.abandoned_temple_2": {
         "common": {
-            "keepers": "We are former acolytes of the <a w='mlord'>Mountain Lord</a>.<br><br>For our lifetime of service and devotion, our deity granted us eternal existance - which we spend here in his halls, tending to the remains of the <a>temple</a>.",
-            "mlord": "May his granite roots be our haven and life energy!<br><br>We worship the Mountain Lord, the creator of the universe, who is all around us.<br><br>His benevolent breath is what you breathe, and the strength of his rocks encircle and protect us from the wanton chaos of the outside.",
+            "keepers": "We are former acolytes of the <a w='mlord'>Mountain Lord</a>.<br><br>For our lifetime of service and devotion, our deity granted us eternal existance - which we spend here in his halls, tending to the remains of the <a>temple</a>.<br><br>Though the service is worthwhile, at times I can't bear the <a>boredom</a>.",
+            "mlord": "May his granite roots be our haven and life energy!<br><br>We of <a>Mihyr</a> worship the Mountain Lord, the creator of the universe, who is all around us.<br><br>His benevolent breath is what you breathe, and the strength of the <a>mountain</a> rocks encircle and protect us from the wanton chaos of the <a>Helhyr</a>.",
             "temple": "All about you is what remains of one of the great temples of the <a w='mlord'>Mountain Lord</a>. Time and human reconing are a cruel pairing, yet we <a>keepers</a> never forget.<br><br>The Mountain Lord is <a>embodied</a> by the mountain for they are one and the same.<br><br>Robust and undieing they stand as sentinels, marking the passage of eons.<br><br>Although, once grand this place has fallen to ruin and most of the halls are now home to creatures of darkness.",
             "embodied": "One of the codes of the <a w='mlord'>Mountain Lord's</a> parables is the <a>mountain</a>.<br><br> Is it a place only in our imagination?<br><br>Only those studying its deepest <a>mysteries</a> can know for sure.",
             "mountain": "Home of the <a w='mlord'>Mountain Lord</a> and center of our universe.<br><br>There is more to the mountain than the pile of rock it seems to be.<br>To learn more find the Seer <a>Gav</a>.",
             "mysteries": "You seek <a>Gav</a> the Seer, I can tell. To reach him, you must travel through the <a>temple</a> and up into the higher levels of the <a>mountain</a>.<br><br>But beware traveler! Few are the safe spaces of this <a>temple</a>.",
             "gav": "The seer Gav makes his home in the <a>Observatory</a>, high in the crown of the <a>mountain</a>.<br>No one knows where he came from or how long he's lived here.<br>He is a mystic and an oracle who only appears to those he finds worthy.",
             "observatory": "The Observatory is an ancient citadel built by the <a>Fehrr</a> on a remote outcropping near the top of the <a>mountain</a>.<br>It is here that <a>Gav</a> meditates and studies the heavens.<br>To reach him, you must travel through this <a>temple</a> and then up towards the peaks.",
-            "fehrr": "The Fehrr are an ancient race, now extinct. Little is known of them, other than that they inhabited the <a>mountain</a> before humankind.<br><br>If books still exist about them, you may find them on the third level of this <a>temple</a>."
+            "fehrr": "The Fehrr are an ancient race, now extinct. Little is known of them, other than that they inhabited the <a>mountain</a> before humankind.<br><br>If books still exist about them in our <a>library</a>, you may find them on the third level of this <a>temple</a>.",
+            "mihyr": "Mihyr is another name for the upper levels of the <a>mountain</a>. The <a w='mlord'>Mountain Lord</a> is worshipped here.",
+            "helhyr": "The lower part of the <a>mountain</a> is named Helhyr. It is a land of shadows, despair and grim doom. Little is known of the dark powers worshipped there, but visit our <a>library</a> on the third level and you may find more information.",
+            "library": "The third level of the <a>temple</a> is carved from the living rock of the <a w='mlord'>Mountain Lord</a>.<br><br>As one of our most sacred places, it housed a collection of tomes detailing all human knowledge of the workings of the world.<br><br>Like the rest of the <a>temple</a>, it has also fallen to ruin but if you search it you may find a few books of interest.<br><br>This is also the level which connects to the rest of the upper levels of <a>Mihyr</a>.",
+            "boredom": "If only there were <a>another</a> soul to converse with! I would love that."
         },
         "548,116,1": {
             "_name_": "Father Theo",
-            "": "Welcome seeker, I am Father Theo. I am one of the <a>keepers</a> of <a>temple</a> of the <a w='mlord'>Mountain Lord</a>."
+            "": function() {
+                if(!ZIL_UTIL.game_state["met_father_theo"]) {
+                    ZIL_UTIL.game_state["met_father_theo"] = true;
+                    ZIL_UTIL.save_config();
+                }
+                return "Welcome seeker, I am Father Theo. I am one of the <a>keepers</a> of <a>temple</a> of the <a w='mlord'>Mountain Lord</a>.";
+            },
+            "another": function() {
+                if(ZIL_UTIL.game_state["met_father_fran"]) {
+                    // todo
+                } else {
+                    return "Yes, well I realize my position in the grand scheme of life is rather unique. I expect there would not be another <a>keeper</a> around.<br><br>Still, if you should come across one... let me know, would you?";
+                }
+            }
+        },
+        "170,426,1": {
+            "_name_": "Father Fran",
+            "": function() {
+                if(!ZIL_UTIL.game_state["met_father_fran"]) {
+                    ZIL_UTIL.game_state["met_father_fran"] = true;
+                    ZIL_UTIL.save_config();
+                }
+                return "Welcome traveler, I am Father Fran. I am one of the <a>keepers</a> of <a>temple</a> of the <a w='mlord'>Mountain Lord</a>.";
+            },
+            "another": function() {
+                if(ZIL_UTIL.game_state["met_father_theo"]) {
+                    // todo
+                } else {
+                    return "I'm sure the other <a>keepers</a> have already turned to dust if they ever even existed to begin with.<br><br>Should you meet one, though, please let me know!";
+                }
+            }
         }
     }
 };
