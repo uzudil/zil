@@ -9,6 +9,12 @@ ZilStory.QUESTS = {
             ZIL_UTIL.game_state["opened_skrit_gate"] = true;
             ZIL_UTIL.save_config();
         }
+    },
+    "keepers": {
+        name: "Find two keepers in the Temple of the Mountain Lord",
+        level: 2,
+        on_complete: function() {
+        }
     }
 };
 
@@ -493,8 +499,10 @@ ZilStory.CONVO = {
             },
             "another": function() {
                 if(ZIL_UTIL.game_state["met_father_fran"]) {
-                    // todo
+                    if(!ZIL.completed_quest("keepers")) ZIL.quest_completed("keepers");
+                    return "What an astonishing revelation! After these years of being in the service of <a w='mlord'>Mountain Lord</a> I'm given a boon.<br><br>Thank you traveler!";
                 } else {
+                    ZIL.add_quest("keepers");
                     return "Yes, well I realize my position in the grand scheme of life is rather unique. I expect there would not be another <a>keeper</a> around.<br><br>Still, if you should come across one... let me know, would you?";
                 }
             }
@@ -510,8 +518,10 @@ ZilStory.CONVO = {
             },
             "another": function() {
                 if(ZIL_UTIL.game_state["met_father_theo"]) {
-                    // todo
+                    if(!ZIL.completed_quest("keepers")) ZIL.quest_completed("keepers");
+                    return "I cannot believe another <a w='keepers'>keeper</a> exists! Who would have thought, after all these years?<br><br>Thank you traveler!";
                 } else {
+                    ZIL.add_quest("keepers");
                     return "I'm sure the other <a>keepers</a> have already turned to dust if they ever even existed to begin with.<br><br>Should you meet one, though, please let me know!";
                 }
             }

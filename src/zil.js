@@ -345,6 +345,7 @@ var ZIL = {
 
     start_convo: function() {
         if(ZIL.selected_creature) {
+            ZIL.center_screen_at(ZIL.selected_creature.mobile.x, ZIL.selected_creature.mobile.y);
             ZilStory.start_conversation(ZIL.shape.category, ZIL.shape.name, ZIL.selected_creature);
         }
     },
@@ -1125,24 +1126,7 @@ var ZIL = {
 
                 if(on_load) on_load();
 
-                var start_z = ZIL.shape.get_highest_empty_space(start_x, start_y, ZIL.player.mobile.shape);
-                ZIL.shape.build_nodes(start_x, start_y, start_z);
-
-                ZIL.init_node_debug();
-
-                ZIL.set_global_pos(start_x - ZIL_UTIL.VIEW_WIDTH / 2, start_y - ZIL_UTIL.VIEW_HEIGHT / 2, 0);
-
-                ZIL.player.mobile.x = start_x;
-                ZIL.player.mobile.y = start_y;
-                ZIL.player.mobile.z = start_z;
-                ZIL.rendered_shape.add(ZIL.player.mobile.shape_obj);
-                ZIL.rendered_shape2.add(ZIL.player.mobile.shape_obj_copy);
-                ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
-
-                ZIL.move_visible_creatures(1000);
-
-                ZIL.redraw_shape();
-                ZIL.render();
+                ZIL.teleport(start_x, start_y);
 
                 ZIL.LOADING = false;
 
@@ -1154,6 +1138,29 @@ var ZIL = {
             });
         }), 500);
 	},
+
+    teleport: function(x, y) {
+        var z = ZIL.shape.get_highest_empty_space(x, y, ZIL.player.mobile.shape);
+        ZIL.shape.build_nodes(x, y, z);
+
+        ZIL.init_node_debug();
+
+        ZIL.set_global_pos(x - ZIL_UTIL.VIEW_WIDTH / 2, y - ZIL_UTIL.VIEW_HEIGHT / 2, 0);
+
+        ZIL.player.mobile.x = x;
+        ZIL.player.mobile.y = y;
+        ZIL.player.mobile.z = z;
+        if(ZIL.player.mobile.shape_obj.parent != ZIL.rendered_shape) {
+            ZIL.rendered_shape.add(ZIL.player.mobile.shape_obj);
+            ZIL.rendered_shape2.add(ZIL.player.mobile.shape_obj_copy);
+        }
+        ZIL.player.mobile.move(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
+
+        ZIL.move_visible_creatures(1000);
+
+        ZIL.redraw_shape();
+        ZIL.render();
+    },
 
     default_convo_complete: function() {
         Mobile.hide_convos();
@@ -1262,6 +1269,11 @@ var ZIL = {
 
         var x = ZIL_UTIL.game_state["quests"].indexOf(quest_key);
         if(x >= 0) {
+            $("#quest_complete").show();
+            setTimeout(function() {
+                $("#quest_complete").hide();
+            }, 2000);
+
             // if we didn't receive this quest, it's still completed, but we don't score it
             ZIL.player.mobile.receive_exp(Math.max(quest.level - this.level, 1) * 50);
 
