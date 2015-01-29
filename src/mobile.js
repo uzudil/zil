@@ -558,6 +558,8 @@ Mobile.prototype.attack_roll = function() {
 
     this.target.mobile.hp -= damage;
     console.log("+++ " + this.target.mobile.get_name() + " takes " + damage + "(a:" + a + "/d:" + d + ") points of damage. (remaining hp=" + this.target.mobile.hp +  ")");
+    if(damage > 0)
+        ZIL.log(this.target.mobile.get_name() + " takes " + damage + " point" + (damage == 1 ? "" : "s") + " of damage.", this.target == ZIL.player ? "console_alert" : null);
 
     if(damage > 0) {
         // animate damage

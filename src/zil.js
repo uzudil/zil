@@ -397,8 +397,8 @@ var ZIL = {
 
 	mouse_to_world: function(event) {
         // http://stackoverflow.com/questions/26822587/using-raycaster-with-an-orthographic-camera
-		var mousex = (( (event.offsetX - ZIL.offset_x) / window.innerWidth ) * 2 - 1);
-		var mousey = (-( (event.offsetY - ZIL.offset_y) / window.innerHeight ) * 2 + 1);
+		var mousex = (( (event.offsetX - ZIL.offset_x) / ZIL.canvas_width ) * 2 - 1);
+		var mousey = (-( (event.offsetY - ZIL.offset_y) / ZIL.canvas_height ) * 2 + 1);
         var vector = new THREE.Vector3( mousex, mousey, -1 ).unproject( ZIL.camera );
         ZIL.dir_vector.set( 0, 0, -1 ).transformDirection( ZIL.camera.matrixWorld );
         ZIL.raycaster.set( vector, ZIL.dir_vector );
@@ -771,7 +771,7 @@ var ZIL = {
             screen_pos = ZIL.world_to_screen(px, py, 0);
             ZIL.screen_pos_map[key] = screen_pos;
         }
-        return screen_pos.x < ZIL.canvas_edge_percent_x || screen_pos.y < ZIL.canvas_edge_percent_y || screen_pos.x >= window.innerWidth - ZIL.canvas_edge_percent_x || screen_pos.y >= window.innerHeight - ZIL.canvas_edge_percent_y;
+        return screen_pos.x < ZIL.canvas_edge_percent_x || screen_pos.y < ZIL.canvas_edge_percent_y || screen_pos.x >= ZIL.canvas_right - ZIL.canvas_edge_percent_x || screen_pos.y >= ZIL.canvas_bottom - ZIL.canvas_edge_percent_y;
     },
 
     world_to_screen: function(x, y, z) {
@@ -781,8 +781,8 @@ var ZIL = {
         projScreenMat.multiplyMatrices( ZIL.camera.projectionMatrix, ZIL.camera.matrixWorldInverse);
         pos.applyMatrix4(projScreenMat);
         return {
-            x: (pos.x+1) * window.innerWidth/2 + ZIL.canvas_offset.left,
-            y: (-pos.y+1) * window.innerHeight/2 +ZIL.canvas_offset.top
+            x: (pos.x+1) * ZIL.canvas_width/2 + ZIL.canvas_offset.left,
+            y: (-pos.y+1) * ZIL.canvas_height/2 +ZIL.canvas_offset.top
         };
     },
 
@@ -858,11 +858,15 @@ var ZIL = {
         ZIL.init_camera();
 
         ZIL.renderer.setSize(window.innerWidth, window.innerHeight);
+        ZIL.canvas_width = window.innerWidth;
+        ZIL.canvas_height = window.innerHeight;
         ZIL.canvas_edge_percent_x = window.innerWidth * 0.1;
         ZIL.canvas_edge_percent_y = window.innerHeight * 0.1;
         ZIL.canvas_offset = $("canvas").offset();
         ZIL.offset_x = 0;
         ZIL.offset_y = 0;
+        ZIL.canvas_right = window.innerWidth;
+        ZIL.canvas_bottom = window.innerHeight;
 
         ZIL.world = new THREE.Object3D();
         ZIL.world.position.set(ZIL_UTIL.VIEW_WIDTH / 2, ZIL_UTIL.VIEW_HEIGHT / 2, 0);
@@ -1120,6 +1124,7 @@ var ZIL = {
         ZIL.creatures = [];
 
         $("body").css("cursor", "progress");
+        ZIL.hide_ui();
         setTimeout(ZIL_UTIL.bind(this, function() {
             ZilShape.load_shape_async(category_name, shape_name, 0, this, false, ZIL_UTIL.update_progress, function(shape) {
                 ZIL.shape = shape;
@@ -1135,9 +1140,74 @@ var ZIL = {
                 ZIL_UTIL.game_state["player_start"] = [category_name, shape_name, start_x, start_y];
                 ZIL_UTIL.save_config();
                 $("body").css("cursor", "default");
+                ZIL.show_ui();
+                ZIL.log("Entered map: " + shape_name, "console_special");
             });
         }), 500);
 	},
+
+    hide_ui: function() {
+        $(".ui_panel").hide();
+    },
+
+    show_ui: function() {
+        $(".ui_panel").show();
+
+        $(".ui_bottom,.ui_top").css("width", window.innerWidth + "px");
+
+        var panels = $(".ui_panel");
+        var top = 0;
+        var left = 0;
+        var right = window.innerWidth;
+        var bottom = window.innerHeight;
+        for(var i = 0; i < panels.length; i++) {
+            var panel = panels.eq(i);
+            if(panel.hasClass("ui_bottom")) {
+                var v = window.innerHeight - panel.height();
+                if(v < bottom) bottom = v;
+            }
+            if(panel.hasClass("ui_right")) {
+                var v = window.innerWidth - panel.width();
+                if(v < right) right = v;
+            }
+            if(panel.hasClass("ui_top")) {
+                var v = panel.height();
+                if(v > top) top = v;
+            }
+            if(panel.hasClass("ui_left")) {
+                var v = panel.width();
+                if(v > left) left = v;
+            }
+        }
+        var w = right - left;
+        var h = bottom - top;
+
+        $("canvas").css({
+            top: top + "px",
+            left: left + "px",
+            width: w + "px",
+            height: h + "px"
+        });
+
+        ZIL.renderer.setSize(w, h);
+        ZIL.canvas_width = w;
+        ZIL.canvas_height = h;
+        ZIL.canvas_edge_percent_x = w * 0.1;
+        ZIL.canvas_edge_percent_y = h * 0.1;
+        ZIL.canvas_offset = $("canvas").offset();
+        ZIL.offset_x = left;
+        ZIL.offset_y = top;
+        ZIL.canvas_right = right;
+        ZIL.canvas_bottom = bottom;
+    },
+
+    log: function(text, console_class) {
+        var html = "<div class='console_text" + (console_class ? " " + console_class : "") + "'>" + text + "</div>";
+        $("#ui_console").append(html);
+        var count = $("#ui_console .console_text").length;
+        if(count > 200) $("#ui_console .console_text").slice(0, count - 200).remove();
+        $('#ui_console').scrollTop($('#ui_console')[0].scrollHeight);
+    },
 
     teleport: function(x, y) {
         var z = ZIL.shape.get_highest_empty_space(x, y, ZIL.player.mobile.shape);
@@ -1261,6 +1331,7 @@ var ZIL = {
 
         var quest = ZilStory.QUESTS[quest_key];
         console.log("Quest added " + quest.name);
+        ZIL.log("Quest added \"" + quest.name + "\".", "console_special");
     },
 
     quest_completed: function(quest_key) {
@@ -1286,6 +1357,7 @@ var ZIL = {
         }
 
         console.log("Quest completed " + quest.name);
+        ZIL.log("Quest completed \"" + quest.name + "\".", "console_special");
     },
 
     has_quest: function(quest_key) {
@@ -1304,6 +1376,7 @@ var ZIL = {
         console.log("+++ Creature died: " + creature.mobile.origin_x + "," + creature.mobile.origin_y + "," + creature.mobile.origin_z);
         if(creature.mobile.ai_move) {
             console.log(creature.mobile.get_name() + " dies.");
+            ZIL.log(creature.mobile.get_name() + " dies.", "console_combat");
             for(var i = 0; i < ZIL.creature_listeners.length; i++) {
                 ZIL.creature_listeners[i](ZIL.shape.category, ZIL.shape.name, creature);
             }

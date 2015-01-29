@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<title>ZIL</title>
-        <link href='http://fonts.googleapis.com/css?family=Sue+Ellen+Francisco|BenchNine|Roboto+Condensed' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Sue+Ellen+Francisco|BenchNine|Roboto+Condensed|Amaranth' rel='stylesheet' type='text/css'>
 		<style>
             * {
                 -webkit-touch-callout: none;
@@ -180,6 +180,50 @@
                 display: none;
             }
 
+            .ui_panel {
+                display: none;
+                position: fixed;
+                z-index: 500;
+                background: #000;
+                color: #888;
+            }
+
+            .ui_bottom {
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                height: 100px;
+            }
+
+            #ui_console {
+                border: 2px solid #333;
+                background: #444;
+                text-shadow: 1px 2px #222;
+                color: #ccc;
+                box-sizing:border-box;
+                padding: 5px;
+                height: 100%;
+                overflow: auto;
+                box-shadow: inset 0 0 100px #000;
+            }
+
+            .console_text {
+                font-size: 14px;
+                font-family: 'Amaranth', sans-serif;
+            }
+
+            .console_special {
+                color: #88cccc;
+            }
+
+            .console_combat {
+                color: #cc88cc;
+            }
+
+            .console_alert {
+                color: #cc8888;
+            }
+
 		</style>
 	</head>
 	<body>
@@ -246,6 +290,10 @@
         </div>
 
         <canvas id="view"></canvas>
+
+        <div class="ui_panel ui_bottom">
+            <div id="ui_console"></div>
+        </div>
 
         <div id="intro_1" class="intro">
             <p>Writing the game progressed well at first.</p>
