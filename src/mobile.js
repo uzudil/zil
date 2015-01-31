@@ -30,6 +30,11 @@ function Mobile(x, y, z, category, shape, parent) {
     this.level = 1;
     this.exp = 0;
     this.remove_me = false;
+    this.spells = [];
+    this.cooldowns = {};
+    this.casting_spell = null;
+    this.casting_spell_move = 0;
+    this.cast_z = 0;
 
     this.shape = ZilShape.load_shape(category, shape, 0, null, true);
 
@@ -187,8 +192,8 @@ Mobile.prototype.set_shape = function(dir) {
 };
 
 Mobile.prototype.move = function(gx, gy, gz) {
-    this.shape_obj.position.set(this.x - gx, this.y - gy, this.z - gz);
-    this.shape_obj_copy.position.set(this.x - gx, this.y - gy, this.z - gz);
+    this.shape_obj.position.set(this.x - gx, this.y - gy, this.z - gz + this.cast_z);
+    this.shape_obj_copy.position.set(this.x - gx, this.y - gy, this.z - gz + this.cast_z);
     this.reposition_divs();
 };
 
@@ -308,6 +313,10 @@ Mobile.prototype.plan_move_to = function(map_shape, x, y, z) {
  */
 Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
+    if(this.casting_spell) {
+        this.cast_animation(map_shape, gx, gy, gz, delta_time);
+    }
+
     // if we can no longer get to the target, forget it
     if(this.ai_move && this.target && !this.can_reach_creature(this.target)) {
         this.reset_move();
@@ -391,6 +400,34 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
         } while(retry_count > 0);
     }
     return false;
+};
+
+Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
+    if(this.casting_spell_move == 0) {
+        if(this.cast_z < 4) {
+            this.cast_z += delta_time * 0.0025;
+            this.shape_obj.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
+            this.shape_obj_copy.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
+            this.move(gx, gy, gz);
+        } else {
+            this.casting_spell_move = 1;
+        }
+    } else if(this.casting_spell_move == 1) {
+        if(this.cast_z > 0) {
+            this.cast_z -= delta_time * 0.0025;
+            this.shape_obj.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
+            this.shape_obj_copy.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
+            this.move(gx, gy, gz);
+        } else {
+            this.casting_spell_move = 2;
+        }
+    } else {
+        this.cast_z = 0;
+        this.shape_obj.children[0].rotation.x = 0;
+        this.shape_obj_copy.children[0].rotation.x = 0;
+        this.casting_spell = null;
+        this.move(gx, gy, gz);
+    }
 };
 
 Mobile.prototype.is_alive = function() {
@@ -592,8 +629,7 @@ Mobile.prototype.receive_exp = function(exp) {
             $("#level_up").hide();
         }, 2000);
     }
-    ZIL_UTIL.player_stats = ZIL.player.get_stats();
-    ZIL_UTIL.save_config();
+    ZIL.player.save_stats();
 };
 
 Mobile.prototype.look_for_target = function() {
@@ -684,4 +720,38 @@ Mobile.prototype.say = function(message, on_render) {
 
 Mobile.hide_convos = function() {
     $(".convo_bubble").remove();
+};
+
+Mobile.prototype.has_spell = function(spell) {
+    return this.spells.indexOf(spell) > -1;
+};
+
+Mobile.prototype.add_spell = function(spell) {
+    this.spells.push(spell);
+    ZIL.log(this.get_name() + " finds a scroll. It tingles with power.");
+};
+
+Mobile.prototype.cast_spell_by_name = function(name) {
+    var spell = Spell.SPELLS_BY_NAME[name];
+    if(!spell) {
+        ZIL.log("There is no spell named " + name);
+    } else if(this.has_spell(spell)) {
+        this.cast_spell(spell);
+    } else {
+        ZIL.log("You don't have a spell named " + name);
+    }
+};
+
+Mobile.prototype.cast_spell = function(spell) {
+    ZIL.log(this.get_name() + " intones: " + spell.name.toUpperCase() + "!", "console_special");
+    var now = Date.now();
+    var c = this.cooldowns["spell_" + spell.name];
+    if(c == null || c < now) {
+        this.cooldowns["spell_" + spell.name] = now + 10 * 1000;
+        this.casting_spell = spell;
+        this.casting_spell_move = 0;
+        spell.play_music();
+    } else {
+        ZIL.log("...and nothing happens.");
+    }
 };

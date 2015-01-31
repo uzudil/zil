@@ -225,6 +225,19 @@ ZilStory.MAPS = {
                 on_mouseclick: function () {
                     ZIL.load_shape("maps", "abandoned_temple_1", 154,42);
                 }
+            },
+            "137,420,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    if(ZIL.player.mobile.has_spell(Spell.HEAL)) {
+                        ZIL.say(ZIL.player, "I found a <b>magic scroll</b> but looks like I already have this one.");
+                    } else {
+                        ZIL.player.mobile.add_spell(Spell.HEAL);
+                        ZIL.player.save_stats();
+                        ZIL.say(ZIL.player, "I found a new <b>magic scroll!</b> It reads: " + Spell.HEAL.name);
+                    }
+                }
             }
         }
     },

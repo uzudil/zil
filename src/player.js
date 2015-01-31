@@ -32,7 +32,8 @@ Player.prototype.get_stats = function() {
     return {
         "hp": this.mobile.hp,
         "exp": this.mobile.exp,
-        "level": this.mobile.level
+        "level": this.mobile.level,
+        "spells": _.map(this.mobile.spells, function(spell) { return spell.name; })
     }
 };
 
@@ -40,4 +41,13 @@ Player.prototype.set_stats = function(stats) {
     this.mobile.hp = stats["hp"] || this.mobile.hp;
     this.mobile.exp = stats["exp"] || this.mobile.exp;
     this.mobile.level = stats["level"] || this.mobile.level;
+    var spell_names = stats["spells"] || [];
+    for(var i = 0; i < spell_names.length; i++) {
+        this.mobile.add_spell(Spell.SPELLS_BY_NAME[spell_names[i]]);
+    }
+};
+
+Player.prototype.save_stats = function() {
+    ZIL_UTIL.player_stats = this.get_stats();
+    ZIL_UTIL.save_config();
 };

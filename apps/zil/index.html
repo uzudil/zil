@@ -184,7 +184,7 @@
                 display: none;
                 position: fixed;
                 z-index: 500;
-                background: #000;
+                background: transparent;
                 color: #888;
             }
 
@@ -224,6 +224,17 @@
                 color: #cc8888;
             }
 
+            .console_command {
+                min-height: 17px;
+                color: #cccc88;
+            }
+
+            .console_command:after {
+                background-image: url(../../img/caret.png);
+                background-size: 24px 16px;
+                content:"\0000a0\0000a0\0000a0\0000a0";
+            }
+
 		</style>
 	</head>
 	<body>
@@ -258,8 +269,17 @@
         <script src="../../src/mobile.js"></script>
         <script src="../../src/creature.js"></script>
         <script src="../../src/player.js"></script>
+		<script src="../../src/spell.js"></script>
 		<script src="../../src/zil.js"></script>
+		<script src="../../src/commands.js"></script>
 		<script src="../../src/story.js"></script>
+
+        <!-- midi.js package -->
+        <script src="../../lib/MIDI.js/js/MIDI/Plugin.js" type="text/javascript"></script>
+        <script src="../../lib/MIDI.js/js/MIDI/Player.js" type="text/javascript"></script>
+        <script src="../../lib/MIDI.js/soundfont/vibraphone-ogg.js" type="text/javascript"></script>
+        <script src="../../lib/MIDI.js/inc/Base64.js" type="text/javascript"></script>
+        <script src="../../lib/MIDI.js/inc/base64binary.js" type="text/javascript"></script>
 
         <div id="menu">
             <div class="title">Z.I.L.</div>

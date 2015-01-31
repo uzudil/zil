@@ -45,6 +45,7 @@ var ZIL = {
     creature_listeners: [],
     node_debug: null,
     combat_range: null,
+    command_enter_mode: false,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -419,10 +420,35 @@ var ZIL = {
 		}
 	},
 
-	key_down: function(event) {
-        if(ZIL.LOADING) return;
+    stop_command_mode: function() {
+        ZIL.command_enter_mode = false;
+    },
 
-//		console.log(event.which);
+	key_up: function(event) {
+        if(ZIL.command_enter_mode) {
+            Commands.special_key(event);
+            return false;
+        }
+        return true;
+    },
+
+	key_press: function(event) {
+        if(ZIL.command_enter_mode) {
+            Commands.typed_key(event);
+            return false;
+        }
+        return true;
+    },
+
+	key_down: function(event) {
+        if(ZIL.LOADING || ZIL.command_enter_mode) return;
+
+        if(event.which == 9 && !ZIL.command_enter_mode) {
+            ZIL.command_enter_mode = true;
+            Commands.start();
+            return false;
+        }
+
 		if(event.target != document.body) return true;
         if(ZIL.GAME_PAUSED) return;
 
@@ -438,9 +464,7 @@ var ZIL = {
         }
 
         // move the cursor
-        if(event.which == 65) {
-            ZIL.player.mobile.start_attack();
-        } else if(event.which == 32) {
+        if(event.which == 32) {
             ZIL.DEBUG_MODE = !ZIL.DEBUG_MODE;
             if(ZIL.DEBUG_MODE) {
                 ZIL.inner.add( ZIL.node_debug );
@@ -1053,6 +1077,8 @@ var ZIL = {
 			bind("mouseup", ZIL.mouse_up);
 		document.body.oncontextmenu = function() { return false; };
 		document.body.onkeydown = ZIL.key_down;
+		document.body.onkeyup = ZIL.key_up;
+		$(document.body).keypress(ZIL.key_press);
 	},
 
     load_game: function() {
@@ -1443,5 +1469,5 @@ var ZIL = {
 
     show_sign: function(text) {
         ZIL.show_message("The sign reads:", text);
-    }
+    },
 };

@@ -79,9 +79,9 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "abandoned_temple_1",
-      248,
-      44
+      "abandoned_temple_2",
+      108,
+      424
     ],
     "has_password": true,
     "opened_ante_gate": true,
@@ -98,6 +98,9 @@
   "player_stats": {
     "hp": 291,
     "exp": 4250,
-    "level": 5
+    "level": 5,
+    "spells": [
+      "Zon-Bur"
+    ]
   }
 }
