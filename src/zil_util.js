@@ -38,6 +38,8 @@ ZIL_UTIL.game_state = {};
 ZIL_UTIL.game_state = {};
 ZIL_UTIL.first_render = null;
 
+ZIL_UTIL.particle_sprite1 = THREE.ImageUtils.loadTexture("../../img/p3.png");
+
 ZIL_UTIL.make_square_face = function(size) {
     var n = size / 2;
 
@@ -59,6 +61,27 @@ ZIL_UTIL.make_square_face = function(size) {
 
 ZIL_UTIL.angle_to_radians = function(angle) {
     return angle / 180.0 * PI;
+};
+
+ZIL_UTIL.radians_to_angle = function(radians) {
+    return radians / PI * 180.0;
+};
+
+ZIL_UTIL.get_angle = function(x, y) {
+    var angle = ZIL_UTIL.radians_to_angle(Math.atan(y / x));
+    // the "arctan problem"
+    if(x < 0) angle += 180;
+    else if (y < 0) angle += 360;
+    angle = ZIL_UTIL.angle_to_radians(angle);
+    return angle;
+};
+
+ZIL_UTIL.grow_vector = function(vertex, delta) {
+    var angle = ZIL_UTIL.get_angle(vertex.x, vertex.y);
+    var h = vertex.y / Math.sin(angle);
+    h += delta;
+    vertex.x = h * Math.cos(angle);
+    vertex.y = h * Math.sin(angle);
 };
 
 ZIL_UTIL.get_distance = function(ax, ay, bx, by) {

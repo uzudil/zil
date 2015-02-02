@@ -35,6 +35,7 @@ function Mobile(x, y, z, category, shape, parent) {
     this.casting_spell = null;
     this.casting_spell_move = 0;
     this.cast_z = 0;
+    this.cast_particles = null;
 
     this.shape = ZilShape.load_shape(category, shape, 0, null, true);
 
@@ -347,7 +348,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
         // look for enemies
         if(this.ai_move && this.is_alive()) {
-            this.look_for_target();
+//            this.look_for_target();
         }
 
         // sleep
@@ -403,6 +404,20 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 };
 
 Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
+
+    // expand the particles
+    for(var i = 0; i < 4000; i++) {
+        var d = delta_time * 0.007;
+        var delta = (Math.random() * d/2 + d/2);
+        var vertex = this.cast_geometry.vertices[i];
+        ZIL_UTIL.grow_vector(vertex, delta);
+    }
+    this.cast_material.opacity = (this.cast_z / 4.0) / 10.0;
+    this.cast_geometry.colorsNeedUpdate = true;
+    this.cast_geometry.verticesNeedUpdate = true;
+    this.cast_particles.position.z = -this.cast_z;
+
+    // move the creature
     if(this.casting_spell_move == 0) {
         if(this.cast_z < 4) {
             this.cast_z += delta_time * 0.0025;
@@ -426,6 +441,7 @@ Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
         this.shape_obj.children[0].rotation.x = 0;
         this.shape_obj_copy.children[0].rotation.x = 0;
         this.casting_spell = null;
+        this.shape_obj.remove(this.cast_particles);
         this.move(gx, gy, gz);
     }
 };
@@ -750,8 +766,42 @@ Mobile.prototype.cast_spell = function(spell) {
         this.cooldowns["spell_" + spell.name] = now + 10 * 1000;
         this.casting_spell = spell;
         this.casting_spell_move = 0;
+        this.init_casting_particles();
         spell.play_music();
     } else {
         ZIL.log("...and nothing happens.");
     }
 };
+
+Mobile.prototype.init_casting_particles = function() {
+    // spell casting particles
+    if(this.cast_particles == null) {
+        this.cast_geometry = new THREE.Geometry();
+
+        for(var i = 0; i < 4000; i++) this.cast_geometry.vertices.push(new THREE.Vector3());
+
+        this.cast_material = new THREE.PointCloudMaterial({
+            size: 30,
+            map: ZIL_UTIL.particle_sprite1,
+            blending: THREE.AdditiveBlending,
+            depthTest: false,
+            transparent: true,
+            fog: false
+        });
+
+        this.cast_particles = new THREE.PointCloud(this.cast_geometry, this.cast_material);
+    }
+    for(var i = 0; i < 4000; i++) {
+        var vertex = this.cast_geometry.vertices[i];
+        vertex.x = Math.random() * 4 - 2;
+        vertex.y = Math.random() * 4 - 2;
+        vertex.z = Math.random() * 3;
+    }
+
+    // re-init the spell casting particles
+    this.cast_material.color.setRGB(0.1, 0.5, 0.95);
+    this.cast_material.opacity = 1;
+    this.cast_geometry.colorsNeedUpdate = true;
+    this.cast_geometry.verticesNeedUpdate = true;
+    this.shape_obj.add(this.cast_particles);
+}
