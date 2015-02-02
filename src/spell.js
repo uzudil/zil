@@ -1,6 +1,7 @@
-function Spell(name, music) {
+function Spell(name, music, start_fx) {
     this.name = name;
     this.music = music;
+    this.start_fx = start_fx;
     Spell.SPELLS_BY_NAME[name] = this;
 }
 
@@ -10,7 +11,9 @@ Spell.MIDI_INSTRUMENT_ID = 11; // vibraphone
 
 Spell.HEAL = new Spell("Zon-Bur", [
     ["Db5", 4], ["Eb5", 4], ["Gb5", 4], ["Eb5", 2], ["Eb5", 2], ["Gb5", 4], ["Db5", 1], ["Db5", 1]
-]);
+], function(caster, target) {
+    caster.mobile.heal((Math.random() * 5 + 5)|0);
+});
 
 Spell.prototype.play_music = function() {
     if(Spell.MIDI_INIT == false) {

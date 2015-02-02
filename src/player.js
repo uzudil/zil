@@ -9,7 +9,7 @@ function Player() {
     this.mobile.max_ap = 10;
     this.mobile.level = 5;
     this.mobile.exp = Math.pow(2, this.mobile.level) * 100;
-    this.mobile.hp = 80;
+    this.mobile.hp = this.mobile.max_hp = 80;
 }
 
 Player.prototype.get_atk = function() {

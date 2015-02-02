@@ -21,6 +21,7 @@ function Mobile(x, y, z, category, shape, parent) {
     this.ap = 0;
     this.max_ap = 10;
     this.hp = 25;
+    this.max_hp = this.hp;
     this.target = null;
     this.target_action = null;
     this.selected = false;
@@ -446,6 +447,13 @@ Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
     }
 };
 
+Mobile.prototype.heal = function(points) {
+    var p = this.hp;
+    this.hp += points;
+    if(this.hp > this.max_hp) this.hp = this.max_hp;
+    ZIL.log(this.get_name() + " heals " + (this.hp - p)  + " points.");
+};
+
 Mobile.prototype.is_alive = function() {
     return this.hp > 0;
 };
@@ -768,6 +776,7 @@ Mobile.prototype.cast_spell = function(spell) {
         this.casting_spell_move = 0;
         this.init_casting_particles();
         spell.play_music();
+        spell.start_fx(this.parent, this.target);
     } else {
         ZIL.log("...and nothing happens.");
     }
