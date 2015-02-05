@@ -30,6 +30,17 @@ ZilCal.schedule = function(name, millis, fx) {
     ZilCal.PENDING_EVENTS.push(new ZilEvent(name, millis, fx));
 };
 
+ZilCal.unschedule = function(name) {
+    console.log("* Removing event: " + name);
+    for(var i = 0; i < ZilCal.PENDING_EVENTS.length; i++) {
+        if(ZilCal.PENDING_EVENTS[i].name == name) {
+            ZilCal.PENDING_EVENTS.splice(i, 1);
+            return true;
+        }
+    }
+    return false;
+};
+
 ZilCal.run = function(delta_time) {
     ZilCal.time += delta_time;
     if(ZilCal.time > 500) {

@@ -37,6 +37,7 @@ function Mobile(x, y, z, category, shape, parent) {
     this.casting_spell_move = 0;
     this.cast_z = 0;
     this.cast_particles = null;
+    this.status = {};
 
     this.shape = ZilShape.load_shape(category, shape, 0, null, true);
 
@@ -66,6 +67,44 @@ function Mobile(x, y, z, category, shape, parent) {
     this.size = Math.max(this.shape.width, this.shape.height);
     this._set_chunk_pos(true);
 }
+
+// the bad
+Mobile.STATUS_HASTED = "hasted";
+Mobile.STATUS_SLOWED = "slowed";
+Mobile.STATUS_HELD = "held";
+Mobile.STATUS_POISONED = "poisoned";
+Mobile.STATUS_DISEASED = "diseased";
+Mobile.STATUS_CONFUSED = "confused";
+Mobile.STATUS_POSSESSED = "possessed";
+
+// the good
+Mobile.STATUS_BLESSED = "blessed";
+Mobile.STATUS_ARMORED = "armored";
+Mobile.STATUS_BLOCKED = "blocked";
+Mobile.STATUS_ENRAGED = "enraged";
+Mobile.STATUS_PROTECTED = "protected";
+
+// neutral
+Mobile.STATUS_DEAD = "dead";
+
+Mobile.prototype.has_status = function(status) {
+    return status in this.status;
+};
+
+Mobile.prototype.remove_status = function(status, turns_count) {
+    delete this.status[status];
+    ZilCal.unschedule("remove_status_" + status);
+};
+
+Mobile.prototype.set_status = function(status, turns_count) {
+    if(this.has_status(status)) this.remove_status(status);
+    this.status[status] = true;
+
+    // todo: give schedule in 'turns' not time.
+    ZilCal.schedule("remove_status_" + status, 500, ZIL_UTIL.bind(this, function() {
+        this.remove_status(status);
+    }));
+};
 
 Mobile.prototype.make_glow = function(obj3d) {
     var outline_obj = null;
@@ -420,8 +459,8 @@ Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
 
     // move the creature
     if(this.casting_spell_move == 0) {
-        if(this.cast_z < 4) {
-            this.cast_z += delta_time * 0.0025;
+        if(this.cast_z < 2) {
+            this.cast_z += delta_time * 0.00125 / Spell.SPEED;
             this.shape_obj.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
             this.shape_obj_copy.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
             this.move(gx, gy, gz);
@@ -430,7 +469,7 @@ Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
         }
     } else if(this.casting_spell_move == 1) {
         if(this.cast_z > 0) {
-            this.cast_z -= delta_time * 0.0025;
+            this.cast_z -= delta_time * 0.00125 / Spell.SPEED;
             this.shape_obj.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
             this.shape_obj_copy.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
             this.move(gx, gy, gz);
@@ -616,9 +655,13 @@ Mobile.prototype.attack_roll = function() {
     var a = this.parent.get_atk();
     var d = this.target.get_def();
     var damage = Math.max(a - d, 0);
+    console.log("+++ " + this.target.mobile.get_name() + " takes " + damage + "(a:" + a + "/d:" + d + ") points of damage.");
+    this.cause_damage(damage);
+};
 
+Mobile.cause_damage = function(damage) {
     this.target.mobile.hp -= damage;
-    console.log("+++ " + this.target.mobile.get_name() + " takes " + damage + "(a:" + a + "/d:" + d + ") points of damage. (remaining hp=" + this.target.mobile.hp +  ")");
+    console.log("+++ (remaining hp=" + this.target.mobile.hp +  ")");
     if(damage > 0)
         ZIL.log(this.target.mobile.get_name() + " takes " + damage + " point" + (damage == 1 ? "" : "s") + " of damage.", this.target == ZIL.player ? "console_alert" : null);
 
@@ -776,7 +819,7 @@ Mobile.prototype.cast_spell = function(spell) {
         this.casting_spell_move = 0;
         this.init_casting_particles();
         spell.play_music();
-        spell.start_fx(this.parent, this.target);
+        spell.start_fx(this.parent, this.target || this.parent);
     } else {
         ZIL.log("...and nothing happens.");
     }
@@ -813,4 +856,4 @@ Mobile.prototype.init_casting_particles = function() {
     this.cast_geometry.colorsNeedUpdate = true;
     this.cast_geometry.verticesNeedUpdate = true;
     this.shape_obj.add(this.cast_particles);
-}
+};

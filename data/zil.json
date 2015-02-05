@@ -79,9 +79,9 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "abandoned_temple_2",
-      108,
-      424
+      "battle",
+      21,
+      21
     ],
     "has_password": true,
     "opened_ante_gate": true,

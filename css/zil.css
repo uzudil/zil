@@ -1,0 +1,394 @@
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+body { padding: 0; margin: 0; background: #222; color: #666; font-family: arial, sans-serif; font-size: 10px; overflow: hidden;}
+canvas {
+    width: 100%;
+    height: 100%;
+    background: #666;
+    display: none;
+}
+.group {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    right: 0;
+    top: 0;
+    padding: 2px;
+    width: 150px;
+    background: #222;
+}
+.omgbigdeal {
+    display: none;
+    color: yellow;
+    font-size: 100px;
+    text-align: center;
+    position: fixed;
+    top: 50%;
+    z-index: 1000;
+    width: 100%;
+    text-transform: uppercase;
+    font-weight: bold;
+    text-shadow: 0 0 50px yellow;
+}
+.convo_bubble {
+    position: absolute;
+    background: #ccc;
+    color: black;
+    padding: 10px;
+    border-radius: 10px;
+    max-width: 320px;
+    font-size: 12px;
+    border: 2px solid #222;
+    font-family: 'Roboto Condensed', sans-serif;
+}
+.convo_link {
+    color: #048;
+}
+.convo_link:hover {
+    text-decoration: underline;
+}
+.convo_bubble b,i {
+    color: #840;
+}
+.creature_description, .player_plan {
+    position: absolute;
+    background: #fff;
+    /* border: 1px solid #fff; */
+    color: black;
+    padding: 2px 10px;
+    border-radius: 5px;
+}
+.ap_cost_ok {
+    color: green;
+}
+.ap_cost_error {
+    color: red;
+}
+.damage {
+    position: absolute;
+    color: #fffc33;
+    padding: 2px 10px;
+    border-radius: 5px;
+    font-size: 20px;
+    font-weight: bold;
+}
+#game_paused {
+    position: fixed;
+    background: #000;
+    color: #fff;
+    bottom: 0;
+    left: 0;
+    padding: 5px;
+    z-index: 100;
+    display: none;
+    width: 100%;
+    opacity: 0.9;
+}
+.intro {
+    display: none;
+    color: white;
+    font-size: 32px;
+    width: 600px;
+    height: 80px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    font-family: 'Sue Ellen Francisco', cursive;
+    /*font-family: 'BenchNine', sans-serif;*/
+}
+
+#message {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    width: 320px;
+    height: 200px;
+    top: 50%;
+    left: 50%;
+    margin-top: -100px;
+    margin-left: -150px;
+    background: #222;
+    border: 2px solid #222;
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 12px;
+    border-radius: 5px;
+}
+
+#message .title {
+    padding: 5px;
+    font-size: 16px;
+}
+
+#message .body {
+    padding: 5px;
+    overflow: auto;
+    height: 155px;
+    background: black;
+}
+
+#menu {
+    background: transparent;
+    color: #888;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    z-index: 1000;
+    top: 0; left: 0;
+    font-size: 24px;
+    font-family: 'Roboto Condensed', sans-serif;
+    margin: 50px;
+}
+
+#menu .title {
+    font-family: 'Sue Ellen Francisco', cursive;
+    font-size: 52px;
+    font-weight: bold;
+}
+
+#menu .cr {
+    font-size: 10px;
+    padding-bottom: 30px;
+    margin-top: -20px;
+}
+
+#menu a {
+    color: #888;
+    text-decoration: none;
+}
+
+#menu a:hover {
+    color: #ff8;
+    text-shadow: 2px 2px #000;
+    font-size: 28px;
+}
+
+#progress, #progress_overlay {
+    display: none;
+}
+
+.ui_panel {
+    display: none;
+    position: fixed;
+    z-index: 500;
+    background: transparent;
+    color: #888;
+}
+
+.ui_black {
+    border: 2px solid #333;
+    background: #444;
+    text-shadow: 1px 2px #222;
+    color: #ccc;
+    box-sizing: border-box;
+    padding: 5px;
+    box-shadow: inset 0 0 100px #000;
+}
+
+.ui_window {
+    border: 3px solid #555;
+    border-radius: 5px;
+    box-sizing: content-box;
+}
+
+.ui_black .title {
+    font-family: 'Roboto Condensed', sans-serif;
+    font-size: 24px;
+    color: #ff8;
+    /*font-weight: bold;*/
+    margin-bottom: 10px;
+}
+
+.ui_bottom {
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100px;
+}
+
+#ui_console {
+    height: 100%;
+    overflow: auto;
+    float: left;
+    width: 80%;
+}
+
+#ui_actions {
+    float: left;
+    width: 20%;
+}
+
+/* from: http://jsfiddle.net/volcanicpixels/udXXA/ */
+a.button::before {
+    border-radius: 3px;
+    box-shadow: #000 0 2px 5px;
+    content: "";
+    display: block;
+    height: 100%;
+    left: 0;
+    padding: 2px 0 0;
+    position: absolute;
+    top: 0;
+    width: 100%; }
+
+a.button:active::before { padding: 1px 0 0; }
+
+a.button {
+    background: #eee;
+    background: linear-gradient(#eee, #e2e2e2);
+    border: solid 1px #d0d0d0;
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 1px #f5f5f5;
+    color: #555;
+    display: inline-block;
+    /*font: bold 12px Arial, Helvetica, Clean, sans-serif;*/
+    font-size: 14px;
+    font-family: 'Amaranth', sans-serif;
+    margin: 0 5px 5px 0;
+    padding: 2px 10px;
+    position: relative;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: 0 1px 0 #fafafa;
+    width: 30%; }
+
+a.button:hover {
+    background: #e4e4e4;
+    background: linear-gradient(#e4e4e4, #ededed);
+    border: solid 1px #c2c2c2;
+    box-shadow: inset 0 0 0 1px #efefef; }
+
+a.button:active {
+    background: #dfdfdf;
+    background: linear-gradient(#dfdfdf, #e3e3e3);
+    border: solid 1px #959595;
+    box-shadow: inset 0 10px 15px 0 #c4c4c4;
+    top:2px;}
+
+a.button.black {
+    background: linear-gradient(#555, #222);
+    border: solid 1px #000;
+    box-shadow: inset 0 0 0 1px #939393;
+    color: #888;
+    text-shadow: 0 1px 0 #000; }
+
+a.button.black:hover {
+    background: linear-gradient(#222, #555);
+    border: solid 1px #000;
+    color: #ba4;
+    box-shadow: inset 0 0 0 1px #818181; }
+
+a.button.black:active {
+    background: linear-gradient(#222, #555);
+    border: solid 1px #000;
+    color: #ba4;
+    box-shadow: inset 0 0 0 1px #818181; }
+
+
+.console_text {
+    font-size: 14px;
+    font-family: 'Amaranth', sans-serif;
+}
+
+.console_special {
+    color: #88cccc;
+}
+
+.console_combat {
+    color: #cc88cc;
+}
+
+.console_alert {
+    color: #cc8888;
+}
+
+.console_command {
+    min-height: 17px;
+    color: #cccc88;
+}
+
+.console_command:after {
+    background-image: url(../img/caret.png);
+    background-size: 24px 16px;
+    content:"\0000a0\0000a0\0000a0\0000a0";
+}
+
+#songbook_ui {
+    width: 500px; height: 300px;
+    left: 50%; top: 50%;
+    margin-left: -250px; margin-top: -150px;
+}
+
+#prev_page {
+    float: left;
+    width: 50px;
+}
+
+#next_page {
+    float: right;
+    width: 50px;
+}
+
+.songbook_page {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#songbook_page_label {
+    font-family: 'Amaranth', sans-serif;
+    font-size: 12px;
+    text-align: center;
+    float: left;
+    width: 68%;
+}
+
+.songbook_spell {
+    float: left;
+    width: 140px;
+    height: 50px;
+    margin: 5px;
+    background: #444;
+    box-shadow: 2px 2px 10px #000;
+    border: 2px solid #666;
+    padding: 5px;
+    font-size: 16px;
+    font-family: 'Amaranth', sans-serif;
+    text-align: center;
+    cursor: pointer;
+}
+
+.songbook_spell:hover {
+    color: #ff8;
+    background: #555;
+}
+
+.disabled_spell {
+    border: 2px solid #444;
+    background: #333;
+    cursor: default;
+}
+
+.disabled_spell:hover {
+    color: #888;
+    background: #333;
+}
+
+.clearfix {
+  *zoom: 1;
+}
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  content: "";
+}
+.clearfix:after {
+  clear: both;
+}

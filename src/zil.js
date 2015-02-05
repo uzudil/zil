@@ -46,6 +46,7 @@ var ZIL = {
     node_debug: null,
     combat_range: null,
     command_enter_mode: false,
+    missile: null,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -563,7 +564,11 @@ var ZIL = {
 
         ZIL.show_cursor();
 
-        if (ZIL.in_combat) {
+        if(ZIL.missile) {
+            if(!ZIL.missile.step(delta_time)) {
+                ZIL.missile = null;
+            }
+        } else if (ZIL.in_combat) {
             ZIL.combat_step(delta_time);
         } else {
             if (ZIL.player.mobile.is_attacking()) {
@@ -573,7 +578,7 @@ var ZIL = {
                 if (ZIL.player.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time)) {
                     ZIL.recenter_screen();
                     ZIL.move_visible_creatures(delta_time);
-                    if(!ZIL.player.mobile.is_moving() || ZIL.player.mobile.move_path_index >= 8) {
+                    if (!ZIL.player.mobile.is_moving() || ZIL.player.mobile.move_path_index >= 8) {
                         ZIL.clear_ground_target();
                     }
                 }
@@ -1181,6 +1186,8 @@ var ZIL = {
 
         $(".ui_bottom,.ui_top").css("width", window.innerWidth + "px");
 
+        Songbook.init_ui();
+
         var panels = $(".ui_panel");
         var top = 0;
         var left = 0;
@@ -1470,4 +1477,10 @@ var ZIL = {
     show_sign: function(text) {
         ZIL.show_message("The sign reads:", text);
     },
+
+    launch_missile: function(source, target, options, on_hit) {
+        ZIL.missile = new Missile(source.mobile.x, source.mobile.y, source.mobile.z,
+            target.mobile.x, target.mobile.y, target.mobile.z,
+            options, on_hit, ZIL.rendered_shape);
+    }
 };
