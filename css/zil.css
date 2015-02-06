@@ -224,6 +224,8 @@ canvas {
 #ui_actions {
     float: left;
     width: 20%;
+    padding-top: 3px;
+    text-align: center;
 }
 
 /* from: http://jsfiddle.net/volcanicpixels/udXXA/ */

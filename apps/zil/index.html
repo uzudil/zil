@@ -36,6 +36,7 @@
         <script src="../../src/mobile.js"></script>
         <script src="../../src/creature.js"></script>
         <script src="../../src/player.js"></script>
+		<script src="../../src/missile.js"></script>
 		<script src="../../src/spell.js"></script>
 		<script src="../../src/songbook.js"></script>
 		<script src="../../src/zil.js"></script>
@@ -67,6 +68,7 @@
                 <% for(var i = 0; i < spells.length; i++) { %>
                     <% if(ZIL.player.mobile.has_spell(spells[i])) { %>
                         <div class="songbook_spell" id="<%= spells[i].name %>">
+                            <img src="<%= spells[i].img_src %>" width="50">
                             <%= spells[i].name %>
                         </div>
                     <% } else { %>

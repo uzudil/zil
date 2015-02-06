@@ -620,6 +620,11 @@ var ZIL = {
             // the target is dying: wait
             ZIL.combat_creature.mobile.target.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time);
             return;
+        } else if(ZIL.combat_creature.mobile.is_casting_spell()) {
+            // casting a spell: wait
+            // todo: tie this in with rest of combat: center screen, ap, enable ui, etc.
+            ZIL.combat_creature.mobile.move_step(ZIL.shape, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2], delta_time);
+            return;
         } else if(ZIL.combat_creature.mobile.ap <= 0) {
             ZIL.next_combat_creature();
         }
@@ -866,7 +871,7 @@ var ZIL = {
             ZIL_UTIL.new_game();
         }
 
-        $("canvas").hide();
+        $("canvas#view").hide();
         $("#debug").hide();
         ZIL.init_dom();
 
@@ -891,7 +896,7 @@ var ZIL = {
         ZIL.canvas_height = window.innerHeight;
         ZIL.canvas_edge_percent_x = window.innerWidth * 0.1;
         ZIL.canvas_edge_percent_y = window.innerHeight * 0.1;
-        ZIL.canvas_offset = $("canvas").offset();
+        ZIL.canvas_offset = $("canvas#view").offset();
         ZIL.offset_x = 0;
         ZIL.offset_y = 0;
         ZIL.canvas_right = window.innerWidth;
@@ -1077,7 +1082,7 @@ var ZIL = {
 	},
 
 	init_dom: function() {
-		$("canvas").
+		$("canvas#view").
 			bind("mousemove", ZIL.mouse_move).
 			bind("mouseup", ZIL.mouse_up);
 		document.body.oncontextmenu = function() { return false; };
@@ -1102,7 +1107,7 @@ var ZIL = {
             ZIL.player = new Player();
             ZIL.player.set_stats(ZIL_UTIL.player_stats);
 
-            $("canvas").show();
+            $("canvas#view").show();
 //            $("#debug").show();
         });
 	},
@@ -1215,7 +1220,7 @@ var ZIL = {
         var w = right - left;
         var h = bottom - top;
 
-        $("canvas").css({
+        $("canvas#view").css({
             top: top + "px",
             left: left + "px",
             width: w + "px",
@@ -1227,7 +1232,7 @@ var ZIL = {
         ZIL.canvas_height = h;
         ZIL.canvas_edge_percent_x = w * 0.1;
         ZIL.canvas_edge_percent_y = h * 0.1;
-        ZIL.canvas_offset = $("canvas").offset();
+        ZIL.canvas_offset = $("canvas#view").offset();
         ZIL.offset_x = left;
         ZIL.offset_y = top;
         ZIL.canvas_right = right;
@@ -1318,9 +1323,6 @@ var ZIL = {
 
 		ZIL.game_step(delta_time);
 
-//		ZIL.renderer.render(ZIL.scene, ZIL.camera);
-//        ZIL.renderer.clear(false, true, false);
-//		ZIL.renderer.render(ZIL.scene2, ZIL.camera);
         ZIL.renderer.clear();
         ZIL.composer.render();
 

@@ -7,7 +7,6 @@ Songbook.init_ui = function() {
 
     $("#songbook_pages").empty();
     for(var i = 0; i < Spell.SPELLS_BY_PAGE.length; i++) {
-        console.log(">>> page=" + i);
         $("#songbook_pages").append(_.template($("#tmpl-songbook_page").html())({
             page: i,
             spells: Spell.SPELLS_BY_PAGE[i]
@@ -23,7 +22,7 @@ Songbook.init_ui = function() {
     });
     $("#next_page").unbind("click").click(Songbook.next_page);
     $("#prev_page").unbind("click").click(Songbook.prev_page);
-    $(".songbook_spell").unbind("click").click(Songbook.cast_spell);
+    $(".songbook_spell:not(.disabled_spell)").unbind("click").click(Songbook.cast_spell);
 };
 
 Songbook.next_page = function() {

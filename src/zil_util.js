@@ -319,3 +319,42 @@ ZIL_UTIL.shade_color = function(color, percent) {
 
     return (R << 16) + (G << 8) + B;
 };
+
+ZIL_UTIL.generate_sprite = function(color, percent) {
+
+    if($("#sprite_canvas").length == 0) {
+        $("body").append("<canvas id='sprite_canvas' width='128' height='128'></canvas>");
+    }
+
+    var canvas = $("#sprite_canvas")[0];
+    var context = canvas.getContext( '2d' );
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    var x = canvas.width / 2;
+    var y = canvas.height / 2;
+    var line_width = 15;
+    var radius = canvas.width / 2 - line_width;
+    var startAngle = 0.5 * Math.PI * percent;
+    var endAngle = 2 * Math.PI * percent;
+    var counterClockwise = false;
+
+    context.beginPath();
+    context.arc(x, y, radius, startAngle, endAngle, counterClockwise);
+    context.lineWidth = line_width;
+    context.fillStyle = color;
+    context.strokeStyle = color;
+    context.fill();
+    context.stroke();
+    context.closePath();
+
+    context.beginPath();
+    context.arc(x, y, radius, 0, 2 * Math.PI, counterClockwise);
+    context.lineWidth = line_width;
+    context.strokeStyle = color;
+    context.stroke();
+    context.closePath();
+
+    context.restore();
+
+    return canvas.toDataURL();
+};

@@ -1,3 +1,17 @@
+var SPELL_COLORS = {
+    "Zon": "#cc8888",
+    "Nul": "#88cc88",
+    "Mor": "#8888cc",
+    "Her": "#c8c888",
+    "Sum": "#c888c8",
+    "Tor": "#88c8c8",
+    "Pel": "#c8ccc8",
+    "Het": "#c8c8cc",
+    "Ton": "#ccc8c8",
+    "Ank": "#88cc88",
+    "Zen": "#cc88cc"
+};
+
 function Spell(name, music, page, intent, affects_many, start_fx, ai_can_use_fx) {
     this.name = name;
     this.music = music;
@@ -6,6 +20,8 @@ function Spell(name, music, page, intent, affects_many, start_fx, ai_can_use_fx)
     this.affects_many = affects_many;
     this.start_fx = start_fx;
     this.ai_can_use_fx = ai_can_use_fx;
+    this.img_src = ZIL_UTIL.generate_sprite(SPELL_COLORS[name.split("-")[0].trim()], page / 5);
+
     Spell.SPELLS_BY_NAME[name] = this;
 
     var p = page - 1;
@@ -229,7 +245,7 @@ Spell.BLOCK_SONG = new Spell("Tor-Zare", [
     target.mobile.set_status(Mobile.STATUS_BLOCKED, 10);
 }, function(target) { return !Spell.target_has_status(target, [Mobile.STATUS_BLOCKED]); });
 
-Spell.HAMMER = new Spell("Tor-Zare", [
+Spell.HAMMER = new Spell("Mor-Dor", [
     ["Db5", 4], ["Db5", 4], ["Db5", 4]
 ], 5, "attack", false, function(caster, target) {
     ZIL.launch_missile(caster, target, { spell: Spell.HAMMER }, function() {

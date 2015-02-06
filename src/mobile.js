@@ -354,7 +354,7 @@ Mobile.prototype.plan_move_to = function(map_shape, x, y, z) {
  */
 Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
-    if(this.casting_spell) {
+    if(this.is_casting_spell()) {
         this.cast_animation(map_shape, gx, gy, gz, delta_time);
     }
 
@@ -388,7 +388,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
         // look for enemies
         if(this.ai_move && this.is_alive()) {
-//            this.look_for_target();
+            this.look_for_target();
         }
 
         // sleep
@@ -484,6 +484,10 @@ Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
         this.shape_obj.remove(this.cast_particles);
         this.move(gx, gy, gz);
     }
+};
+
+Mobile.prototype.is_casting_spell = function() {
+    return this.casting_spell != null;
 };
 
 Mobile.prototype.heal = function(points) {
@@ -659,7 +663,7 @@ Mobile.prototype.attack_roll = function() {
     this.cause_damage(damage);
 };
 
-Mobile.cause_damage = function(damage) {
+Mobile.prototype.cause_damage = function(damage) {
     this.target.mobile.hp -= damage;
     console.log("+++ (remaining hp=" + this.target.mobile.hp +  ")");
     if(damage > 0)
