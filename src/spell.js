@@ -20,7 +20,8 @@ function Spell(name, music, page, intent, affects_many, start_fx, ai_can_use_fx)
     this.affects_many = affects_many;
     this.start_fx = start_fx;
     this.ai_can_use_fx = ai_can_use_fx;
-    this.img_src = ZIL_UTIL.generate_sprite(SPELL_COLORS[name.split("-")[0].trim()], page / 5);
+    this.color = SPELL_COLORS[name.split("-")[0].trim()];
+    this.img_src = ZIL_UTIL.generate_sprite(this.color, page / 5);
 
     Spell.SPELLS_BY_NAME[name] = this;
 

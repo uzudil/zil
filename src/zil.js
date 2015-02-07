@@ -1334,8 +1334,8 @@ var ZIL = {
 			ZIL.fps_counter = 0;
 			ZIL.fps_start = now;
 		}
-//		requestAnimationFrame(ZIL.render);
-		setTimeout(ZIL.render, 50); // reduce fan noise
+		requestAnimationFrame(ZIL.render);
+//		setTimeout(ZIL.render, 50); // reduce fan noise
 	},
 
     quake: function() {
@@ -1484,6 +1484,7 @@ var ZIL = {
         ZIL.missile = new Missile(source.mobile.x, source.mobile.y, source.mobile.z,
             target.mobile.x, target.mobile.y, target.mobile.z,
             options, on_hit, ZIL.rendered_shape,
-            ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
+            ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2],
+            options["spell"] ? options["spell"].color : null);
     }
 };

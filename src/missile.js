@@ -1,4 +1,4 @@
-function Missile(src_x, src_y, src_z, to_x, to_y, to_z, options, on_hit, map_shape, gx, gy, gz) {
+function Missile(src_x, src_y, src_z, to_x, to_y, to_z, options, on_hit, map_shape, gx, gy, gz, color) {
     this.src_x = src_x;
     this.src_y = src_y;
     this.src_z = src_z;
@@ -9,6 +9,7 @@ function Missile(src_x, src_y, src_z, to_x, to_y, to_z, options, on_hit, map_sha
     this.on_hit = on_hit;
     this.is_live = true;
     this.target_point = new THREE.Vector3();
+    this.color = color ? new THREE.Color(parseInt(color.substr(1), 16)) : new THREE.Color("rgb(255,0,0)");
     
     // spell casting particles
     this.init_particles();
@@ -54,7 +55,7 @@ Missile.prototype.reset_particles = function(map_shape, gx, gy, gz) {
     }
 
     // re-init the spell casting particles
-    Missile.material.color.setRGB(0.1, 0.5, 0.95);
+    Missile.material.color.set(this.color);
     Missile.material.opacity = 1;
     Missile.geometry.colorsNeedUpdate = true;
     Missile.geometry.verticesNeedUpdate = true;
