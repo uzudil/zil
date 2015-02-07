@@ -62,6 +62,7 @@ Spell.BLESS = new Spell("Nul-Bur", [
 Spell.FIRE = new Spell("Mor-Dil", [
     ["Db5", 4], ["Db5", 4], ["Db5", 4]
 ], 1, "attack", false, function(caster, target) {
+    console.log("Missile from " + caster.mobile.get_name() + " to " + target.mobile.get_name());
     ZIL.launch_missile(caster, target, { spell: Spell.FIRE }, function() {
         target.mobile.cause_damage((Math.random() * 5 + 5)|0);
     });

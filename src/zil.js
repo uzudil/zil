@@ -565,7 +565,7 @@ var ZIL = {
         ZIL.show_cursor();
 
         if(ZIL.missile) {
-            if(!ZIL.missile.step(delta_time)) {
+            if(!ZIL.missile.step(delta_time, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2])) {
                 ZIL.missile = null;
             }
         } else if (ZIL.in_combat) {
@@ -1483,6 +1483,7 @@ var ZIL = {
     launch_missile: function(source, target, options, on_hit) {
         ZIL.missile = new Missile(source.mobile.x, source.mobile.y, source.mobile.z,
             target.mobile.x, target.mobile.y, target.mobile.z,
-            options, on_hit, ZIL.rendered_shape);
+            options, on_hit, ZIL.rendered_shape,
+            ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
     }
 };

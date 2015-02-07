@@ -660,32 +660,32 @@ Mobile.prototype.attack_roll = function() {
     var d = this.target.get_def();
     var damage = Math.max(a - d, 0);
     console.log("+++ " + this.target.mobile.get_name() + " takes " + damage + "(a:" + a + "/d:" + d + ") points of damage.");
-    this.cause_damage(damage);
+    this.target.mobile.cause_damage(damage);
 };
 
 Mobile.prototype.cause_damage = function(damage) {
-    this.target.mobile.hp -= damage;
-    console.log("+++ (remaining hp=" + this.target.mobile.hp +  ")");
+    this.hp -= damage;
+    console.log("+++ (remaining hp=" + this.hp +  ")");
     if(damage > 0)
-        ZIL.log(this.target.mobile.get_name() + " takes " + damage + " point" + (damage == 1 ? "" : "s") + " of damage.", this.target == ZIL.player ? "console_alert" : null);
+        ZIL.log(this.get_name() + " takes " + damage + " point" + (damage == 1 ? "" : "s") + " of damage.", this == ZIL.player ? "console_alert" : null);
 
     if(damage > 0) {
         // animate damage
-        this.target.mobile.show_above(damage, "damage");
+        this.show_above(damage, "damage");
 
-        // target dead?
-        if (!this.target.mobile.is_alive()) {
+        // dead?
+        if (!this.is_alive()) {
 
             // experience gain
             if(!this.ai_move) {
-                this.receive_exp(Math.max(this.target.mobile.level - this.level, 1) * 50);
+                this.receive_exp(Math.max(this.level - this.level, 1) * 50);
             }
 
             // won't need this anymore
             this.shape_obj.remove(this.outline_obj);
 
             // target death
-            ZIL.creature_dead(this.target);
+            ZIL.creature_dead(this.parent);
         }
     }
 };
