@@ -10,7 +10,8 @@ function Missile(src_x, src_y, src_z, to_x, to_y, to_z, options, on_hit, map_sha
     this.is_live = true;
     this.target_point = new THREE.Vector3();
     this.color = color ? new THREE.Color(parseInt(color.substr(1), 16)) : new THREE.Color("rgb(255,0,0)");
-    
+    this.last_dir = null;
+
     // spell casting particles
     this.init_particles();
 
@@ -82,6 +83,14 @@ Missile.prototype.step = function(delta_time, gx, gy, gz) {
             Missile.particles.position.set(this.src_x - gx, this.src_y - gy, this.src_z - gz);
             this.target_point.set(this.to_x - gx, this.to_y - gy, this.to_z - gz);
             Missile.particles.lookAt(this.target_point);
+            if(this.last_dir != null) {
+                var dir_change = Math.abs(Missile.particles.rotation.z - this.last_dir);
+                if (dir_change >= 0.75 * Math.PI && dir_change < 1.25 * Math.PI) {
+                    // we got turned around
+                    this.end_missile(true);
+                }
+            }
+            this.last_dir = Missile.particles.rotation.z;
         } else {
             this.end_missile(true);
         }

@@ -1334,8 +1334,8 @@ var ZIL = {
 			ZIL.fps_counter = 0;
 			ZIL.fps_start = now;
 		}
-		requestAnimationFrame(ZIL.render);
-//		setTimeout(ZIL.render, 50); // reduce fan noise
+//		requestAnimationFrame(ZIL.render);
+		setTimeout(ZIL.render, 50); // reduce fan noise
 	},
 
     quake: function() {
