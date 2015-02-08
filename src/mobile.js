@@ -356,6 +356,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
 
     if(this.is_casting_spell()) {
         this.cast_animation(map_shape, gx, gy, gz, delta_time);
+        return !this.is_casting_spell();
     }
 
     // if we can no longer get to the target, forget it
@@ -379,8 +380,10 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
                 this.shape_obj.children[0].position.z -= delta_time * 0.05;
                 this.shape_obj_copy.children[0].position.z -= delta_time * 0.05;
             } else {
-                this.shape_obj.parent.remove(this.shape_obj);
-                this.shape_obj_copy.parent.remove(this.shape_obj_copy);
+                if(this.shape_obj.parent) {
+                    this.shape_obj.parent.remove(this.shape_obj);
+                    this.shape_obj_copy.parent.remove(this.shape_obj_copy);
+                }
                 this.remove_me = true;
             }
             return true;
@@ -459,6 +462,7 @@ Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
 
     // move the creature
     if(this.casting_spell_move == 0) {
+        this.face_target();
         if(this.cast_z < 2) {
             this.cast_z += delta_time * 0.00125 / Spell.SPEED;
             this.shape_obj.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
@@ -483,6 +487,8 @@ Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
         this.casting_spell = null;
         this.shape_obj.remove(this.cast_particles);
         this.move(gx, gy, gz);
+
+        this.cancel_face_target();
     }
 };
 
@@ -516,17 +522,26 @@ Mobile.prototype.start_attack = function() {
     this.attack_phase = 0;
 };
 
+Mobile.prototype.cancel_face_target = function(delta_time) {
+    this.shape_obj.rotation.z = 0;
+    this.shape_obj_copy.rotation.z = 0;
+};
+
+Mobile.prototype.face_target = function(delta_time) {
+    // face the enemy
+    if(this.target) {
+        var x2 = this.target.mobile.x;
+        var y2 = this.target.mobile.y;
+        var zrot = Math.atan2(y2 - this.y, x2 - this.x);
+        this.shape_obj.rotation.z = zrot - this.shape.get_rotation() - PI/2;
+        this.shape_obj_copy.rotation.z = zrot - this.shape.get_rotation() - PI/2;
+    }
+};
+
 Mobile.prototype.attack = function(delta_time) {
     if(this.is_attacking() && this.is_alive()) {
 
-        // face the enemy
-        if(this.target) {
-            var x2 = this.target.mobile.x;
-            var y2 = this.target.mobile.y;
-            var zrot = Math.atan2(y2 - this.y, x2 - this.x);
-            this.shape_obj.rotation.z = zrot - this.shape.get_rotation() - PI/2;
-            this.shape_obj_copy.rotation.z = zrot - this.shape.get_rotation() - PI/2;
-        }
+        this.face_target();
 
         if(this.attack_dir) {
             this.attack_angle += delta_time * 0.4 * this.attack_dir;
@@ -551,8 +566,7 @@ Mobile.prototype.attack = function(delta_time) {
 
                 // end of attack
                 this.attack_phase = null;
-                this.shape_obj.rotation.z = 0;
-                this.shape_obj_copy.rotation.z = 0;
+                this.cancel_face_target();
             }
         }
     }
@@ -561,6 +575,10 @@ Mobile.prototype.attack = function(delta_time) {
 
 Mobile.prototype.is_target_dying = function() {
     return this.target && !this.target.mobile.is_alive() && !this.target.mobile.remove_me;
+};
+
+Mobile.prototype.is_dying = function() {
+    return !this.is_alive() && !this.remove_me;
 };
 
 Mobile.prototype.is_target_in_range = function(x, y) {
