@@ -23,7 +23,7 @@ ZilStory.MAPS = {
         events: {
             on_load: function() {
                 if(!ZIL_UTIL.game_state["seen_intro"]) {
-                    ZilCal.schedule("intro", 500, function () {
+                    ZilCal.schedule("intro", 0, function () {
                         ZIL_UTIL.game_state["seen_intro"] = true;
                         ZIL_UTIL.save_config();
                         ZIL.say(ZIL.player, "What... <b>is...</b> <i>happening?...</i>", function () {

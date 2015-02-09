@@ -1,12 +1,12 @@
-function ZilEvent(name, millis, fx) {
+function ZilEvent(name, turns, fx, birth_turn) {
     this.name = name;
-    this.millis = millis;
+    this.turns = turns;
     this.fx = fx;
-    this.dob = Date.now();
+    this.birth_turn = birth_turn;
 }
 
-ZilEvent.prototype.run = function() {
-    if(Date.now() >= this.dob + this.millis) {
+ZilEvent.prototype.run = function(current_turn) {
+    if(current_turn - this.birth_turn >= this.turns) {
         try {
             console.log("* Running event: " + this.name);
             this.fx();
@@ -23,11 +23,11 @@ function ZilCal() {
 }
 
 ZilCal.PENDING_EVENTS = [];
-ZilCal.time = 0;
+ZilCal.turn = 0;
 
-ZilCal.schedule = function(name, millis, fx) {
-    console.log("* Adding event: " + name);
-    ZilCal.PENDING_EVENTS.push(new ZilEvent(name, millis, fx));
+ZilCal.schedule = function(name, turns, fx) {
+    console.log("* Adding event: " + name + " will run in " + turns + " turns.");
+    ZilCal.PENDING_EVENTS.push(new ZilEvent(name, turns, fx, ZilCal.turn));
 };
 
 ZilCal.unschedule = function(name) {
@@ -41,15 +41,12 @@ ZilCal.unschedule = function(name) {
     return false;
 };
 
-ZilCal.run = function(delta_time) {
-    ZilCal.time += delta_time;
-    if(ZilCal.time > 500) {
-        for (var i = 0; i < ZilCal.PENDING_EVENTS.length; i++) {
-            if (ZilCal.PENDING_EVENTS[i].run()) {
-                ZilCal.PENDING_EVENTS.splice(i, 1);
-                i--;
-            }
+ZilCal.run = function() {
+    ZilCal.turn++;
+    for (var i = 0; i < ZilCal.PENDING_EVENTS.length; i++) {
+        if (ZilCal.PENDING_EVENTS[i].run(ZilCal.turn)) {
+            ZilCal.PENDING_EVENTS.splice(i, 1);
+            i--;
         }
-        ZilCal.time = 0;
     }
 };

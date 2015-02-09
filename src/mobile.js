@@ -100,8 +100,7 @@ Mobile.prototype.set_status = function(status, turns_count) {
     if(this.has_status(status)) this.remove_status(status);
     this.status[status] = true;
 
-    // todo: give schedule in 'turns' not time.
-    ZilCal.schedule("remove_status_" + status, 500, ZIL_UTIL.bind(this, function() {
+    ZilCal.schedule("remove_status_" + status, 10, ZIL_UTIL.bind(this, function() {
         this.remove_status(status);
     }));
 };
@@ -833,10 +832,13 @@ Mobile.prototype.cast_spell_by_name = function(name) {
 
 Mobile.prototype.cast_spell = function(spell) {
     ZIL.log(this.get_name() + " intones: " + spell.name.toUpperCase() + "!", "console_special");
-    var now = Date.now();
-    var c = this.cooldowns["spell_" + spell.name];
-    if(c == null || c < now) {
-        this.cooldowns["spell_" + spell.name] = now + 10 * 1000;
+    var key = "spell_" + spell.name;
+    var c = this.cooldowns[key];
+    if(c == null) {
+        this.cooldowns[key] = true;
+        ZilCal.schedule("cooldown-" + key, spell.cooldown, ZIL_UTIL.bind(this, function() {
+            delete this.cooldowns[key];
+        }));
         this.casting_spell = spell;
         this.casting_spell_move = 0;
         this.init_casting_particles();

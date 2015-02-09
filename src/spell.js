@@ -12,7 +12,7 @@ var SPELL_COLORS = {
     "Zen": "#cc88cc"
 };
 
-function Spell(name, music, page, intent, affects_many, start_fx, ai_can_use_fx) {
+function Spell(name, music, page, intent, affects_many, start_fx, ai_can_use_fx, cooldown) {
     this.name = name;
     this.music = music;
     this.page = page;
@@ -20,6 +20,7 @@ function Spell(name, music, page, intent, affects_many, start_fx, ai_can_use_fx)
     this.affects_many = affects_many;
     this.start_fx = start_fx;
     this.ai_can_use_fx = ai_can_use_fx;
+    this.cooldown = cooldown || 10;
     this.color = SPELL_COLORS[name.split("-")[0].trim()];
     this.img_src = ZIL_UTIL.generate_sprite(this.color, page / 5);
 
