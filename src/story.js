@@ -23,7 +23,7 @@ ZilStory.MAPS = {
         events: {
             on_load: function() {
                 if(!ZIL_UTIL.game_state["seen_intro"]) {
-                    ZilCal.schedule("intro", 0, function () {
+                    setTimeout(function() {
                         ZIL_UTIL.game_state["seen_intro"] = true;
                         ZIL_UTIL.save_config();
                         ZIL.say(ZIL.player, "What... <b>is...</b> <i>happening?...</i>", function () {
@@ -33,7 +33,7 @@ ZilStory.MAPS = {
                                 });
                             });
                         });
-                    });
+                    }, 500);
                 }
 
                 if(ZIL_UTIL.game_state["opened_ante_gate"]) {
