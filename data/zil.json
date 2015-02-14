@@ -79,15 +79,17 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "hallway",
-      94,
-      372
+      "skrit-library",
+      127,
+      108
     ],
     "quests": [
       "gav"
     ],
     "has_password": true,
-    "opened_ante_gate": true
+    "opened_ante_gate": true,
+    "skrit_intro": true,
+    "has_map": true
   },
   "player_stats": {
     "hp": 78,

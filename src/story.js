@@ -340,7 +340,7 @@ ZilStory.MAPS = {
                             ZIL_UTIL.game_state["has_map"] = true;
                             ZIL_UTIL.save_config();
 
-                            // todo: show world map button in ui
+                            $("#map").show();
 
                             return true;
                         });
@@ -385,7 +385,7 @@ ZilStory.CONVO = {
             "confused": "Fell from a far-away land, you say?<br>Well, if you seek answers, visit <a>Gav</a> in the <a w='gav'>mountain</a>.",
             "shriven": "All are but dust to the <a>divinity</a>.<br>We move like moths around the divine <a>flame</a>.",
             "gav": function() {
-                ZIL.add_quest("gav");
+                if(!ZIL.has_quest("gav")) ZIL.add_quest("gav");
                 return "The seer Gav has made his home under these <a>peaks</a>.<br>You will need the <a>password</a> to enter.";
             },
             "password": function() {

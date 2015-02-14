@@ -1242,6 +1242,7 @@ var ZIL = {
 
         Songbook.init_ui();
         QuestWindow.init_ui();
+        MapWindow.init_ui();
 
         var panels = $(".ui_panel");
         var top = 0;
@@ -1276,6 +1277,8 @@ var ZIL = {
             width: w + "px",
             height: h + "px"
         });
+
+        $("#map").toggle(ZIL_UTIL.game_state["has_map"] != null);
 
         ZIL.renderer.setSize(w, h);
         ZIL.canvas_width = w;

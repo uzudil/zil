@@ -82,13 +82,14 @@ canvas {
     position: fixed;
     background: #000;
     color: #fff;
-    bottom: 0;
+    top: 0;
     left: 0;
     padding: 5px;
     z-index: 100;
     display: none;
     width: 100%;
     opacity: 0.9;
+    border-bottom: 1px solid #666;
 }
 .intro {
     display: none;
@@ -397,6 +398,26 @@ a.button.black.active {
 .disabled_spell:hover {
     color: #888;
     background: #333;
+}
+
+#map_ui {
+    width: 700px;
+    height: 500px;
+    margin-left: -350px;
+    margin-top: -250px;
+}
+
+#mountain_map_container {
+    height: 430px;
+    width: 100%;
+    overflow: auto;
+    margin-bottom: 5px;
+}
+
+#mountain_map {
+    width: 677px;
+    height: 800px;
+    background: #ccd url(../data/world.png);
 }
 
 .clearfix {
