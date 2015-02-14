@@ -693,6 +693,8 @@ var ZIL = {
         return turn_done;
     },
 
+    MAX_DISTANCE: ZIL_UTIL.VIEW_WIDTH / 2 + ZIL_UTIL.CHUNK_SIZE,
+
     for_visible_creatures: function(creature_fx) {
         for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH; x+=ZIL_UTIL.CHUNK_SIZE) {
             for(var y = 0; y < ZIL_UTIL.VIEW_WIDTH; y+=ZIL_UTIL.CHUNK_SIZE) {
@@ -767,7 +769,10 @@ var ZIL = {
         ZIL.combat_creature_index = 0;
         ZIL.combat_creatures = _.filter($.map(Object.keys(ZIL.shown_creatures), function(id) {
             return ZIL.creatures_map[id];
-        }), function(c) { return c.mobile.is_alive(); });
+        }), function(c) {
+            var distance = ZIL_UTIL.get_distance(c.mobile.x, c.mobile.y, ZIL.player.mobile.x, ZIL.player.mobile.y);
+            return c.mobile.is_alive() && distance <= ZIL.MAX_DISTANCE;
+        });
         if(ZIL.combatants_exists()) {
             ZIL.combat_creatures.sort(function(a, b) {
                 return a.mobile.initiative - b.mobile.initiative;
