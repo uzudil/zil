@@ -2,6 +2,12 @@ function ZilStory() {
 }
 
 ZilStory.QUESTS = {
+    "gav": {
+        name: "Find the seer Gav",
+        level: 1,
+        on_complete: function() {
+        }
+    },
     "sewers": {
         name: "Kill the beast in the Skrit sewers",
         level: 1,
@@ -378,7 +384,10 @@ ZilStory.CONVO = {
             "": "You look <a>confused</a> child...<br>Have you come to be <a>shriven</a>?",
             "confused": "Fell from a far-away land, you say?<br>Well, if you seek answers, visit <a>Gav</a> in the <a w='gav'>mountain</a>.",
             "shriven": "All are but dust to the <a>divinity</a>.<br>We move like moths around the divine <a>flame</a>.",
-            "gav": "The seer Gav has made his home under these <a>peaks</a>.<br>You will need the <a>password</a> to enter.",
+            "gav": function() {
+                ZIL.add_quest("gav");
+                return "The seer Gav has made his home under these <a>peaks</a>.<br>You will need the <a>password</a> to enter.";
+            },
             "password": function() {
                 ZIL_UTIL.game_state["has_password"] = true;
                 ZIL_UTIL.save_config();

@@ -79,21 +79,15 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "battle",
-      21,
-      21
+      "hallway",
+      94,
+      372
+    ],
+    "quests": [
+      "gav"
     ],
     "has_password": true,
-    "opened_ante_gate": true,
-    "skrit_intro": true,
-    "quests": [],
-    "opened_skrit_gate": true,
-    "completed_quests": [
-      "sewers",
-      "keepers"
-    ],
-    "met_father_fran": true,
-    "met_father_theo": true
+    "opened_ante_gate": true
   },
   "player_stats": {
     "hp": 78,

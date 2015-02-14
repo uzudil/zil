@@ -15,9 +15,11 @@ Songbook.init_ui = function() {
     Songbook.show_page(0);
 
     $("#songbook").unbind("click").click(function() {
+        $(".ui_window:not(#songbook_ui)").hide();
         ui.toggle();
     });
     $("#close_songbook").unbind("click").click(function() {
+        $(".ui_window:not(#songbook_ui)").hide();
         ui.toggle();
     });
     $("#next_page").unbind("click").click(Songbook.next_page);

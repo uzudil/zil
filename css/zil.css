@@ -197,6 +197,9 @@ canvas {
     border: 3px solid #555;
     border-radius: 5px;
     box-sizing: content-box;
+    width: 500px; height: 300px;
+    left: 50%; top: 50%;
+    margin-left: -250px; margin-top: -150px;
 }
 
 .ui_black .title {
@@ -294,6 +297,9 @@ a.button.black:active {
     color: #ba4;
     box-shadow: inset 0 0 0 1px #818181; }
 
+a.button.black.active {
+    color: #840;
+}
 
 .console_text {
     font-size: 14px;
@@ -324,9 +330,19 @@ a.button.black:active {
 }
 
 #songbook_ui {
-    width: 500px; height: 300px;
-    left: 50%; top: 50%;
-    margin-left: -250px; margin-top: -150px;
+}
+
+#quests_ui .quest_list {
+    height: 150px;
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid #666;
+    overflow: auto;
+}
+
+#quests_ui .quest_list .quest_entry {
+    padding: 5px;
+    background: #666;
 }
 
 #prev_page {

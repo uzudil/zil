@@ -39,6 +39,7 @@
 		<script src="../../src/missile.js"></script>
 		<script src="../../src/spell.js"></script>
 		<script src="../../src/songbook.js"></script>
+		<script src="../../src/quests_window.js"></script>
 		<script src="../../src/zil.js"></script>
 		<script src="../../src/commands.js"></script>
 		<script src="../../src/story.js"></script>
@@ -49,6 +50,23 @@
         <script src="../../lib/MIDI.js/soundfont/vibraphone-ogg.js" type="text/javascript"></script>
         <script src="../../lib/MIDI.js/inc/Base64.js" type="text/javascript"></script>
         <script src="../../lib/MIDI.js/inc/base64binary.js" type="text/javascript"></script>
+
+        <div id="quests_ui" class="ui_panel ui_black ui_window">
+            <div class="title">Quests</div>
+            <div>
+                <a href="#" class="button black active quest_selector" data-sel="current_quests">Current</a>
+                <a href="#" class="button black quest_selector" data-sel="completed_quests">Completed</a>
+            </div>
+            <div class="quest_list" id="current_quests">
+            </div>
+            <div class="quest_list" id="completed_quests" style="display: none;">
+            </div>
+            <a href="#" class="button black" id="close_quests">Close</a>
+        </div>
+
+        <script id='tmpl-quest_list' type='text/template'>
+            <div class="quest_entry"><%= quest.name %></div>
+        </script>
 
         <div id="songbook_ui" class="ui_panel ui_black ui_window">
             <div class="title">Songbook</div>

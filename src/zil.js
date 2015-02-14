@@ -1236,6 +1236,7 @@ var ZIL = {
         $(".ui_bottom,.ui_top").css("width", window.innerWidth + "px");
 
         Songbook.init_ui();
+        QuestWindow.init_ui();
 
         var panels = $(".ui_panel");
         var top = 0;
