@@ -244,53 +244,97 @@ ZilStory.MAPS = {
                         ZIL.say(ZIL.player, "I found a new <b>magic scroll!</b> It reads: " + Spell.HEAL.name);
                     }
                 }
+            },
+            "695,744,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "abandoned_temple_3", 38, 40);
+                }
             }
         }
     },
-    "maps.westvein": {
+    "maps.abandoned_temple_3": {
         events: {
             on_load: function() {
-                ZIL.add_creature_listener(function(map_cat, map_name, creature) {
-                    if(creature.mobile.get_name() == "Fire Imp") {
-                        if(ZIL_UTIL.game_state["lift_operator_saved"] == null) {
-                            ZIL_UTIL.game_state["lift_operator_saved"] = 0;
-                        } else {
-                            ZIL_UTIL.game_state["lift_operator_saved"] = ZIL_UTIL.game_state["lift_operator_saved"] + 1;
-                        }
-                        ZIL_UTIL.save_config();
-                    }
-                });
             }
         },
         locations: {
-            "333,81,1": {
+            "29,29,1": {
                 on_mouseover: function () {
                 },
                 on_mouseclick: function () {
-                    ZIL.load_shape("maps", "skrit", 27, 195);
+                    ZIL.load_shape("maps", "abandoned_temple_2", 695, 740);
                 }
             },
-            "281,81,1": {
+            "25,290,1": {
                 on_mouseover: function () {
                 },
                 on_mouseclick: function () {
-                    ZIL.show_sign("Welcome, O Traveler to the holy temple of <i>Srag the Adjudicator.</i><br><br>" +
-                        "If you seek other lands, see <i>the lift operator to the east.</i><br><br>" +
-                        "May you leave your wordly cares outside our gates and rest safely in the celestial sanctuary " +
-                        "of undisturbed peace and...<br><br>" +
-                        "<i>(Here the text becomes illegible. The wood looks to have been destroyed by claw marks.)</i>");
+                    ZIL.teleport(235, 379);
                 }
             },
-            "154,78,2": {
+            "233,377,1": {
                 on_mouseover: function () {
                 },
                 on_mouseclick: function () {
-                    ZIL.show_sign("This way to the lift operator.<br><br>" +
-                        "Lift costs:<br>" +
-                        "&nbsp;&nbsp;&nbsp;5CP up to Mihyr and beyond.<br>" +
-                        "&nbsp;&nbsp;&nbsp;10CP to the Dahrhyr and lower realms.<br>" +
-                        "<br>" +
-                        "<i>(You can barely make out the hastily added note at the bottom:<br>Save me!)</i>");
+                    ZIL.teleport(27, 292);
+                }
+            },
+            "394,378,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.teleport(365, 209);
+                }
+            },
+            "363,207,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.teleport(396, 380);
+                }
+            },
+            "363,195,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.teleport(296, 157);
+                }
+            },
+            "292,153,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.teleport(365, 197);
+                }
+            },
+            "204,179,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.teleport(143, 192);
+                }
+            },
+            "141,190,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.teleport(206, 181);
+                }
+            },
+            "27,116,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.teleport(119, 298);
+                }
+            },
+            "117,296,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.teleport(29, 118);
                 }
             }
         }

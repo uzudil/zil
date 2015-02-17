@@ -24,7 +24,7 @@ Rocks.prototype.regen = function() {
             }
         }
     }
-    for(var i = 0; i < (this.options["erode_count"] || 5); i++) {
+    for(var i = 0; i < ((this.options && this.options["erode_count"]) || 5); i++) {
         this.erode_shape();
     }
     this.apply_gravity();

@@ -331,7 +331,6 @@ var ZIL = {
 
             // rebuild the nodes
             ZIL.shape.build_nodes(ZIL.player.mobile.x, ZIL.player.mobile.y, ZIL.player.mobile.z);
-            ZIL.init_node_debug();
 
             // repaint
             ZIL.set_global_pos(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
@@ -467,6 +466,7 @@ var ZIL = {
         if(event.which == 32) {
             ZIL.DEBUG_MODE = !ZIL.DEBUG_MODE;
             if(ZIL.DEBUG_MODE) {
+                ZIL.init_node_debug();
                 ZIL.inner.add( ZIL.node_debug );
 //                ZIL.inner.add( ZIL.coord );
                 ZIL.inner.add( ZIL.obj );
@@ -1303,8 +1303,6 @@ var ZIL = {
     teleport: function(x, y) {
         var z = ZIL.shape.get_highest_empty_space(x, y, ZIL.player.mobile.shape);
         ZIL.shape.build_nodes(x, y, z);
-
-        ZIL.init_node_debug();
 
         ZIL.set_global_pos(x - ZIL_UTIL.VIEW_WIDTH / 2, y - ZIL_UTIL.VIEW_HEIGHT / 2, 0);
 

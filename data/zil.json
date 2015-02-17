@@ -61,27 +61,27 @@
     13421772,
     12040119
   ],
-  "shape_name": "maps.abandoned_temple_2",
+  "shape_name": "maps.abandoned_temple_3",
   "shortcuts": [
     "objects.mlord_banner",
-    "objects.bookshelf",
+    "objects.teleporter",
     "floor.stone",
     "floors.wood",
     "doors.iron",
     "walls.stone_low",
     "walls.stone2",
     "walls.stone-ruin",
-    "walls.stone_low",
-    "objects.mushroom2"
+    "walls.stone",
+    "walls.stone-win"
   ],
   "game_events": {},
   "game_state": {
     "seen_intro": true,
     "player_start": [
       "maps",
-      "skrit-library",
-      127,
-      108
+      "abandoned_temple_3",
+      38,
+      40
     ],
     "quests": [
       "gav"
