@@ -2,7 +2,7 @@ function Creature(monster, pos, id) {
     this.id = id;
     this.mobile = new Mobile(pos[0], pos[1], pos[2], monster.category, monster.shape, this);
     this.mobile.ai_move = true;
-    this.mobile.speed = 40;
+    this.mobile.speed = 100;
     this.mobile.monster = monster;
     this.mobile.alignment = monster.level > 0 ? "evil" : "good";
     this.mobile.initiative = 2;
