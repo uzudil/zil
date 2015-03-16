@@ -370,26 +370,17 @@ ZilShape.prototype.clear_shape = function(parent_shape, position_offset) {
     this.invalidate();
 };
 
-ZilShape.prototype.render_shape_simple = function() {
-    var parent_shape = new THREE.Object3D();
-    var chunk_key = [0, 0, 0].join(",");
-    var chunk = new Chunk(chunk_key);
-    this.render_chunk(0, 0, 0, chunk);
-    parent_shape.add(chunk.shape);
-    return parent_shape;
-};
-
 ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 	if(position_offset == null) position_offset = ZIL_UTIL.ORIGIN;
 	if(parent_shape == null) parent_shape = new THREE.Object3D();
 
 	var drawn_chunks = {};
 	var cx, cy, cz, gx, gy, gz, chunk_key, chunk;
-	for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH; x+=ZIL_UTIL.CHUNK_SIZE) {
+	for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH && x < this.width; x+=ZIL_UTIL.CHUNK_SIZE) {
 		gx = position_offset[0] + x;
-		for(var y = 0; y < ZIL_UTIL.VIEW_HEIGHT; y+=ZIL_UTIL.CHUNK_SIZE) {
+		for(var y = 0; y < ZIL_UTIL.VIEW_HEIGHT && y < this.height; y+=ZIL_UTIL.CHUNK_SIZE) {
 			gy = position_offset[1] + y;
-			for(var z = 0; z < ZIL_UTIL.VIEW_DEPTH; z+=ZIL_UTIL.CHUNK_SIZE) {
+			for(var z = 0; z < ZIL_UTIL.VIEW_DEPTH && z < this.depth; z+=ZIL_UTIL.CHUNK_SIZE) {
 				gz = position_offset[2] + z;
 
 				cx = (gx / ZIL_UTIL.CHUNK_SIZE)|0;
