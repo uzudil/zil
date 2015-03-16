@@ -506,6 +506,13 @@ Mobile.prototype.is_alive = function() {
     return this.hp > 0;
 };
 
+Mobile.prototype.cancel_pending_move = function() {
+    if(this.is_moving()) {
+        this.move_path = null;
+        this.move_path_index = 0;
+    }
+};
+
 Mobile.prototype.is_moving = function() {
     return this.move_path != null &&
         this.move_path.length > 0;

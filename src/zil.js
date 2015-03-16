@@ -47,6 +47,7 @@ var ZIL = {
     combat_range: null,
     command_enter_mode: false,
     missile: null,
+    render_started: false,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -1306,12 +1307,13 @@ var ZIL = {
 
         ZIL.set_global_pos(x - ZIL_UTIL.VIEW_WIDTH / 2, y - ZIL_UTIL.VIEW_HEIGHT / 2, 0);
 
+        ZIL.player.mobile.cancel_pending_move();
         ZIL.player.mobile.move_to(x, y, z, ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
 
         ZIL.draw_visible_creatures(1000);
 
         ZIL.redraw_shape();
-        ZIL.render();
+        if(!this.render_started) ZIL.render();
     },
 
     default_convo_complete: function() {
@@ -1361,6 +1363,7 @@ var ZIL = {
     },
 
 	render: function() {
+        this.render_started = true;
 		var now = Date.now();
         var delta_time = now - ZIL.last_time;
         ZIL.last_time = now;
@@ -1374,12 +1377,12 @@ var ZIL = {
 		ZIL.fps_counter++;
 		if(ZIL.fps_counter >= 25) {
 			var fps = ZIL.fps_counter / (now - ZIL.fps_start) * 1000;
-			$("#fps").html(fps.toFixed(2));
+            ZIL_UTIL.show_fps(fps.toFixed(2));
 			ZIL.fps_counter = 0;
 			ZIL.fps_start = now;
 		}
 //		requestAnimationFrame(ZIL.render);
-		setTimeout(ZIL.render, 50); // reduce fan noise
+        setTimeout(ZIL.render, 50); // reduce fan noise
 	},
 
     quake: function() {

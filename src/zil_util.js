@@ -358,3 +358,9 @@ ZIL_UTIL.generate_sprite = function(color, percent) {
 
     return canvas.toDataURL();
 };
+
+ZIL_UTIL.show_fps = function(fps) {
+//    $("#fps").html(fps);
+    var win = gui.Window.get();
+    win.title = "ZIL - " + fps;
+};
