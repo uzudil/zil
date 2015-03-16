@@ -370,6 +370,15 @@ ZilShape.prototype.clear_shape = function(parent_shape, position_offset) {
     this.invalidate();
 };
 
+ZilShape.prototype.render_shape_simple = function() {
+    var parent_shape = new THREE.Object3D();
+    var chunk_key = [0, 0, 0].join(",");
+    var chunk = new Chunk(chunk_key);
+    this.render_chunk(0, 0, 0, chunk);
+    parent_shape.add(chunk.shape);
+    return parent_shape;
+};
+
 ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
 	if(position_offset == null) position_offset = ZIL_UTIL.ORIGIN;
 	if(parent_shape == null) parent_shape = new THREE.Object3D();

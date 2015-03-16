@@ -41,7 +41,7 @@ function Mobile(x, y, z, category, shape, parent) {
 
     this.shape = ZilShape.load_shape(category, shape, 0, null, true);
 
-    this.shape_obj = this.shape.render_shape();
+    this.shape_obj = this.shape.render_shape_simple();
     this.shape_obj_copy = this.shape_obj.clone();
 
     // center the shape's geometry (so rotation works correctly)
