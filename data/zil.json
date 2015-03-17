@@ -79,17 +79,15 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "abandoned_temple_3",
-      38,
-      40
+      "hallway",
+      94,
+      372
     ],
     "quests": [
       "gav"
     ],
     "has_password": true,
-    "opened_ante_gate": true,
-    "skrit_intro": true,
-    "has_map": true
+    "opened_ante_gate": true
   },
   "player_stats": {
     "hp": 78,
