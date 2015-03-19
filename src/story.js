@@ -336,7 +336,35 @@ ZilStory.MAPS = {
                 on_mouseclick: function () {
                     ZIL.teleport(29, 118);
                 }
+            },
+            "272,64,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Danger: Spiders have been spotted in this area.<br><br>" +
+                        "Always walk in pairs and if attacked, protect the books first then fight back.<br><br>" +
+                        "<i>(No fire-based spells are allowed.)</i>");
+                }
+            },
+            "261,271,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("This area is under development.<br><br>" +
+                        "In the near future it will house the Karwadian wing of the library, due to a generous grant from C. Karwadian.<br><br>" +
+                        "<i>Also: watch for spiders in this area</i>");
+                }
+            },
+            "90,35,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Praise the <i>Mountain Lord</i> in his granit halls.<br><br>" +
+                        "You may peruse the library of all worldly knowledge assembled here by the toils of many.<br><br>" +
+                        "Ponder and respect this during your visit.");
+                }
             }
+
         }
     },
     "maps.skrit_sewers": {

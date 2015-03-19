@@ -36,7 +36,7 @@ var ZIL = {
     INTRO_TIMEOUT: null,
     GAME_PAUSED: false,
     on_unpause: null,
-    Z_SCALE: 4,
+    Z_SCALE: 5,
     shape_name_and_location: null,
     LOADING: false,
     quake_start: null,
