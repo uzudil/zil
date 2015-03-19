@@ -63,15 +63,15 @@
   ],
   "shape_name": "maps.abandoned_temple_3",
   "shortcuts": [
-    "objects.mlord_banner",
-    "objects.column",
+    "objects.bookshelf",
+    "objects.sign",
     "floor.stone",
     "floors.wood",
     "doors.iron",
     "walls.stone_low",
     "walls.stone2",
     "walls.stone-ruin",
-    "walls.stone",
+    "walls.stone_low",
     "walls.stone-win"
   ],
   "game_events": {},
@@ -79,15 +79,18 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "hallway",
-      94,
-      372
+      "abandoned_temple_3",
+      38,
+      40
     ],
     "quests": [
       "gav"
     ],
     "has_password": true,
-    "opened_ante_gate": true
+    "opened_ante_gate": true,
+    "skrit_intro": true,
+    "opened_skrit_gate": true,
+    "met_father_theo": true
   },
   "player_stats": {
     "hp": 78,
