@@ -19,6 +19,7 @@ ZIL_UTIL.CAM_ZOOM = 1.4 * 2.25;
 ZIL_UTIL.ORIGIN = [0, 0, 0];
 ZIL_UTIL.DAMAGE_LIFE = 2300;
 ZIL_UTIL.DAMAGE_SPEED = 20;
+ZIL_UTIL.god_mode = false;
 
 // colors from: http://timtrott.co.uk/web-20-color-palette/
 ZIL_UTIL.palette = [
@@ -223,6 +224,10 @@ ZIL_UTIL.is_mini_mode = function() {
     return gui.App.argv && gui.App.argv.indexOf("--mini") >= 0;
 };
 
+ZIL_UTIL.is_god_mode = function() {
+    return gui.App.argv && gui.App.argv.indexOf("--god") >= 0;
+};
+
 ZIL_UTIL.load_config = function(mini_x, mini_y) {
 
     // mini mode
@@ -233,6 +238,8 @@ ZIL_UTIL.load_config = function(mini_x, mini_y) {
             location.reload();
         }
     }
+
+    ZIL_UTIL.god_mode = ZIL_UTIL.is_god_mode();
 
     var config = JSON.parse(fs.readFileSync("../../data/zil.json"));
 
