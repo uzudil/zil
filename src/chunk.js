@@ -28,16 +28,26 @@ Chunk.get_box_geometry = function() {
 Chunk.BOX = Chunk.get_box_geometry();
 
 Chunk.COLORS = {};
-Chunk.get_material = function(color) {
-	var material = Chunk.COLORS[color];
-	if(material == null) {
-		material = new THREE.MeshLambertMaterial( {color: ZIL_UTIL.palette[color] } );
-		Chunk.COLORS[color] = material;
-	}
+Chunk.TRANSPARENT_COLORS = {};
+Chunk.get_material = function(color, is_transparent) {
+    var material;
+    if(is_transparent) {
+        material = Chunk.TRANSPARENT_COLORS[color];
+        if (material == null) {
+            material = new THREE.MeshLambertMaterial({color: ZIL_UTIL.palette[color], transparent: true, opacity: 0.5 });
+            Chunk.TRANSPARENT_COLORS[color] = material;
+        }
+    } else {
+        material = Chunk.COLORS[color];
+        if (material == null) {
+            material = new THREE.MeshLambertMaterial({color: ZIL_UTIL.palette[color] });
+            Chunk.COLORS[color] = material;
+        }
+    }
 	return material;
 };
 
-Chunk.prototype.render = function(use_boxes) {
+Chunk.prototype.render = function(use_boxes, is_transparent) {
 //	console.log("* Rendering chunk " + this.name);
 
     if(this.geo) this.geo.dispose();
@@ -51,7 +61,7 @@ Chunk.prototype.render = function(use_boxes) {
 
 				var block = this.get_block(x, y, z);
 				if(block != null) {
-                    this.render_block(x, y, z, block, materials, material_index_map, use_boxes);
+                    this.render_block(x, y, z, block, materials, material_index_map, use_boxes, is_transparent);
 				}
 			}
 		}
@@ -60,8 +70,8 @@ Chunk.prototype.render = function(use_boxes) {
     this.shape = new THREE.Mesh(this.geo, this.materials);
 };
 
-Chunk.prototype.render_block = function(x, y, z, value, materials, material_index_map, use_boxes) {
-    var material = Chunk.get_material(value);
+Chunk.prototype.render_block = function(x, y, z, value, materials, material_index_map, use_boxes, is_transparent) {
+    var material = Chunk.get_material(value, is_transparent);
     // keep the minimum number of materials
     var material_index = material_index_map[value];
     if(material_index == null) {
@@ -70,58 +80,65 @@ Chunk.prototype.render_block = function(x, y, z, value, materials, material_inde
         material_index_map[value] = material_index;
     }
 
-    if(use_boxes) {
-
-        var child_shape = new THREE.Mesh(Chunk.BOX, material);
+    // south
+    var faces = [];
+    if (!this.get_block(x, y + 1, z)) {
+        var child_shape = new THREE.Mesh(Chunk.FACE, material);
         child_shape.position.x = x;
+        child_shape.position.y = y + 0.5;
+        child_shape.position.z = z;
+        child_shape.rotation.x = PI / 2;
+        faces.push(child_shape);
+    }
+
+    // east
+    if (!this.get_block(x + 1, y, z)) {
+        var child_shape = new THREE.Mesh(Chunk.FACE, material);
+        child_shape.position.x = x + 0.5;
         child_shape.position.y = y;
         child_shape.position.z = z;
+        child_shape.rotation.y = -PI / 2;
+        faces.push(child_shape);
+    }
 
-        // build a single geometry for fast rendering
-        child_shape.updateMatrix();
-        this.geo.merge(child_shape.geometry, child_shape.matrix, material_index);
-        this.geo.mergeVertices();
+    // top
+    if (!this.get_block(x, y, z + 1)) {
+        var child_shape = new THREE.Mesh(Chunk.FACE, material);
+        child_shape.position.x = x;
+        child_shape.position.y = y;
+        child_shape.position.z = z + 0.5;
+        child_shape.rotation.x = -PI;
+        faces.push(child_shape);
+    }
 
-    } else {
-
-        // south
-        var faces = [];
-        if (y == ZIL_UTIL.CHUNK_SIZE - 1 || !this.get_block(x, y + 1, z)) {
+    if(use_boxes) {
+        // north
+        if (!this.get_block(x, y - 1, z)) {
             var child_shape = new THREE.Mesh(Chunk.FACE, material);
             child_shape.position.x = x;
-            child_shape.position.y = y + 0.5;
+            child_shape.position.y = y - 0.5;
             child_shape.position.z = z;
-            child_shape.rotation.x = PI / 2;
+            child_shape.rotation.x = -PI / 2;
             faces.push(child_shape);
         }
 
-        // east
-        if (x == ZIL_UTIL.CHUNK_SIZE - 1 || !this.get_block(x + 1, y, z)) {
+        // west
+        if (!this.get_block(x - 1, y, z)) {
             var child_shape = new THREE.Mesh(Chunk.FACE, material);
-            child_shape.position.x = x + 0.5;
+            child_shape.position.x = x - 0.5;
             child_shape.position.y = y;
             child_shape.position.z = z;
-            child_shape.rotation.y = -PI / 2;
+            child_shape.rotation.y = PI / 2;
             faces.push(child_shape);
         }
+    }
 
-        // top
-        if (!this.get_block(x, y, z + 1)) {
-            var child_shape = new THREE.Mesh(Chunk.FACE, material);
-            child_shape.position.x = x;
-            child_shape.position.y = y;
-            child_shape.position.z = z + 0.5;
-            child_shape.rotation.x = -PI;
-            faces.push(child_shape);
-        }
-
-        // build a single geometry for fast rendering
-        if (faces.length > 0) {
-            for (var i = 0; i < faces.length; i++) {
-                faces[i].updateMatrix();
-                this.geo.merge(faces[i].geometry, faces[i].matrix, material_index);
-                //                                this.geo.mergeVertices(); // too slow
-            }
+    // build a single geometry for fast rendering
+    if (faces.length > 0) {
+        for (var i = 0; i < faces.length; i++) {
+            faces[i].updateMatrix();
+            this.geo.merge(faces[i].geometry, faces[i].matrix, material_index);
+            //                                this.geo.mergeVertices(); // too slow
         }
     }
 };

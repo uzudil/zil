@@ -1,10 +1,12 @@
-function Monster(category, shape, name, level, loiter_radius) {
+function Monster(category, shape, name, level, loiter_radius, ethereal) {
     this.category = category;
     this.shape = shape;
     this.name = name;
     this.level = level;
-    this.key = null;
     this.loiter_radius = loiter_radius;
+    this.ethereal = ethereal;
+
+    this.key = null;
 }
 
 MONSTERS = {
@@ -18,6 +20,7 @@ MONSTERS = {
     "gspider": new Monster("creatures", "spider", "Giant Spider", 2),
     "goblin": new Monster("creatures", "gnome", "Common Goblin", 2),
     "imp": new Monster("creatures", "imp", "Fire Imp", 3),
+    "shade": new Monster("creatures", "shade", "Lesser Shade", 3, null, true),
     "demon": new Monster("creatures", "demon", "Bael Demon", 9)
 };
 

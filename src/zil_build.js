@@ -551,7 +551,7 @@ var ZIL_BUILD = {
 	},
 
 	redraw_shape: function() {
-		ZIL_BUILD.shape.render_shape(ZIL_BUILD.rendered_shape, ZIL_BUILD.global_pos);
+		ZIL_BUILD.shape.render_shape(ZIL_BUILD.rendered_shape, ZIL_BUILD.global_pos, true);
 		$("#chunks_info").html("scr: " + Object.keys(ZIL_BUILD.shape.chunks_on_screen).length +
 			" mem: " + Object.keys(ZIL_BUILD.shape.chunks_in_memory).length);
 	},

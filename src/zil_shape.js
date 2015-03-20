@@ -2,6 +2,7 @@ var ZilShape = function(category, name, shape, width, height, depth, rotation, l
 	this.category = category;
 	this.name = name;
     this.use_boxes = use_boxes;
+    this.is_transparent = false;
     var _shape = {};
     for(var key in shape) {
         var value = shape[key];
@@ -370,17 +371,17 @@ ZilShape.prototype.clear_shape = function(parent_shape, position_offset) {
     this.invalidate();
 };
 
-ZilShape.prototype.render_shape = function(parent_shape, position_offset) {
+ZilShape.prototype.render_shape = function(parent_shape, position_offset, skip_bounds_check) {
 	if(position_offset == null) position_offset = ZIL_UTIL.ORIGIN;
 	if(parent_shape == null) parent_shape = new THREE.Object3D();
 
 	var drawn_chunks = {};
 	var cx, cy, cz, gx, gy, gz, chunk_key, chunk;
-	for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH && x < this.width; x+=ZIL_UTIL.CHUNK_SIZE) {
+	for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH && (skip_bounds_check || x < this.width); x+=ZIL_UTIL.CHUNK_SIZE) {
 		gx = position_offset[0] + x;
-		for(var y = 0; y < ZIL_UTIL.VIEW_HEIGHT && y < this.height; y+=ZIL_UTIL.CHUNK_SIZE) {
+		for(var y = 0; y < ZIL_UTIL.VIEW_HEIGHT && (skip_bounds_check || y < this.height); y+=ZIL_UTIL.CHUNK_SIZE) {
 			gy = position_offset[1] + y;
-			for(var z = 0; z < ZIL_UTIL.VIEW_DEPTH && z < this.depth; z+=ZIL_UTIL.CHUNK_SIZE) {
+			for(var z = 0; z < ZIL_UTIL.VIEW_DEPTH && (skip_bounds_check || z < this.depth); z+=ZIL_UTIL.CHUNK_SIZE) {
 				gz = position_offset[2] + z;
 
 				cx = (gx / ZIL_UTIL.CHUNK_SIZE)|0;
@@ -606,7 +607,7 @@ ZilShape.prototype.find_index_node = function(x, y, z) {
 
 ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk) {
     chunk.set_pos(cx * ZIL_UTIL.CHUNK_SIZE, cy * ZIL_UTIL.CHUNK_SIZE, cz * ZIL_UTIL.CHUNK_SIZE, this);
-	chunk.render(this.use_boxes); // force refresh
+	chunk.render(this.use_boxes, this.is_transparent); // force refresh
 
     // debug info
     chunk.shape.userData.name = this.category + "." + this.name;

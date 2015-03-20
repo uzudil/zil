@@ -1,5 +1,5 @@
 // a thing that can move
-function Mobile(x, y, z, category, shape, parent) {
+function Mobile(x, y, z, category, shape, parent, is_transparent) {
     this.x = x;
     this.y = y;
     this.z = z;
@@ -40,6 +40,7 @@ function Mobile(x, y, z, category, shape, parent) {
     this.status = {};
 
     this.shape = ZilShape.load_shape(category, shape, 0, null, true);
+    this.shape.is_transparent = is_transparent;
 
     this.shape_obj = this.shape.render_shape();
     this.shape_obj_copy = this.shape_obj.clone();

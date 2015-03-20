@@ -1,6 +1,6 @@
 function Creature(monster, pos, id) {
     this.id = id;
-    this.mobile = new Mobile(pos[0], pos[1], pos[2], monster.category, monster.shape, this);
+    this.mobile = new Mobile(pos[0], pos[1], pos[2], monster.category, monster.shape, this, monster.ethereal);
     this.mobile.ai_move = true;
     this.mobile.speed = 100;
     this.mobile.monster = monster;
