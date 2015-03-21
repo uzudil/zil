@@ -666,26 +666,28 @@ ZilShape.prototype.get_shape_at = function(x, y, z) {
 };
 
 
-function PathNode(x, y, z, is_empty) {
+function PathNode(x, y, z, is_empty, allow_ethereal) {
     this.x = x;
     this.y = y;
     this.z = z;
     this.is_empty = is_empty;
+    this.allow_ethereal = allow_ethereal;
 }
 
-PathNode.prototype.getCost = function(other_node) {
+PathNode.prototype.getCost = function(other_node, creature) {
+    if(creature && creature.mobile.is_ethereal()) return 1;
     var dz = Math.abs(this.z - other_node.z);
     return dz <= 1 ? 1 : 100000;
 };
 
 PathNode.prototype.clone = function() {
-    return new PathNode(this.x, this.y, this.z, this.is_empty);
+    return new PathNode(this.x, this.y, this.z, this.is_empty, this.allow_ethereal);
 };
 
-PathNode.prototype.next_to = function(pos) {
+PathNode.prototype.next_to = function(pos, creature) {
     return Math.abs(this.x - pos[0]) <= 1 &&
-        Math.abs(this.y - pos[1]) &&
-        Math.abs(this.z - pos[2]);
+        Math.abs(this.y - pos[1]) <= 1 &&
+        (Math.abs(this.z - pos[2]) <= 1 || creature && creature.mobile.is_ethereal());
 };
 
 
@@ -700,7 +702,7 @@ ZilShape.prototype.build_nodes = function(x, y, z) {
         var col = [];
         this.nodes[xx] = col;
         for(var yy = 0; yy < (this.height / ZilShape.PATH_RES)|0; yy++) {
-            col[yy] = new PathNode(xx * ZilShape.PATH_RES, yy * ZilShape.PATH_RES, null, true);
+            col[yy] = new PathNode(xx * ZilShape.PATH_RES, yy * ZilShape.PATH_RES, null, true, false);
         }
     }
     this._find_nodes_iterative( ((x / ZilShape.PATH_RES)|0), ((y / ZilShape.PATH_RES)|0), {} );
@@ -737,6 +739,7 @@ ZilShape.prototype._find_nodes_iterative = function(start_nx, start_ny, seen_nod
         var node = this.nodes[nx][ny];
         if(node.z == null) {
             var pos = this._get_map_point_for_node(nx, ny);
+            node.allow_ethereal = pos.z >= 0; // ghosts can go thru walls
             node.z = pos.z;
             node._tmp_is_empty = pos.z <= -1;
         }

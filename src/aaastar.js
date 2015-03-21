@@ -94,7 +94,7 @@ var astar = {
 
                 // The g score is the shortest distance from start to current node.
                 // We need to check if the path we have arrived at this neighbor is the shortest one we have seen yet.
-                var gScore = currentNode.g + neighbor.getCost(currentNode),
+                var gScore = currentNode.g + neighbor.getCost(currentNode, creature),
                     beenVisited = neighbor.visited;
 
                 if (!beenVisited || gScore < neighbor.g) {
@@ -154,7 +154,7 @@ var astar = {
 };
 
 ZilShape.prototype.isWall = function(node, creature, ignore_creatures) {
-    if(node.is_empty) return true;
+    if(node.is_empty && !(creature.mobile.is_ethereal() && node.allow_ethereal)) return true;
 
     if(!ignore_creatures) {
         for (var dx = 0; dx < ZilShape.PATH_RES; dx++) {
@@ -214,7 +214,7 @@ ZilShape.prototype.astar_search = function(start, end, creature) {
             p.push([x, y, z]);
         }
     }
-    if(end_node && p.length > 0 && end_node.next_to(p[p.length - 1], p[p.length - 1], p[p.length - 1])) {
+    if(end_node && p.length > 0 && end_node.next_to(p[p.length - 1], p[p.length - 1], p[p.length - 1], creature)) {
         p.push([end_node.x, end_node.y, end_node.z]);
     }
     return p;
@@ -242,10 +242,10 @@ ZilShape.prototype.neighbors = function(node, creature) {
     var ny = (node.y / ZilShape.PATH_RES)|0;
 
     var ret = [];
-    if(nx > 0 && Math.abs(this.nodes[nx - 1][ny].z - node.z) <= 1) ret.push(this.nodes[nx - 1][ny]);
-    if(ny > 0 && Math.abs(this.nodes[nx][ny - 1].z - node.z) <= 1) ret.push(this.nodes[nx][ny - 1]);
-    if(nx < this.nodes.length - 1 && Math.abs(this.nodes[nx + 1][ny].z - node.z) <= 1) ret.push(this.nodes[nx + 1][ny]);
-    if(ny < this.nodes[0].length - 1 && Math.abs(this.nodes[nx][ny + 1].z - node.z) <= 1) ret.push(this.nodes[nx][ny + 1]);
+    if(nx > 0 && (creature.mobile.is_ethereal() || Math.abs(this.nodes[nx - 1][ny].z - node.z) <= 1)) ret.push(this.nodes[nx - 1][ny]);
+    if(ny > 0 && (creature.mobile.is_ethereal() || Math.abs(this.nodes[nx][ny - 1].z - node.z) <= 1)) ret.push(this.nodes[nx][ny - 1]);
+    if(nx < this.nodes.length - 1 && (creature.mobile.is_ethereal() || Math.abs(this.nodes[nx + 1][ny].z - node.z) <= 1)) ret.push(this.nodes[nx + 1][ny]);
+    if(ny < this.nodes[0].length - 1 && (creature.mobile.is_ethereal() || Math.abs(this.nodes[nx][ny + 1].z - node.z) <= 1)) ret.push(this.nodes[nx][ny + 1]);
 
     if (this.diagonal) {
         throw "Not implemented.";
