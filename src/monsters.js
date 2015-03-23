@@ -21,7 +21,8 @@ MONSTERS = {
     "goblin": new Monster("creatures", "gnome", "Common Goblin", 2),
     "imp": new Monster("creatures", "imp", "Fire Imp", 3),
     "shade": new Monster("creatures", "shade", "Lesser Shade", 3, null, true),
-    "demon": new Monster("creatures", "demon", "Bael Demon", 9)
+    "demon": new Monster("creatures", "demon", "Bael Demon", 9),
+    "soldier": new Monster("creatures", "soldier", "Guard", 0, 16)
 };
 
 for(var key in MONSTERS) {

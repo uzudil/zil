@@ -363,8 +363,29 @@ ZilStory.MAPS = {
                         "You may peruse the library of all worldly knowledge assembled here by the toils of many.<br><br>" +
                         "Ponder and respect this during your visit.");
                 }
+            },
+            "128,295,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "oram-gates", 357, 187);
+                }
             }
-
+        }
+    },
+    "maps.oram-gates": {
+        events: {
+            on_load: function () {
+            }
+        },
+        locations: {
+            "357,174,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "abandoned_temple_3", 132, 304);
+                }
+            },
         }
     },
     "maps.skrit_sewers": {
