@@ -574,6 +574,11 @@ var ZIL = {
                 ZIL.shown_creatures[creature.id] = true;
             }
 
+            // is this creature close to the player?
+            if(creature != ZIL.player && ZIL_UTIL.get_shape_distance(ZIL.player, creature) < 64) {
+                ZilStory.on_creature_near(ZIL.shape.category, ZIL.shape.name, creature);
+            }
+
             // remember the creature
             drawn_creatures[creature.id] = true;
 
@@ -697,10 +702,17 @@ var ZIL = {
     MAX_DISTANCE: ZIL_UTIL.VIEW_WIDTH / 2 + ZIL_UTIL.CHUNK_SIZE,
 
     for_visible_creatures: function(creature_fx) {
-        for(var x = 0; x < ZIL_UTIL.VIEW_WIDTH; x+=ZIL_UTIL.CHUNK_SIZE) {
-            for(var y = 0; y < ZIL_UTIL.VIEW_WIDTH; y+=ZIL_UTIL.CHUNK_SIZE) {
-                var cx = ((ZIL.global_pos[0] + x)/ZIL_UTIL.CHUNK_SIZE)|0;
-                var cy = ((ZIL.global_pos[1] + y)/ZIL_UTIL.CHUNK_SIZE)|0;
+        ZIL.for_creatures_in_area(ZIL.global_pos[0], ZIL.global_pos[1],
+            ZIL.global_pos[0] + ZIL_UTIL.VIEW_WIDTH,
+            ZIL.global_pos[1] + ZIL_UTIL.VIEW_WIDTH,
+            creature_fx);
+    },
+
+    for_creatures_in_area: function(xa, ya, xb, yb, creature_fx) {
+        for(var x = xa; x < xb; x+=ZIL_UTIL.CHUNK_SIZE) {
+            for(var y = ya; y < yb; y+=ZIL_UTIL.CHUNK_SIZE) {
+                var cx = (x / ZIL_UTIL.CHUNK_SIZE)|0;
+                var cy = (y / ZIL_UTIL.CHUNK_SIZE)|0;
                 var creatures = Mobile.get_for_chunk(cx, cy);
                 if(creatures.length > 0) {
                     for (var idx = 0; idx < creatures.length; idx++) {
@@ -772,7 +784,7 @@ var ZIL = {
             return ZIL.creatures_map[id];
         }), function(c) {
             var distance = ZIL_UTIL.get_distance(c.mobile.x, c.mobile.y, ZIL.player.mobile.x, ZIL.player.mobile.y);
-            return c.mobile.is_alive() && distance <= ZIL.MAX_DISTANCE;
+            return c.mobile.is_alive() && distance <= ZIL.MAX_DISTANCE && (c == ZIL.player || c.mobile.can_reach_creature(ZIL.player));
         });
         if(ZIL.combatants_exists()) {
             ZIL.combat_creatures.sort(function(a, b) {

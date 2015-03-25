@@ -257,6 +257,33 @@ ZilStory.MAPS = {
     "maps.abandoned_temple_3": {
         events: {
             on_load: function() {
+                if (!ZIL_UTIL.game_state["encounter_exygor"]) {
+                    ZIL.for_creatures_in_area(22, 148, 92, 238, function(creature) {
+                        if(creature != ZIL.player) {
+                            creature.mobile.make_neutral();
+                        }
+                    });
+                }
+            },
+            on_creature_near: function(creature) {
+                if(creature.mobile.monster == MONSTERS.demon && !ZIL_UTIL.game_state["encounter_exygor"]) {
+                    ZIL.center_screen_at(creature.mobile.x, creature.mobile.y);
+                    ZIL.say(creature, "All hope is <b>lost</b> to you human. " +
+                        "Your feeble exploration of the mountain ends now.<br><br>" +
+                        "Eimorden will be pleased by this easy victory.<br><br>" +
+                        "<i>Attack my minions! Feed on his soul!</i>", function () {
+                            ZIL_UTIL.game_state["encounter_exygor"] = true;
+                            ZIL_UTIL.save_config();
+                            ZIL.for_creatures_in_area(22, 148, 92, 238, function(creature) {
+                                if(creature != ZIL.player) {
+                                    creature.mobile.make_evil();
+                                }
+                            });
+                            Mobile.hide_convos();
+                            return true;
+                        }
+                    );
+                }
             }
         },
         locations: {
@@ -385,7 +412,7 @@ ZilStory.MAPS = {
                 on_mouseclick: function () {
                     ZIL.load_shape("maps", "abandoned_temple_3", 132, 304);
                 }
-            },
+            }
         }
     },
     "maps.skrit_sewers": {
@@ -444,6 +471,13 @@ ZilStory.MAPS = {
     }
 };
 
+ZilStory.on_creature_near = function(map_category_name, map_shape_name, creature) {
+    var m = ZilStory.MAPS[map_category_name + "." + map_shape_name];
+    if(m && m.events && m.events.on_creature_near) {
+        m.events.on_creature_near(creature);
+    }
+};
+
 ZilStory.on_map_load = function(map_category_name, map_shape_name) {
     var m = ZilStory.MAPS[map_category_name + "." + map_shape_name];
     if(m && m.events && m.events.on_load) {
@@ -490,33 +524,6 @@ ZilStory.CONVO = {
             "seem": "Use your wits and might if you can.<br>The seer <a>Gav</a> only helps those who walk the right path."
         }
     },
-    "maps.westvein": {
-        "common": {
-
-        },
-        "11,45,2": {
-            "_name_": "Lift Operator",
-            "": function() {
-                var n = ZIL_UTIL.game_state["lift_operator_saved"];
-                if(n == null) {
-                    return "Oh good you're here! The <a>imps</a> have been terrorizing me for far too long. Please be as kind as to <a>dispatch</a> them!";
-                } else if(n < 4) {
-                    return "You're doing a great job, but be sure to kill all four <a>imps</a>. That's the only way they will ever learn.";
-                } else {
-                    return "Thank you so much for getting rid of those pesky <a>imps</a>. They have been a source of pain for far too long.";
-                }
-            },
-            "imps": function() {
-                var n = ZIL_UTIL.game_state["lift_operator_saved"];
-                if(n && n == 4) {
-                    return "I'm not sure how they got here... They just appeared one day, probably from <a>Dahrhyr</a>. It's not a good omen, that I can tell you!";
-                } else {
-                    return "The little red gremlins outside my house. Kill them for me!";
-                }
-            },
-            "dahrhyr": ""
-        }
-    },
     "maps.skrit": {
         "common": {
             "wondering": "Yes it is confusing at first, I know. <a>Many</a> like you come through here.",
@@ -540,7 +547,7 @@ ZilStory.CONVO = {
             "sage": "It is my job to <a w='wondering'>divine</a> the fate of all here.",
             "library": "Take the stairs down to my basement and feel free to browse my tomes. It may teach you a little of the history of our world.",
             "things": "Goblins and other monsters. You may consult my <a>library</a> downstairs if you wish to learn more about the local fauna.",
-            "upper": "This town is a peaceful <a>nexus</a> but the rest of the <a>mountain</a> is a warren of ruined passages. There are additional levels above and below us. If you'd like you can borrow my map of the mountain from my <a>library</a>.",
+            "upper": "This town is a peaceful <a>nexus</a> but the rest of the <a>mountain</a> is a warren of ruined passages. There are additional levels above and below us. If you'd like you can borrow my map of the mountain from my <a>library</a>."
         },
         "170,43,3": {
             "_name_": "Zef",

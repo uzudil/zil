@@ -323,6 +323,18 @@ Mobile.prototype.creature_loiter_plan = function(map_shape) {
     }
 };
 
+Mobile.prototype.make_neutral = function() {
+    this.alignment = "neutral";
+};
+
+Mobile.prototype.make_evil = function() {
+    this.alignment = "evil";
+    this.move_path = null;
+    this.move_path_index = 0;
+    this.sleep_turns = null;
+};
+
+
 Mobile.prototype.creature_move_plan = function(map_shape) {
     if(this.move_path == null && this.sleep_turns == null) {
 
@@ -370,7 +382,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
         this.reset_move();
     }
 
-    if(this.ai_move && this.is_alive()) {
+    if(this.ai_move && this.is_alive() && this.alignment != "neutral") {
         this.creature_move_plan(map_shape);
     }
 
@@ -396,7 +408,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
         }
 
         // look for enemies
-        if(this.ai_move && this.is_alive() && !ZIL_UTIL.god_mode) {
+        if(this.ai_move && this.is_alive() && !ZIL_UTIL.god_mode && this.alignment != "neutral") {
             this.look_for_target();
         }
 
