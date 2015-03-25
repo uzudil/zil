@@ -158,7 +158,7 @@ canvas {
 #menu .cr {
     font-size: 10px;
     padding-bottom: 30px;
-    margin-top: -20px;
+    /*margin-top: -20px; */
 }
 
 #menu a {

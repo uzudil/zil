@@ -61,7 +61,7 @@
     13421772,
     12040119
   ],
-  "shape_name": "maps.oram-gates",
+  "shape_name": "maps.abandoned_temple_3",
   "shortcuts": [
     "objects.column",
     "objects.plant",
@@ -79,9 +79,9 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "oram-gates",
-      357,
-      187
+      "abandoned_temple_3",
+      136,
+      192
     ],
     "quests": [
       "gav"
@@ -90,11 +90,12 @@
     "opened_ante_gate": true,
     "skrit_intro": true,
     "opened_skrit_gate": true,
-    "met_father_theo": true
+    "met_father_theo": true,
+    "encounter_exygor": true
   },
   "player_stats": {
-    "hp": 78,
-    "exp": 4450,
+    "hp": 200,
+    "exp": 4500,
     "level": 5,
     "spells": [
       "Zon-Bur",
