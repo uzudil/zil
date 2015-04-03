@@ -1,0 +1,28 @@
+<html>
+	<head>
+		<title>ZIL</title>
+        <link rel="stylesheet" type="text/css" href="../../css/zil.css">
+	</head>
+	<body>
+        <script type="text/javascript" src="../../lib/jquery-2.0.3.min.js"></script>
+        <script type="text/javascript" src="../../lib/underscore-min.js"></script>
+
+        <script src="../../lib/three.js"></script>
+
+        <script src="../../src/zil_util.js"></script>
+		<script src="../../src/chunk.js"></script>
+		<script src="../../src/zil_shape.js"></script>
+		<script src="../../src/zil_animator.js"></script>
+
+
+        <canvas id="view" style="display: block;"></canvas>
+
+        <div id="debug" style="color: white; position: fixed;">x:<span class="x"> y:</span><span class="y"> z:</span><span class="z"></span></div>
+
+		<script>
+            $(document).ready(function() {
+                Zil_Animator.start_animator();
+            });
+        </script>
+	</body>
+</html>
