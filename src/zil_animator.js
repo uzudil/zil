@@ -1,43 +1,50 @@
-function AnimatedModel(category, name, parts, animations) {
+function AnimatedModel(category, name, model, animations) {
     this.initialize = ZIL_UTIL.bind(this, function() {
-        this.shapes = {};
         this.shape_objs = {};
         this.angles = {};
         this.width = this.height = this.depth = 0;
         this.shape_obj = new THREE.Object3D();
-        for(var i = 0; i < parts.length; i++) {
-            var width = parts[i].end[0] - parts[i].start[0] + 1;
-            var height = parts[i].end[1] - parts[i].start[1] + 1;
-            var depth = parts[i].end[2] - parts[i].start[2] + 1;
-            var points = {};
-            for(var x = parts[i].start[0]; x <= parts[i].end[0]; x++) {
-                if(x > this.width) this.width = x;
-                for(var y = parts[i].start[1]; y <= parts[i].end[1]; y++) {
-                    if(y > this.height) this.height = y;
-                    for (var z = parts[i].start[2]; z <= parts[i].end[2]; z++) {
-                        if(z > this.depth) this.depth = z;
-                        points[x + "," + y + "," + z] = parts[i].color;
+        AnimatedModel.visit_parts(model, null, ZIL_UTIL.bind(this, function(part, parent_part) {
+
+            var current_shape = parent_part == null ? this.shape_obj : this.shape_objs[parent_part.name];
+
+            var o;
+            if(part["parts"]) {
+                o = new THREE.Object3D();
+            } else {
+                var width = part.end[0] - part.start[0] + 1;
+                var height = part.end[1] - part.start[1] + 1;
+                var depth = part.end[2] - part.start[2] + 1;
+                var points = {};
+                for(var x = part.start[0]; x <= part.end[0]; x++) {
+                    if(x > this.width) this.width = x;
+                    for(var y = part.start[1]; y <= part.end[1]; y++) {
+                        if(y > this.height) this.height = y;
+                        for (var z = part.start[2]; z <= part.end[2]; z++) {
+                            if(z > this.depth) this.depth = z;
+                            points[x + "," + y + "," + z] = part.color;
+                        }
                     }
                 }
-            }
-            var s = new ZilShape(category, name + ".part." + parts[i].name,
-                points,
-                width, height, depth, 0, null, true, null, null);
-            var o = s.render_shape();
+                var s = new ZilShape(category, name + ".part." + part.name,
+                    points,
+                    width, height, depth, 0, null, true, null, null);
+                o = s.render_shape();
 
-            // set rotational centers
-            if("center" in parts[i]) {
-                var geo = o.children[0].geometry;
-                geo.applyMatrix(new THREE.Matrix4().makeTranslation(parts[i].center[0], parts[i].center[1], parts[i].center[2]));
-                o.position.set(parts[i].start[0] - parts[i].center[0], parts[i].start[1] - parts[i].center[1], parts[i].start[2] - parts[i].center[2]);
-            } else {
-                o.position.set(parts[i].start[0], parts[i].start[1], parts[i].start[2]);
-            }
+                // set rotational centers
+                if("center" in part) {
+                    var geo = o.children[0].geometry;
+                    geo.applyMatrix(new THREE.Matrix4().makeTranslation(part.center[0], part.center[1], part.center[2]));
+                    o.position.set(part.start[0] - part.center[0], part.start[1] - part.center[1], part.start[2] - part.center[2]);
+                } else {
+                    o.position.set(part.start[0], part.start[1], part.start[2]);
+                }
 
-            this.shapes[parts[i].name] = s;
-            this.shape_objs[parts[i].name] = o;
-            this.shape_obj.add(o);
-        }
+            }
+            this.shape_objs[part.name] = o;
+            current_shape.add(o);
+        }));
+
         this.animations = animations;
         this.animation_name = null;
         this.animation_index = 0;
@@ -147,72 +154,138 @@ AnimatedModel.prototype.render = function(delta_time) {
     }
 };
 
-AnimatedModel.create_model = function(name, parts, animations, colors) {
-    var p = [];
-    for(var i = 0; i < parts.length; i++) {
-        var part = $.extend(true, {}, parts[i]);
+AnimatedModel.create_model = function(name, model, colors) {
+    // copy the parts so we don't modify the original
+    var parts = $.extend(true, {}, model[0]);
+    AnimatedModel.visit_parts(parts, null, function(part) {
         var new_color = colors[part.name];
         if(new_color != null) part.color = new_color;
-        p.push(part);
-    }
-    return new AnimatedModel("creatures", name, p, animations);
+    });
+    return new AnimatedModel("creatures", name, parts, model[1]);
 };
 
-AnimatedModel.HUMAN_PARTS = [
+AnimatedModel.visit_parts = function(part, parent_part, on_visit) {
+    if(part) {
+        on_visit(part, parent_part);
+        if(part["parts"]) {
+            for(var i = 0; i < part.parts.length; i++) {
+                AnimatedModel.visit_parts(part.parts[i], part, on_visit);
+            }
+        }
+    }
+};
+
+AnimatedModel.HUMAN_MODEL = [
     {
-        name: "right_leg",
-        start: [3,1,0],
-        end: [3,1,1],
-        center: [0,0,-1],
-        color: 1
+        name: "body",
+        parts: [
+            {
+                name: "upper",
+                parts: [
+                    {
+                        name: "torso",
+                        start: [1, 1, 2],
+                        end: [3, 2, 3],
+                        color: 3
+                    },
+                    {
+                        name: "head",
+                        start: [2, 1, 4],
+                        end: [2, 1, 4],
+                        color: 4
+                    },
+                    {
+                        name: "left_arm",
+                        start: [4, 1, 2],
+                        end: [4, 1, 3],
+                        center: [0, 0, -1],
+                        color: 5
+                    },
+                    {
+                        name: "right_arm",
+                        start: [0, 1, 2],
+                        end: [0, 1, 3],
+                        center: [0, 0, -1],
+                        color: 6
+                    }
+                ]
+            },
+            {
+                name: "lower",
+                parts: [
+                    {
+                        name: "right_leg",
+                        start: [3, 1, 0],
+                        end: [3, 1, 1],
+                        center: [0, 0, -1],
+                        color: 1
+                    },
+                    {
+                        name: "left_leg",
+                        start: [1, 1, 0],
+                        end: [1, 1, 1],
+                        center: [0, 0, -1],
+                        color: 2
+                    }
+                ]
+            }
+        ]
     },
     {
-        name: "left_leg",
-        start: [1,1,0],
-        end: [1,1,1],
-        center: [0,0,-1],
-        color: 2
-    },
-    {
-        name: "torso",
-        start: [1, 1, 2],
-        end: [3, 2, 3],
-        color: 3
-    },
-    {
-        name: "head",
-        start: [2, 1, 4],
-        end: [2, 1, 4],
-        color: 4
-    },
-    {
-        name: "left_arm",
-        start: [4, 1, 2],
-        end: [4, 1, 3],
-        center: [0,0,-1],
-        color: 5
-    },
-    {
-        name: "right_arm",
-        start: [0, 1, 2],
-        end: [0, 1, 3],
-        center: [0,0,-1],
-        color: 6
+        walk: [
+            { "upper": { z: 0 }, "head": { z: 0 }, "left_arm": { x: 0 }, "right_arm": { x: 0 }, "left_leg": { x: 0 }, "right_leg": { x: 0 } },
+            { "upper": { z: 10 }, "head": { z: -10 }, "left_arm": { x: -45 }, "right_arm": { x: 45 }, "left_leg": { x: -45 }, "right_leg": { x: 45 } },
+            { "upper": { z: 0 }, "head": { z: 0 }, "left_arm": { x: 0 }, "right_arm": { x: 0 }, "left_leg": { x: 0 }, "right_leg": { x: 0 } },
+            { "upper": { z: -10 }, "head": { z: 10 }, "left_arm": { x: 45 }, "right_arm": { x: -45 }, "left_leg": { x: 45 }, "right_leg": { x: -45 } }
+        ],
+        attack: [
+            { "upper": { x: 0 }, "right_arm": { x: 0 } },
+            { "upper": { x: -20 }, "right_arm": { x: 180 } },
+            { "upper": { x: -10 }, "right_arm": { x: 90 } }
+        ],
+        "pain": [
+            { "upper": { x: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 }, "right_leg": { x: 0 } },
+            { "upper": { x: 40 }, "right_arm": { x: 90 }, "left_arm": { x: 110 }, "right_leg": { x: 40 }  },
+            { "upper": { x: 20 }, "right_arm": { x: 45 }, "left_arm": { x: 50 }, "right_leg": { x: 20 }   }
+        ],
+        "bored": [
+            { "upper": { y: 0 }, "right_arm": { y: 0 }, "left_arm": { y: 0 } },
+            { "upper": { y: 5 }, "right_arm": { y: 40 }, "left_arm": { y: -10 } },
+            { "upper": { y: 0 }, "right_arm": { y: 0 }, "left_arm": { y: 0 } },
+            { "upper": { y: -5 }, "right_arm": { y: 10 }, "left_arm": { y: -40 } },
+            { "upper": { y: 0 }, "right_arm": { y: 0 }, "left_arm": { y: 0 } },
+            { "upper": { y: 0 }, "right_arm": { y: 0 }, "left_arm": { y: 0 } },
+            { "right_leg": { x: 20 }, "left_leg": { x: 0 } },
+            { "right_leg": { x: 0 }, "left_leg": { x: 0 } },
+            { "right_leg": { x: 0 }, "left_leg": { x: 20 } },
+            { "right_leg": { x: 0 }, "left_leg": { x: 0 } },
+            { "upper": { z: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 } },
+            { "upper": { z: 30 }, "right_arm": { x: 40 }, "left_arm": { x: -40 } },
+            { "upper": { z: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 } },
+            { "upper": { z: -30 }, "right_arm": { x: -40 }, "left_arm": { x: 40 } },
+            { "upper": { z: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 } },
+            { "upper": { z: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 } },
+            { "upper": { z: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 } },
+            { "upper": { z: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 } },
+            { "upper": { z: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 } }
+        ],
+        "cast": [
+            { "right_arm": { x: 0 }, "left_arm": { x: 0 } },
+            { "right_arm": { x: 70 }, "left_arm": { x: 70 } },
+            { "right_arm": { x: 70, y: -40 }, "left_arm": { x: 70, y: 40 } },
+            { "right_arm": { x: 70, y: -40 }, "left_arm": { x: 70, y: 40 } },
+            { "right_arm": { x: 70, y: 0 }, "left_arm": { x: 70, y: 0 } },
+            { "right_arm": { x: 180, y: 40 }, "left_arm": { x: 180, y: -40 }, "upper": { x: 20 } },
+            { "right_arm": { x: 180, y: 40 }, "left_arm": { x: 180, y: -40 }, "upper": { x: 20 } },
+            { "right_arm": { x: 180, y: 40 }, "left_arm": { x: 180, y: -40 }, "upper": { x: 20 } },
+            { "right_arm": { x: 70, y: 0 }, "left_arm": { x: 70, y: 0 }, "upper": { x: 0 } },
+            { "right_arm": { x: 0 }, "left_arm": { x: 0 } }
+        ]
     }
 ];
 
-AnimatedModel.HUMAN_ANIMATIONS = {
-    walk: [
-        { "head": { z: 0 }, "left_arm": { x: 0 }, "right_arm": { x: 0 }, "left_leg": { x: 0 }, "right_leg": { x: 0 } },
-        { "head": { z: -10 }, "left_arm": { x: -45 }, "right_arm": { x: 45 }, "left_leg": { x: -45 }, "right_leg": { x: 45 } },
-        { "head": { z: 0 }, "left_arm": { x: 0 }, "right_arm": { x: 0 }, "left_leg": { x: 0 }, "right_leg": { x: 0 } },
-        { "head": { z: 10 }, "left_arm": { x: 45 }, "right_arm": { x: -45 }, "left_leg": { x: 45 }, "right_leg": { x: -45 } }
-    ]
-};
-
 AnimatedModel.HUMAN = AnimatedModel.create_model("human",
-    AnimatedModel.HUMAN_PARTS,
-    AnimatedModel.HUMAN_ANIMATIONS, {
+    AnimatedModel.HUMAN_MODEL, {
         head: 2,
         left_leg: 1,
         right_leg: 1,
@@ -222,8 +295,7 @@ AnimatedModel.HUMAN = AnimatedModel.create_model("human",
     });
 
 AnimatedModel.GUARD = AnimatedModel.create_model("guard",
-    AnimatedModel.HUMAN_PARTS,
-    AnimatedModel.HUMAN_ANIMATIONS, {
+    AnimatedModel.HUMAN_MODEL, {
         head: 19,
         left_leg: 20,
         right_leg: 20,
@@ -232,6 +304,13 @@ AnimatedModel.GUARD = AnimatedModel.create_model("guard",
         torso: 19
     });
 
+
+
+
+
+
+
+// Test animations
 var Zil_Animator = {
 
 	fps_counter: 0,
@@ -274,12 +353,15 @@ var Zil_Animator = {
             }
         });
 
-
         Zil_Animator.model = AnimatedModel.HUMAN.initialize();
         Zil_Animator.scene.add( Zil_Animator.model.shape_obj );
         Zil_Animator.model.shape_obj.position.x += Zil_Animator.model.width / 2;
         Zil_Animator.model.shape_obj.position.y += Zil_Animator.model.height / 2;
-        Zil_Animator.model.set_animation_name("walk");
+//        Zil_Animator.model.set_animation_name("walk");
+//        Zil_Animator.model.set_animation_name("attack");
+//        Zil_Animator.model.set_animation_name("pain");
+//        Zil_Animator.model.set_animation_name("bored");
+        Zil_Animator.model.set_animation_name("cast");
 
         Zil_Animator.render();
     },
