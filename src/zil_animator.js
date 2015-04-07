@@ -4,6 +4,7 @@ function AnimatedModel(category, name, model, animations) {
         this.angles = {};
         this.width = this.height = this.depth = 0;
         this.shape_obj = new THREE.Object3D();
+        this.model = model;
         AnimatedModel.visit_parts(model, null, ZIL_UTIL.bind(this, function(part, parent_part) {
 
             var current_shape = parent_part == null ? this.shape_obj : this.shape_objs[parent_part.name];
@@ -67,6 +68,9 @@ AnimatedModel.prototype.set_animation_name = function(name) {
     this.animation_name = name;
     this.animation_index = 0;
     this.animation_time = 0;
+    AnimatedModel.visit_parts(this.model, null, ZIL_UTIL.bind(this, function(part) {
+        this.shape_objs[part.name].rotation.set(0, 0, 0);
+    }));
 };
 
 AnimatedModel.prototype.render = function(delta_time) {
@@ -234,21 +238,21 @@ AnimatedModel.HUMAN_MODEL = [
     {
         walk: [
             { "upper": { z: 0 }, "head": { z: 0 }, "left_arm": { x: 0 }, "right_arm": { x: 0 }, "left_leg": { x: 0 }, "right_leg": { x: 0 } },
-            { "upper": { z: 10 }, "head": { z: -10 }, "left_arm": { x: -45 }, "right_arm": { x: 45 }, "left_leg": { x: -45 }, "right_leg": { x: 45 } },
+            { "upper": { z: 5 }, "head": { z: -10 }, "left_arm": { x: -45 }, "right_arm": { x: 45 }, "left_leg": { x: -45 }, "right_leg": { x: 45 } },
             { "upper": { z: 0 }, "head": { z: 0 }, "left_arm": { x: 0 }, "right_arm": { x: 0 }, "left_leg": { x: 0 }, "right_leg": { x: 0 } },
-            { "upper": { z: -10 }, "head": { z: 10 }, "left_arm": { x: 45 }, "right_arm": { x: -45 }, "left_leg": { x: 45 }, "right_leg": { x: -45 } }
+            { "upper": { z: -5 }, "head": { z: 10 }, "left_arm": { x: 45 }, "right_arm": { x: -45 }, "left_leg": { x: 45 }, "right_leg": { x: -45 } }
         ],
         attack: [
             { "upper": { x: 0 }, "right_arm": { x: 0 } },
             { "upper": { x: -20 }, "right_arm": { x: 180 } },
             { "upper": { x: -10 }, "right_arm": { x: 90 } }
         ],
-        "pain": [
+        pain: [
             { "upper": { x: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 }, "right_leg": { x: 0 } },
             { "upper": { x: 40 }, "right_arm": { x: 90 }, "left_arm": { x: 110 }, "right_leg": { x: 40 }  },
             { "upper": { x: 20 }, "right_arm": { x: 45 }, "left_arm": { x: 50 }, "right_leg": { x: 20 }   }
         ],
-        "bored": [
+        bored: [
             { "upper": { y: 0 }, "right_arm": { y: 0 }, "left_arm": { y: 0 } },
             { "upper": { y: 5 }, "right_arm": { y: 40 }, "left_arm": { y: -10 } },
             { "upper": { y: 0 }, "right_arm": { y: 0 }, "left_arm": { y: 0 } },
@@ -269,7 +273,7 @@ AnimatedModel.HUMAN_MODEL = [
             { "upper": { z: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 } },
             { "upper": { z: 0 }, "right_arm": { x: 0 }, "left_arm": { x: 0 } }
         ],
-        "cast": [
+        cast: [
             { "right_arm": { x: 0 }, "left_arm": { x: 0 } },
             { "right_arm": { x: 70 }, "left_arm": { x: 70 } },
             { "right_arm": { x: 70, y: -40 }, "left_arm": { x: 70, y: 40 } },
@@ -280,6 +284,12 @@ AnimatedModel.HUMAN_MODEL = [
             { "right_arm": { x: 180, y: 40 }, "left_arm": { x: 180, y: -40 }, "upper": { x: 20 } },
             { "right_arm": { x: 70, y: 0 }, "left_arm": { x: 70, y: 0 }, "upper": { x: 0 } },
             { "right_arm": { x: 0 }, "left_arm": { x: 0 } }
+        ],
+        death: [
+            { "body": { x: 0 }, "right_arm": { x: 180, y: 40 }, "left_arm": { x: 180, y: -40 }, "upper": { x: 20 } },
+            { "body": { x: 30 } },
+            { "body": { x: 60 } },
+            { "body": { x: 90 } }
         ]
     }
 ];
@@ -352,16 +362,18 @@ var Zil_Animator = {
                 Zil_Animator.model.paused = !Zil_Animator.model.paused;
             }
         });
+        $("#animation").change(function(event) {
+            Zil_Animator.model.set_animation_name($("#animation").val());
+            Zil_Animator.model.paused = false;
+            event.stopPropagation();
+            return true;
+        });
 
         Zil_Animator.model = AnimatedModel.HUMAN.initialize();
         Zil_Animator.scene.add( Zil_Animator.model.shape_obj );
         Zil_Animator.model.shape_obj.position.x += Zil_Animator.model.width / 2;
         Zil_Animator.model.shape_obj.position.y += Zil_Animator.model.height / 2;
-//        Zil_Animator.model.set_animation_name("walk");
-//        Zil_Animator.model.set_animation_name("attack");
-//        Zil_Animator.model.set_animation_name("pain");
-//        Zil_Animator.model.set_animation_name("bored");
-        Zil_Animator.model.set_animation_name("cast");
+        Zil_Animator.model.set_animation_name("walk");
 
         Zil_Animator.render();
     },
@@ -394,7 +406,7 @@ var Zil_Animator = {
 
         Zil_Animator.model.render(dx);
 
-        if(Zil_Animator.revolve) Zil_Animator.model.shape_obj.rotation.z += 0.1;
+//        if(Zil_Animator.revolve) Zil_Animator.model.shape_obj.rotation.z += 0.1;
 
 		Zil_Animator.renderer.render(Zil_Animator.scene, Zil_Animator.camera);
 
