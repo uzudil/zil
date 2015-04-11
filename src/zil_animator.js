@@ -58,6 +58,14 @@ function AnimatedModel(category, name, model, animations) {
         this.width = this.height = size;
         console.log(name + " size=" + this.width + "," + this.height + "," + this.depth);
 
+        // center the shape's geometry (so rotation works correctly)
+        for(var i = 0; i < this.shape_obj.children.length; i++) {
+            var o = this.shape_obj.children[i];
+            o.applyMatrix( new THREE.Matrix4().makeTranslation( -this.width/2, -this.height/2, 0 ) );
+        }
+
+        this.shape_obj_copy = this.shape_obj.clone();
+
         return this;
     });
 }
@@ -71,6 +79,25 @@ AnimatedModel.prototype.set_animation_name = function(name) {
     AnimatedModel.visit_parts(this.model, null, ZIL_UTIL.bind(this, function(part) {
         this.shape_objs[part.name].rotation.set(0, 0, 0);
     }));
+    this.update_copy_shape();
+};
+
+AnimatedModel.prototype._animate_part = function(animation, shape_name, axis) {
+    var target_angle = ZIL_UTIL.angle_to_radians(animation[shape_name][axis] || 0);
+    var start_angle = this.angles[shape_name][axis];
+    if(start_angle == null) {
+        start_angle = this.shape_objs[shape_name].rotation[axis];
+        this.angles[shape_name][axis] = start_angle;
+    }
+
+    var angle;
+    if(start_angle < target_angle) {
+        angle = (target_angle - start_angle) * (this.animation_time / AnimatedModel.ANIMATION_TIME) + start_angle;
+    } else {
+        angle = target_angle + (start_angle - target_angle) * (1 - (this.animation_time / AnimatedModel.ANIMATION_TIME));
+    }
+
+    this.shape_objs[shape_name].rotation[axis] = angle;
 };
 
 AnimatedModel.prototype.render = function(delta_time) {
@@ -101,60 +128,19 @@ AnimatedModel.prototype.render = function(delta_time) {
     // animate
     for(var shape_name in a) {
         if(this.angles[shape_name] == null) this.angles[shape_name] = { x: 0, y: 0, z: 0 };
-        var angle, target_angle, start_angle;
+        this._animate_part(a, shape_name, "x");
+        this._animate_part(a, shape_name, "y");
+        this._animate_part(a, shape_name, "z");
+    }
+    this.update_copy_shape();
+};
 
-        target_angle = ZIL_UTIL.angle_to_radians(a[shape_name]["x"] || 0);
-        start_angle = this.angles[shape_name]["x"];
-        if(start_angle == null) {
-            start_angle = this.shape_objs[shape_name].rotation.x;
-            this.angles[shape_name]["x"] = start_angle;
-        }
-
-        if(start_angle < target_angle) {
-            angle = (target_angle - start_angle) * (this.animation_time / AnimatedModel.ANIMATION_TIME) + start_angle;
-            $("#debug .x").text("+++ " + ZIL_UTIL.radians_to_angle(angle).toFixed(2) + " index=" + this.animation_index);
-        } else {
-            angle = target_angle + (start_angle - target_angle) * (1 - (this.animation_time / AnimatedModel.ANIMATION_TIME));
-            $("#debug .x").text("--- " + ZIL_UTIL.radians_to_angle(angle).toFixed(2) + " index=" + this.animation_index);
-        }
-
-        this.shape_objs[shape_name].rotation.x = angle;
-
-
-        target_angle = ZIL_UTIL.angle_to_radians(a[shape_name]["y"] || 0);
-        start_angle = this.angles[shape_name]["y"];
-        if (start_angle == null) {
-            start_angle = this.shape_objs[shape_name].rotation.y;
-            this.angles[shape_name]["y"] = start_angle;
-        }
-
-        if (start_angle < target_angle) {
-            angle = (target_angle - start_angle) * (this.animation_time / AnimatedModel.ANIMATION_TIME) + start_angle;
-            $("#debug .y").text("+++ " + ZIL_UTIL.radians_to_angle(angle).toFixed(2) + " index=" + this.animation_index);
-        } else {
-            angle = target_angle + (start_angle - target_angle) * (1 - (this.animation_time / AnimatedModel.ANIMATION_TIME));
-            $("#debug .y").text("--- " + ZIL_UTIL.radians_to_angle(angle).toFixed(2) + " index=" + this.animation_index);
-        }
-
-        this.shape_objs[shape_name].rotation.y = angle;
-
-
-            target_angle = ZIL_UTIL.angle_to_radians(a[shape_name]["z"] || 0);
-            start_angle = this.angles[shape_name]["z"];
-            if (start_angle == null) {
-                start_angle = this.shape_objs[shape_name].rotation.y;
-                this.angles[shape_name]["z"] = start_angle;
-            }
-
-            if (start_angle < target_angle) {
-                angle = (target_angle - start_angle) * (this.animation_time / AnimatedModel.ANIMATION_TIME) + start_angle;
-                $("#debug .z").text("+++ " + ZIL_UTIL.radians_to_angle(angle).toFixed(2) + " index=" + this.animation_index);
-            } else {
-                angle = target_angle + (start_angle - target_angle) * (1 - (this.animation_time / AnimatedModel.ANIMATION_TIME));
-                $("#debug .z").text("--- " + ZIL_UTIL.radians_to_angle(angle).toFixed(2) + " index=" + this.animation_index);
-            }
-
-            this.shape_objs[shape_name].rotation.z = angle;
+AnimatedModel.prototype.update_copy_shape = function(obj_src, obj_dst) {
+    if(obj_src == null) obj_src = this.shape_obj;
+    if(obj_dst == null) obj_dst = this.shape_obj_copy;
+    obj_dst.rotation.set(obj_src.rotation.x, obj_src.rotation.y, obj_src.rotation.z);
+    for(var i = 0; i < obj_src.children.length; i++) {
+        this.update_copy_shape(obj_src.children[i], obj_dst.children[i]);
     }
 };
 
@@ -294,25 +280,29 @@ AnimatedModel.HUMAN_MODEL = [
     }
 ];
 
-AnimatedModel.HUMAN = AnimatedModel.create_model("human",
-    AnimatedModel.HUMAN_MODEL, {
-        head: 2,
-        left_leg: 1,
-        right_leg: 1,
-        left_arm: 3,
-        right_arm: 3,
-        torso: 3
-    });
+AnimatedModel.HUMAN = function() {
+    return AnimatedModel.create_model("human",
+        AnimatedModel.HUMAN_MODEL, {
+            head: 2,
+            left_leg: 1,
+            right_leg: 1,
+            left_arm: 3,
+            right_arm: 3,
+            torso: 3
+        });
+};
 
-AnimatedModel.GUARD = AnimatedModel.create_model("guard",
-    AnimatedModel.HUMAN_MODEL, {
-        head: 19,
-        left_leg: 20,
-        right_leg: 20,
-        left_arm: 19,
-        right_arm: 19,
-        torso: 19
-    });
+AnimatedModel.GUARD = function() {
+    return AnimatedModel.create_model("guard",
+        AnimatedModel.HUMAN_MODEL, {
+            head: 19,
+            left_leg: 20,
+            right_leg: 20,
+            left_arm: 19,
+            right_arm: 19,
+            torso: 19
+        });
+};
 
 
 
@@ -369,7 +359,7 @@ var Zil_Animator = {
             return true;
         });
 
-        Zil_Animator.model = AnimatedModel.HUMAN.initialize();
+        Zil_Animator.model = AnimatedModel.HUMAN().initialize();
         Zil_Animator.scene.add( Zil_Animator.model.shape_obj );
         Zil_Animator.model.shape_obj.position.x += Zil_Animator.model.width / 2;
         Zil_Animator.model.shape_obj.position.y += Zil_Animator.model.height / 2;
@@ -421,4 +411,4 @@ var Zil_Animator = {
 //		requestAnimationFrame(Zil_Animator.render);
 		setTimeout(Zil_Animator.render, 50); // reduce fan noise
 	}
-}
+};

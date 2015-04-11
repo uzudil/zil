@@ -494,8 +494,7 @@ var ZIL = {
 
                             // if not yet added, add creature
                             if (ZIL.shown_creatures[c.id] == null) {
-                                ZIL.rendered_shape.add(c.mobile.shape_obj);
-                                ZIL.rendered_shape2.add(c.mobile.shape_obj_copy);
+                                c.mobile.add_shape(ZIL.rendered_shape, ZIL.rendered_shape2);
                                 ZIL.shown_creatures[c.id] = true;
                             }
 
@@ -520,8 +519,7 @@ var ZIL = {
         for(var i = 0;  i < creature_ids.length; i++) {
             var creature_id = creature_ids[i];
             var creature = ZIL.creatures_map[creature_id];
-            if(creature.mobile.shape_obj && creature.mobile.shape_obj.parent) ZIL.rendered_shape.remove(creature.mobile.shape_obj);
-            if(creature.mobile.shape_obj_copy && creature.mobile.shape_obj_copy.parent) ZIL.rendered_shape2.remove(creature.mobile.shape_obj_copy);
+            creature.mobile.remove_shape();
             creature.mobile.remove_divs();
 
             // don't show again
@@ -569,8 +567,7 @@ var ZIL = {
         ZIL.for_visible_creatures(function(creature) {
             // if not yet added, add creature
             if (ZIL.shown_creatures[creature.id] == null) {
-                ZIL.rendered_shape.add(creature.mobile.shape_obj);
-                ZIL.rendered_shape2.add(creature.mobile.shape_obj_copy);
+                creature.mobile.add_shape(ZIL.rendered_shape, ZIL.rendered_shape2);
                 ZIL.shown_creatures[creature.id] = true;
             }
 
@@ -614,6 +611,9 @@ var ZIL = {
                     ZIL.clear_ground_target();
                 }
             }
+
+            // advance animation
+            creature.mobile.render(delta_time);
         });
 
         // remove not-shown creatures

@@ -1,6 +1,6 @@
 function Player() {
     this.id = "player";
-    this.mobile = new Mobile(0, 0, null, "creatures", "player2", this);
+    this.mobile = new Mobile(0, 0, null, "creatures", "player2", this, false, AnimatedModel.HUMAN);
     this.mobile.ai_move = false;
     this.mobile.speed = 20;
     this.mobile.alignment = "good";

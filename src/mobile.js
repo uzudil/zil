@@ -1,5 +1,5 @@
 // a thing that can move
-function Mobile(x, y, z, category, shape, parent, is_transparent) {
+function Mobile(x, y, z, category, shape, parent, is_transparent, animated_model) {
     this.x = x;
     this.y = y;
     this.z = z;
@@ -42,13 +42,20 @@ function Mobile(x, y, z, category, shape, parent, is_transparent) {
     this.shape = ZilShape.load_shape(category, shape, 0, null, true);
     this.shape.is_transparent = is_transparent;
 
-    this.shape_obj = this.shape.render_shape();
-    this.shape_obj_copy = this.shape_obj.clone();
+    this.animated_model = animated_model ? animated_model().initialize() : null;
+    if(this.animated_model) {
+        this.shape_obj = this.animated_model.shape_obj;
+        this.shape_obj_copy = this.animated_model.shape_obj_copy;
+        this.animated_model.set_animation_name("walk");
+    } else {
+        this.shape_obj = this.shape.render_shape();
+        this.shape_obj_copy = this.shape_obj.clone();
 
-    // center the shape's geometry (so rotation works correctly)
-    for(var i = 0; i < this.shape_obj.children.length; i++) {
-        var mesh = this.shape_obj.children[i];
-        mesh.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( -this.shape.width/2, -this.shape.height/2, 0 ) );
+        // center the shape's geometry (so rotation works correctly)
+        for(var i = 0; i < this.shape_obj.children.length; i++) {
+            var mesh = this.shape_obj.children[i];
+            mesh.geometry.applyMatrix( new THREE.Matrix4().makeTranslation( -this.shape.width/2, -this.shape.height/2, 0 ) );
+        }
     }
 
     // add the selection glow
@@ -68,6 +75,24 @@ function Mobile(x, y, z, category, shape, parent, is_transparent) {
     this.size = Math.max(this.shape.width, this.shape.height);
     this._set_chunk_pos(true);
 }
+
+Mobile.prototype.render = function(delta_time) {
+    if(this.animated_model) {
+        this.animated_model.render(delta_time);
+    }
+};
+
+// add this mobile's shapes to the 3d world
+Mobile.prototype.add_shape = function(world_obj, world_obj_pass2) {
+    world_obj.add(this.shape_obj);
+    world_obj_pass2.add(this.shape_obj_copy);
+};
+
+// remove this mobile's shapes from the 3d world
+Mobile.prototype.remove_shape = function() {
+    if(this.shape_obj && this.shape_obj.parent) this.shape_obj.parent.remove(this.shape_obj);
+    if(this.shape_obj_copy && this.shape_obj_copy.parent) this.shape_obj_copy.parent.remove(this.shape_obj_copy);
+};
 
 // the bad
 Mobile.STATUS_HASTED = "hasted";
@@ -112,9 +137,8 @@ Mobile.prototype.set_status = function(status, turns_count) {
 
 Mobile.prototype.make_glow = function(obj3d) {
     var outline_obj = null;
-    for(var i = 0; i < obj3d.children.length; i++) {
-        var mesh = obj3d.children[i];
-        if(mesh.geometry.faces.length > 0) {
+    ZIL_UTIL.visit_objects(obj3d, ZIL_UTIL.bind(this, function(mesh) {
+        if(mesh["geometry"] && mesh.geometry.faces.length > 0) {
             var glowMesh = new THREEx.GeometricGlowMesh(mesh);
 //	        mesh.add(glowMesh.object3d);
             outline_obj = glowMesh.object3d;
@@ -129,7 +153,7 @@ Mobile.prototype.make_glow = function(obj3d) {
             outsideUniforms.coeficient.value = 0.1;
             outsideUniforms.power.value = 1.2;
         }
-    }
+    }));
     return outline_obj;
 };
 
@@ -225,9 +249,11 @@ Mobile.prototype.set_selected = function(selected) {
 };
 
 Mobile.prototype.set_shape = function(dir) {
-    this.shape_obj.remove(this.outline_obj);
-    if(this.selected) {
-        this.shape_obj.add(this.outline_obj);
+    if(this.outline_obj) {
+        this.shape_obj.remove(this.outline_obj);
+        if (this.selected) {
+            this.shape_obj.add(this.outline_obj);
+        }
     }
 
     this.dir = dir;
@@ -725,7 +751,7 @@ Mobile.prototype.cause_damage = function(damage) {
             }
 
             // won't need this anymore
-            this.shape_obj.remove(this.outline_obj);
+            if(this.outline_obj) this.shape_obj.remove(this.outline_obj);
 
             // target death
             ZIL.creature_dead(this.parent);

@@ -41,6 +41,13 @@ ZIL_UTIL.first_render = null;
 
 ZIL_UTIL.particle_sprite1 = THREE.ImageUtils.loadTexture("../../img/p3.png");
 
+ZIL_UTIL.visit_objects = function(object, visit_fx) {
+    visit_fx(object);
+    for(var i = 0; i < object.children.length; i++) {
+        ZIL_UTIL.visit_objects(object.children[i], visit_fx);
+    }
+};
+
 ZIL_UTIL.make_square_face = function(size) {
     var n = size / 2;
 
