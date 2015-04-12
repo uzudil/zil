@@ -58,14 +58,10 @@ function Mobile(x, y, z, category, shape, parent, is_transparent, animated_model
         }
     }
 
-    // add the selection glow
-    this.outline_obj = this.make_glow(this.shape_obj);
-
     // store the creature ref. in the userdata (used for mouseover lookup)
-    this.shape_obj.userData.creature = this.parent;
-    for(var t = 0; t < this.shape_obj.children.length; t++) {
-        this.shape_obj.children[t].userData.creature = this.parent;
-    }
+    ZIL_UTIL.visit_objects(this.shape_obj, ZIL_UTIL.bind(this, function(mesh) {
+        mesh.userData.creature = this.parent;
+    }));
     this.dir = ZIL_UTIL.N;
 
     this.last_x = x;
@@ -133,28 +129,6 @@ Mobile.prototype.set_status = function(status, turns_count) {
     ZilCal.schedule("remove_status_" + status, 10, ZIL_UTIL.bind(this, function() {
         this.remove_status(status);
     }));
-};
-
-Mobile.prototype.make_glow = function(obj3d) {
-    var outline_obj = null;
-    ZIL_UTIL.visit_objects(obj3d, ZIL_UTIL.bind(this, function(mesh) {
-        if(mesh["geometry"] && mesh.geometry.faces.length > 0) {
-            var glowMesh = new THREEx.GeometricGlowMesh(mesh);
-//	        mesh.add(glowMesh.object3d);
-            outline_obj = glowMesh.object3d;
-
-            var insideUniforms	= glowMesh.insideMesh.material.uniforms;
-            insideUniforms.glowColor.value.set('hotpink');
-            insideUniforms.coeficient.value = 1.1;
-            insideUniforms.power.value = 1.4;
-
-            var outsideUniforms	= glowMesh.outsideMesh.material.uniforms;
-            outsideUniforms.glowColor.value.set('hotpink');
-            outsideUniforms.coeficient.value = 0.1;
-            outsideUniforms.power.value = 1.2;
-        }
-    }));
-    return outline_obj;
 };
 
 Mobile.prototype.contains_point = function(x, y, z, buffer) {
@@ -249,13 +223,6 @@ Mobile.prototype.set_selected = function(selected) {
 };
 
 Mobile.prototype.set_shape = function(dir) {
-    if(this.outline_obj) {
-        this.shape_obj.remove(this.outline_obj);
-        if (this.selected) {
-            this.shape_obj.add(this.outline_obj);
-        }
-    }
-
     this.dir = dir;
 
     this.shape_obj.rotation.set(0, 0, PI/2 * dir);
@@ -753,9 +720,6 @@ Mobile.prototype.cause_damage = function(damage) {
             if(!this.ai_move) {
                 this.receive_exp(Math.max(this.level - this.level, 1) * 50);
             }
-
-            // won't need this anymore
-            if(this.outline_obj) this.shape_obj.remove(this.outline_obj);
 
             // target death
             ZIL.creature_dead(this.parent);
