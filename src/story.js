@@ -412,6 +412,43 @@ ZilStory.MAPS = {
                 on_mouseclick: function () {
                     ZIL.load_shape("maps", "abandoned_temple_3", 132, 304);
                 }
+            },
+            "179,52,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.say(ZIL.player, "The city gates are locked and guarded for some reason.");
+                }
+            },
+            "158,74,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Infectious disease danger: city gates locked due to <i>viral outbreak</i>, by order of the Mayor.<br><br>" +
+                        "May the Mountain Lord show mercy on our worthless souls.");
+                }
+            },
+            "210,75,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Infectious disease danger: city gates locked due to <i>viral outbreak</i>, by order of the Mayor.<br><br>" +
+                        "May the Mountain Lord show mercy on our worthless souls.");
+                }
+            },
+            "95,68,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Endiminium Gas Mine, Bore #74: <i>Breathing Mask</i> or <i>Protective Spell</i> recommended before entry.<br><br>Trespassers assume all risk.<br><br><small>Oram Gasworks Inc.</small>");
+                }
+            },
+            "373,192,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Temple of the <i>Mountain Lord</i>, Library Entrance.<br><br>Fines or late fees on all <i>magical texts</i> are doubled.");
+                }
             }
         }
     },
@@ -647,6 +684,26 @@ ZilStory.CONVO = {
                     return "I'm sure the other <a>keepers</a> have already turned to dust if they ever even existed to begin with.<br><br>Should you meet one, though, please let me know!";
                 }
             }
+        }
+    },
+    "maps.oram-gates": {
+        "common": {
+            "oram": "Are ye daft or just hard-o hearin'? Ye be standing at her very gates!<br><br>Admire the gates, or a swift beatin' is all that's offered: ye can't <a w='business'>come in</a>.",
+            "business": "Just passing through, eh?<br><br>Looking for someone named Gav?<br><br>Well that's too bad, 'cause no ones goes <b>in or out</b>, by order of the <a>mayor</a>.",
+            "mayor": "Since ye are already wasting me time, I might as well mention that an 'orrible <a>plague</a> has cursed this town.<br><br>The mayor ordered the gates shut and guarded to ensure that filthy vermin like ye don't further spread this <a w='plague'>disease</a>.",
+            "plague": "A raging madness comes about all who come near the afflicted.<br><br>They wander the streets in mobs, looking to spread their germs...'tis 'orrible!<br><br>If ye be wanting to find this Gav, better find <i>another way</i> up the mountain."
+        },
+        "192,66,1": {
+            "_name_": "Guard Ron",
+            "": "Come to gawk at the unhinged, ye worthless scab?<br><br>State yer <a>business</a> in <a>Oram</a> or sod off!"
+        },
+        "174,65,1": {
+            "_name_": "Guard Bram",
+            "": "What are you looking at ye filthy sod?<br><br>What <a>business</a> have ye in <a>Oram</a>?"
+        },
+        "99,88,1": {
+            "_name_": "Healer Daz",
+            "": "Wanting to travel up the mountain, friends? Maybe we can come to a mutually beneficial <a>arrangement</a>..."
         }
     }
 };
