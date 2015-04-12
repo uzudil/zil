@@ -50,6 +50,7 @@ function AnimatedModel(category, name, model, animations) {
         this.animation_name = null;
         this.animation_index = 0;
         this.animation_time = 0;
+        this.animation_speed = 100;
 
         this.paused = false;
 
@@ -70,16 +71,16 @@ function AnimatedModel(category, name, model, animations) {
     });
 }
 
-AnimatedModel.ANIMATION_TIME = 200;
-
 AnimatedModel.prototype.set_animation_name = function(name) {
-    this.animation_name = name;
-    this.animation_index = 0;
-    this.animation_time = 0;
-    AnimatedModel.visit_parts(this.model, null, ZIL_UTIL.bind(this, function(part) {
-        this.shape_objs[part.name].rotation.set(0, 0, 0);
-    }));
-    this.update_copy_shape();
+    if(this.animation_name != name) {
+        this.animation_name = name;
+        this.animation_index = 0;
+        this.animation_time = 0;
+        AnimatedModel.visit_parts(this.model, null, ZIL_UTIL.bind(this, function (part) {
+            this.shape_objs[part.name].rotation.set(0, 0, 0);
+        }));
+        this.update_copy_shape();
+    }
 };
 
 AnimatedModel.prototype._animate_part = function(animation, shape_name, axis) {
@@ -92,9 +93,9 @@ AnimatedModel.prototype._animate_part = function(animation, shape_name, axis) {
 
     var angle;
     if(start_angle < target_angle) {
-        angle = (target_angle - start_angle) * (this.animation_time / AnimatedModel.ANIMATION_TIME) + start_angle;
+        angle = (target_angle - start_angle) * (this.animation_time / this.animation_speed) + start_angle;
     } else {
-        angle = target_angle + (start_angle - target_angle) * (1 - (this.animation_time / AnimatedModel.ANIMATION_TIME));
+        angle = target_angle + (start_angle - target_angle) * (1 - (this.animation_time / this.animation_speed));
     }
 
     this.shape_objs[shape_name].rotation[axis] = angle;
@@ -106,7 +107,7 @@ AnimatedModel.prototype.render = function(delta_time) {
     var a = this.animations[this.animation_name][this.animation_index];
 
     this.animation_time += delta_time;
-    if(this.animation_time > AnimatedModel.ANIMATION_TIME) {
+    if(this.animation_time > this.animation_speed) {
         // setup start angles
         for(var shape_name in a) {
             this.angles[shape_name] = {

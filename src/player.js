@@ -3,6 +3,7 @@ function Player() {
     this.mobile = new Mobile(0, 0, null, "creatures", "player2", this, false, AnimatedModel.HUMAN);
     this.mobile.ai_move = false;
     this.mobile.speed = 20;
+    if(this.mobile.animated_model) this.mobile.animated_model.animation_speed = 100;
     this.mobile.alignment = "good";
     this.mobile.initiative = 1;
     this.mobile.ap = 0;

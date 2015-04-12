@@ -607,9 +607,13 @@ var ZIL = {
                     }
                 }
 
+                creature.mobile.set_animation(creature.mobile.is_moving() ? "walk" : null);
+
                 if (!ZIL.player.mobile.is_moving() || ZIL.player.mobile.move_path_index >= 8) {
                     ZIL.clear_ground_target();
                 }
+            } else {
+                creature.mobile.set_animation(null);
             }
 
             // advance animation

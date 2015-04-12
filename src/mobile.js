@@ -46,7 +46,7 @@ function Mobile(x, y, z, category, shape, parent, is_transparent, animated_model
     if(this.animated_model) {
         this.shape_obj = this.animated_model.shape_obj;
         this.shape_obj_copy = this.animated_model.shape_obj_copy;
-        this.animated_model.set_animation_name("walk");
+        this.animated_model.set_animation_name(null);
     } else {
         this.shape_obj = this.shape.render_shape();
         this.shape_obj_copy = this.shape_obj.clone();
@@ -385,6 +385,10 @@ Mobile.prototype.plan_move_to = function(map_shape, x, y, z) {
         this.move_path = p;
         this.sleep_turns = null;
     }
+};
+
+Mobile.prototype.set_animation = function(animation_name) {
+    if(this.animated_model) this.animated_model.set_animation_name(animation_name);
 };
 
 /**
