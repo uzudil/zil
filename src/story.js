@@ -703,7 +703,11 @@ ZilStory.CONVO = {
         },
         "99,88,1": {
             "_name_": "Healer Daz",
-            "": "Wanting to travel up the mountain, friends? Maybe we can come to a mutually beneficial <a>arrangement</a>..."
+            "": "Wanting to travel up the mountain, friend? Maybe we can come to a mutually beneficial <a>arrangement</a>...",
+            "arrangement": "The nearby gas <a>mine</a> contains an air-vent that connects to the Oram city sewers. You <a>could</a> use it to travel into the diseased city.",
+            "mine": "Before the <a>outbreak</a>, a local mining company mined Endiminium gas here. This chemical has lots of uses from curing meat to being a vital component in certain enchantments... The <a w='could'>latter</a> is what interests me.",
+            "could": "Like I said, travel to the city is possible. The way in is currently blocked by a magical barrier and I know the arcane song to remove it.<br><br>All I require in return is for you to bring me a canister of Endiminium <a w='mine'>gas</a> from the mine.<br><br>A fair trade, now <a>what</a> do you say?",
+            "what": "Good, good, I knew you could be reasonable.<br><br>Oh, I forgot to mention: the disease that plagues the city also appears in the mine, so you may encounter some... abberrations...<br><br>I'm confident you will have no trouble. Remember, bring me a single <a w='could'>canister</a> of the gas, and I will teach you the song of unblocking.<br><br>Good luck!"
         }
     }
 };
