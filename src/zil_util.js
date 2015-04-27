@@ -141,6 +141,13 @@ ZIL_UTIL.clear_node = function(node) {
 	}
 };
 
+ZIL_UTIL.apply_to_shape = function(shape, fx) {
+    fx(shape);
+    for(var i = 0; shape.children && i < shape.children.length; i++) {
+        ZIL_UTIL.apply_to_shape(shape.children[i], fx);
+    }
+};
+
 ZIL_UTIL.update_progress = function(percent, title) {
     if(percent >= 1) {
         $("#progress").hide();

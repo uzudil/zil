@@ -34,13 +34,13 @@ Chunk.get_material = function(color, is_transparent) {
     if(is_transparent) {
         material = Chunk.TRANSPARENT_COLORS[color];
         if (material == null) {
-            material = new THREE.MeshLambertMaterial({color: ZIL_UTIL.palette[color], transparent: true, opacity: 0.5 });
+            material = new THREE.MeshLambertMaterial({color: ZIL_UTIL.palette[color], transparent: true, opacity: 0.5, shading: THREE.FlatShading });
             Chunk.TRANSPARENT_COLORS[color] = material;
         }
     } else {
         material = Chunk.COLORS[color];
         if (material == null) {
-            material = new THREE.MeshLambertMaterial({color: ZIL_UTIL.palette[color] });
+            material = new THREE.MeshLambertMaterial({color: ZIL_UTIL.palette[color], shading: THREE.FlatShading });
             Chunk.COLORS[color] = material;
         }
     }

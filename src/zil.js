@@ -48,6 +48,12 @@ var ZIL = {
     command_enter_mode: false,
     missile: null,
     render_started: false,
+    is_indoors: false,
+    indoor_light: null,
+    ambient: null,
+    key1: null,
+    key2: null,
+    key3: null,
 
 	mouse_move: function(event) {
         ZIL.mouse_position_event(event);
@@ -953,7 +959,7 @@ var ZIL = {
         // ---------------------
         // scene
         ZIL.scene = new THREE.Scene();
-        ZIL.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0] });
+        ZIL.renderer = new THREE.WebGLRenderer({ canvas: $("#view")[0], precision: "lowp", maxLights: 6 });
         ZIL.renderer.autoClear = false;
         ZIL.init_camera();
 
@@ -989,8 +995,6 @@ var ZIL = {
 //		ZIL.inner.add( ZIL.obj );
         ZIL.init_cursor();
 
-        ZIL.init_light(ZIL.scene);
-
         // ---------------------
         // scene2
         ZIL.scene2 = new THREE.Scene();
@@ -1006,7 +1010,8 @@ var ZIL = {
 
         ZIL.rendered_shape2 = new THREE.Object3D();
         ZIL.inner2.add(ZIL.rendered_shape2);
-        ZIL.init_light(ZIL.scene2);
+
+        ZIL.init_light();
 
         // ---------------------
         // composer
@@ -1070,27 +1075,48 @@ var ZIL = {
         ZIL.load_game();
     },
 
-	init_light: function(scene) {
-        // credit: https://github.com/jeromeetienne/threex.basiclighting/blob/master/threex.basiclighting.js
-        var object3d	= new THREE.AmbientLight(0x101010);
-        object3d.name	= 'Ambient light';
-        scene.add(object3d);
+	init_light: function() {
+        if(ZIL.indoor_light == null) {
+            ZIL.indoor_light = new THREE.DirectionalLight('white', 0.2);
+            ZIL.indoor_light.position.set(100, 100, 24);
+            ZIL.scene.add(ZIL.indoor_light);
 
-        var object3d	= new THREE.DirectionalLight('white', 0.5);
-//        object3d.position.set(2.6,1,3);
-        object3d.position.set(0,3,3);
-        object3d.name	= 'Back light';
-        scene.add(object3d);
+            // credit: https://github.com/jeromeetienne/threex.basiclighting/blob/master/threex.basiclighting.js
+            // outdoors
+            ZIL.ambient	= new THREE.AmbientLight(0x101010);
+            ZIL.ambient.name	= 'Ambient light';
+            ZIL.scene.add(ZIL.ambient);
 
-        var object3d	= new THREE.DirectionalLight('white', 0.1);
-        object3d.position.set(3, 3, 0);
-        object3d.name 	= 'Key light';
-        scene.add(object3d);
+            ZIL.key1	= new THREE.DirectionalLight('white', 0.5);
+    //        object3d.position.set(2.6,1,3);
+            ZIL.key1.position.set(0,3,3);
+            ZIL.key1.name	= 'Back light';
+            ZIL.scene.add(ZIL.key1);
 
-        var object3d	= new THREE.DirectionalLight('white', 0.7);
-        object3d.position.set(3, 0, 3);
-        object3d.name	= 'Fill light';
-        scene.add(object3d);
+            ZIL.key2	= new THREE.DirectionalLight('white', 0.1);
+            ZIL.key2.position.set(3, 3, 0);
+            ZIL.key2.name 	= 'Key light';
+            ZIL.scene.add(ZIL.key2);
+
+            ZIL.key3	= new THREE.DirectionalLight('white', 0.7);
+            ZIL.key3.position.set(3, 0, 3);
+            ZIL.key3.name	= 'Fill light';
+            ZIL.scene.add(ZIL.key3);
+        }
+
+        if(ZIL.is_indoors) {
+            ZIL.indoor_light.intensity = 0.2;
+            ZIL.ambient.intensity = 0;
+            ZIL.key1.intensity = 0;
+            ZIL.key2.intensity = 0;
+            ZIL.key3.intensity = 0;
+        } else {
+            ZIL.indoor_light.intensity = 0;
+            ZIL.ambient.intensity = 1;
+            ZIL.key1.intensity = 0.5;
+            ZIL.key2.intensity = 0.1;
+            ZIL.key3.intensity = 0.7;
+        }
 	},
 
 	init_cursor: function() {
@@ -1238,6 +1264,10 @@ var ZIL = {
                 ZIL.LOADING = false;
 
                 ZilStory.on_map_load(category_name, shape_name);
+
+                // setup lighting
+                ZIL.init_light();
+                ZIL.player.set_lights(ZIL.is_indoors);
 
                 ZIL_UTIL.game_state["player_start"] = [category_name, shape_name, start_x, start_y];
                 ZIL_UTIL.save_config();

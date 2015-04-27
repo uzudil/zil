@@ -4,10 +4,12 @@ function AnimatedModel(category, name, model, animations) {
         this.angles = {};
         this.width = this.height = this.depth = 0;
         this.shape_obj = new THREE.Object3D();
+        this.model_obj = new THREE.Object3D();
+        this.shape_obj.add(this.model_obj);
         this.model = model;
         AnimatedModel.visit_parts(model, null, ZIL_UTIL.bind(this, function(part, parent_part) {
 
-            var current_shape = parent_part == null ? this.shape_obj : this.shape_objs[parent_part.name];
+            var current_shape = parent_part == null ? this.model_obj : this.shape_objs[parent_part.name];
 
             var o;
             if(part["parts"]) {
@@ -60,12 +62,12 @@ function AnimatedModel(category, name, model, animations) {
         console.log(name + " size=" + this.width + "," + this.height + "," + this.depth);
 
         // center the shape's geometry (so rotation works correctly)
-        for(var i = 0; i < this.shape_obj.children.length; i++) {
-            var o = this.shape_obj.children[i];
+        for(var i = 0; i < this.model_obj.children.length; i++) {
+            var o = this.model_obj.children[i];
             o.applyMatrix( new THREE.Matrix4().makeTranslation( -this.width/2, -this.height/2, 0 ) );
         }
 
-        this.shape_obj_copy = this.shape_obj.clone();
+        this.shape_obj_copy = this.model_obj.clone();
 
         return this;
     });
@@ -137,7 +139,7 @@ AnimatedModel.prototype.render = function(delta_time) {
 };
 
 AnimatedModel.prototype.update_copy_shape = function(obj_src, obj_dst) {
-    if(obj_src == null) obj_src = this.shape_obj;
+    if(obj_src == null) obj_src = this.model_obj;
     if(obj_dst == null) obj_dst = this.shape_obj_copy;
     obj_dst.rotation.set(obj_src.rotation.x, obj_src.rotation.y, obj_src.rotation.z);
     for(var i = 0; i < obj_src.children.length; i++) {

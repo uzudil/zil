@@ -11,7 +11,27 @@ function Player() {
     this.mobile.level = 5;
     this.mobile.exp = Math.pow(2, this.mobile.level) * 100;
     this.mobile.hp = this.mobile.max_hp = 80;
+
+    // todo: only if inside
+    this.lights = new THREE.Object3D();
+    this.light = new THREE.PointLight( 0xffaa00, 1, 80 );
+    this.light.position.set( 5.5, 5.5, 5.5 );
+    this.lights.add(this.light);
+    this.light2 = new THREE.PointLight( 0xfffef3, 1, 170 );
+    this.light2.position.set( 16, 16, 24 );
+    this.lights.add(this.light2);
+    this.mobile.shape_obj.add(this.lights);
 }
+
+Player.prototype.set_lights = function(enabled) {
+    if(enabled) {
+        this.light.intensity = 1;
+        this.light2.intensity = 1;
+    } else {
+        this.light.intensity = 0;
+        this.light2.intensity = 0;
+    }
+};
 
 Player.prototype.get_atk = function() {
     return ZIL_UTIL.rand_int(0, this.mobile.level * 6);

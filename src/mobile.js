@@ -47,8 +47,9 @@ function Mobile(x, y, z, category, shape, parent, is_transparent, animated_model
         this.shape_obj = this.animated_model.shape_obj;
         this.shape_obj_copy = this.animated_model.shape_obj_copy;
         this.animated_model.set_animation_name(null);
+        this.rotate_obj = this.animated_model.model_obj;
     } else {
-        this.shape_obj = this.shape.render_shape();
+        this.rotate_obj = this.shape_obj = this.shape.render_shape();
         this.shape_obj_copy = this.shape_obj.clone();
 
         // center the shape's geometry (so rotation works correctly)
@@ -225,7 +226,7 @@ Mobile.prototype.set_selected = function(selected) {
 Mobile.prototype.set_shape = function(dir) {
     this.dir = dir;
 
-    this.shape_obj.rotation.set(0, 0, PI/2 * dir);
+    this.rotate_obj.rotation.set(0, 0, PI/2 * dir);
     this.shape_obj_copy.rotation.set(0, 0, PI/2 * dir);
 };
 
@@ -388,8 +389,8 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
         this.move_time = 0;
 
         if(!this.is_alive()) {
-            if(this.shape_obj.children[0].rotation.y < PI / 2) {
-                this.shape_obj.children[0].rotation.y += delta_time * 0.01;
+            if(this.rotate_obj.children[0].rotation.y < PI / 2) {
+                this.rotate_obj.children[0].rotation.y += delta_time * 0.01;
                 this.shape_obj_copy.children[0].rotation.y += delta_time * 0.01;
             } else if(this.shape_obj.children[0].position.z > -1) {
                 this.shape_obj.children[0].position.z -= delta_time * 0.05;
@@ -480,7 +481,7 @@ Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
         this.face_target();
         if(this.cast_z < 2) {
             this.cast_z += delta_time * 0.00125 / Spell.SPEED;
-            this.shape_obj.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
+            this.rotate_obj.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
             this.shape_obj_copy.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
             this.move(gx, gy, gz);
         } else {
@@ -489,7 +490,7 @@ Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
     } else if(this.casting_spell_move == 1) {
         if(this.cast_z > 0) {
             this.cast_z -= delta_time * 0.00125 / Spell.SPEED;
-            this.shape_obj.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
+            this.rotate_obj.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
             this.shape_obj_copy.children[0].rotation.x = ZIL_UTIL.angle_to_radians(this.cast_z * 7);
             this.move(gx, gy, gz);
         } else {
@@ -497,7 +498,7 @@ Mobile.prototype.cast_animation = function(map_shape, gx, gy, gz, delta_time) {
         }
     } else {
         this.cast_z = 0;
-        this.shape_obj.children[0].rotation.x = 0;
+        this.rotate_obj.children[0].rotation.x = 0;
         this.shape_obj_copy.children[0].rotation.x = 0;
         this.casting_spell = null;
         this.shape_obj.remove(this.cast_particles);
@@ -545,7 +546,7 @@ Mobile.prototype.start_attack = function() {
 };
 
 Mobile.prototype.cancel_face_target = function(delta_time) {
-    this.shape_obj.rotation.z = 0;
+    this.rotate_obj.rotation.z = 0;
     this.shape_obj_copy.rotation.z = 0;
 };
 
@@ -555,7 +556,7 @@ Mobile.prototype.face_target = function(delta_time) {
         var x2 = this.target.mobile.x;
         var y2 = this.target.mobile.y;
         var zrot = Math.atan2(y2 - this.y, x2 - this.x);
-        this.shape_obj.rotation.z = zrot - this.shape.get_rotation() - PI/2;
+        this.rotate_obj.rotation.z = zrot - this.shape.get_rotation() - PI/2;
         this.shape_obj_copy.rotation.z = zrot - this.shape.get_rotation() - PI/2;
     }
 };
@@ -578,7 +579,7 @@ Mobile.prototype.attack = function(delta_time) {
                     this.attack_dir = null;
                 }
             }
-            this.shape_obj.children[0].rotation.x = -ZIL_UTIL.angle_to_radians(this.attack_angle);
+            this.rotate_obj.children[0].rotation.x = -ZIL_UTIL.angle_to_radians(this.attack_angle);
             this.shape_obj_copy.children[0].rotation.x = -ZIL_UTIL.angle_to_radians(this.attack_angle);
         } else {
             // last part: wait some time, run encounter and end attack
