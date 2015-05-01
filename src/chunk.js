@@ -29,20 +29,29 @@ Chunk.BOX = Chunk.get_box_geometry();
 
 Chunk.COLORS = {};
 Chunk.TRANSPARENT_COLORS = {};
+Chunk.shaderMaterial = null;
 Chunk.get_material = function(color, is_transparent) {
     var material;
-    if(is_transparent) {
-        material = Chunk.TRANSPARENT_COLORS[color];
-        if (material == null) {
-            material = new THREE.MeshLambertMaterial({color: ZIL_UTIL.palette[color], transparent: true, opacity: 0.5, shading: THREE.FlatShading });
-            Chunk.TRANSPARENT_COLORS[color] = material;
-        }
+    if(Chunk.shaderMaterial == null) {
+        var shaders = ZIL_UTIL.get_shaders();
+        Chunk.shaderMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+                blockColor: {
+                    type: "v3",
+                    value: new THREE.Vector3(0, 0, 0)
+                },
+                lightPos: {
+                    type: "v3",
+                    value: ZIL_UTIL.lightPos
+                }
+            },
+            vertexShader:   shaders[0],
+            fragmentShader: shaders[1]
+        });
+        material = Chunk.shaderMaterial;
     } else {
-        material = Chunk.COLORS[color];
-        if (material == null) {
-            material = new THREE.MeshLambertMaterial({color: ZIL_UTIL.palette[color], shading: THREE.FlatShading });
-            Chunk.COLORS[color] = material;
-        }
+        material = Chunk.shaderMaterial.clone();
+        material.uniforms.lightPos.value = ZIL_UTIL.lightPos;
     }
 	return material;
 };
@@ -72,6 +81,10 @@ Chunk.prototype.render = function(use_boxes, is_transparent) {
 
 Chunk.prototype.render_block = function(x, y, z, value, materials, material_index_map, use_boxes, is_transparent) {
     var material = Chunk.get_material(value, is_transparent);
+
+    var color = ZIL_UTIL.palette[value];
+    material.uniforms.blockColor.value.set(((color & 0xff0000) >> 16) / 255.0, ((color & 0xff00) >> 8) / 255.0, (color & 0xff) / 255.0);
+
     // keep the minimum number of materials
     var material_index = material_index_map[value];
     if(material_index == null) {

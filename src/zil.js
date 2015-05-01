@@ -909,14 +909,14 @@ var ZIL = {
 
 	start_game: function() {
         // skip menu when in mini mode
-        if(ZIL_UTIL.is_mini_mode()) {
+        if (ZIL_UTIL.is_mini_mode() || ZIL_UTIL.is_continue_game_mode()) {
             $("#menu").hide();
             ZIL.continue_game();
         }
 
-        $("#menu a").click(function(event) {
+        $("#menu a").click(function (event) {
             var id = $(event.target).attr("id");
-            if(id == "new_game" && !confirm("Erase saved game?")) {
+            if (id == "new_game" && !confirm("Erase saved game?")) {
                 return false;
             }
             $("#menu").hide();
@@ -1011,8 +1011,6 @@ var ZIL = {
         ZIL.rendered_shape2 = new THREE.Object3D();
         ZIL.inner2.add(ZIL.rendered_shape2);
 
-        ZIL.init_light();
-
         // ---------------------
         // composer
 
@@ -1074,50 +1072,6 @@ var ZIL = {
         ZIL_UTIL.save_config();
         ZIL.load_game();
     },
-
-	init_light: function() {
-        if(ZIL.indoor_light == null) {
-            ZIL.indoor_light = new THREE.DirectionalLight('white', 0.2);
-            ZIL.indoor_light.position.set(100, 100, 24);
-            ZIL.scene.add(ZIL.indoor_light);
-
-            // credit: https://github.com/jeromeetienne/threex.basiclighting/blob/master/threex.basiclighting.js
-            // outdoors
-            ZIL.ambient	= new THREE.AmbientLight(0x101010);
-            ZIL.ambient.name	= 'Ambient light';
-            ZIL.scene.add(ZIL.ambient);
-
-            ZIL.key1	= new THREE.DirectionalLight('white', 0.5);
-    //        object3d.position.set(2.6,1,3);
-            ZIL.key1.position.set(0,3,3);
-            ZIL.key1.name	= 'Back light';
-            ZIL.scene.add(ZIL.key1);
-
-            ZIL.key2	= new THREE.DirectionalLight('white', 0.1);
-            ZIL.key2.position.set(3, 3, 0);
-            ZIL.key2.name 	= 'Key light';
-            ZIL.scene.add(ZIL.key2);
-
-            ZIL.key3	= new THREE.DirectionalLight('white', 0.7);
-            ZIL.key3.position.set(3, 0, 3);
-            ZIL.key3.name	= 'Fill light';
-            ZIL.scene.add(ZIL.key3);
-        }
-
-        if(ZIL.is_indoors) {
-            ZIL.indoor_light.intensity = 0.2;
-            ZIL.ambient.intensity = 0;
-            ZIL.key1.intensity = 0;
-            ZIL.key2.intensity = 0;
-            ZIL.key3.intensity = 0;
-        } else {
-            ZIL.indoor_light.intensity = 0;
-            ZIL.ambient.intensity = 1;
-            ZIL.key1.intensity = 0.5;
-            ZIL.key2.intensity = 0.1;
-            ZIL.key3.intensity = 0.7;
-        }
-	},
 
 	init_cursor: function() {
 		// the cursor box
@@ -1264,10 +1218,6 @@ var ZIL = {
                 ZIL.LOADING = false;
 
                 ZilStory.on_map_load(category_name, shape_name);
-
-                // setup lighting
-                ZIL.init_light();
-                ZIL.player.set_lights(ZIL.is_indoors);
 
                 ZIL_UTIL.game_state["player_start"] = [category_name, shape_name, start_x, start_y];
                 ZIL_UTIL.save_config();

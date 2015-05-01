@@ -235,6 +235,9 @@ Mobile.prototype.move = function(gx, gy, gz) {
     if(this.is_ethereal()) zz = 1; // hack!
     this.shape_obj.position.set(this.x - gx, this.y - gy, zz);
     this.shape_obj_copy.position.set(this.x - gx, this.y - gy, zz);
+    if(ZIL.player && this == ZIL.player.mobile) {
+        ZIL_UTIL.lightPos.set(this.x - gx + this.shape.width / 2, this.y - gy + this.shape.height / 2, zz + this.shape.depth / 2);
+    }
     this.reposition_divs();
 };
 

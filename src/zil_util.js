@@ -3,6 +3,8 @@ var PI = 3.14159;
 var ZIL_UTIL = {
 };
 
+ZIL_UTIL.lightPos = new THREE.Vector3(0, 0, 0);
+
 ZIL_UTIL.N = 0; // y smaller
 ZIL_UTIL.E = 1; // x smaller
 ZIL_UTIL.S = 2; // y bigger
@@ -238,6 +240,10 @@ ZIL_UTIL.is_mini_mode = function() {
     return gui.App.argv && gui.App.argv.indexOf("--mini") >= 0;
 };
 
+ZIL_UTIL.is_continue_game_mode = function() {
+    return gui.App.argv && gui.App.argv.indexOf("-c") >= 0;
+};
+
 ZIL_UTIL.is_god_mode = function() {
     return gui.App.argv && gui.App.argv.indexOf("--god") >= 0;
 };
@@ -324,6 +330,17 @@ ZIL_UTIL.delete_shape = function(name) {
     throw "Implement me: delete shape " + name;
 };
 
+ZIL_UTIL.shaders = null;
+ZIL_UTIL.get_shaders = function() {
+    if(ZIL_UTIL.shaders == null) {
+        var path = "../../data/shaders/vertexshader.glsl";
+        var vertex_shader = fs.readFileSync(path);
+        path = "../../data/shaders/fragmentshader.glsl";
+        var frag_shader = fs.readFileSync(path);
+        ZIL_UTIL.shaders = [vertex_shader, frag_shader];
+    }
+    return ZIL_UTIL.shaders;
+};
 // credit: http://stackoverflow.com/questions/5560248/programmatically-lighten-or-darken-a-hex-color-or-rgb-and-blend-colors
 ZIL_UTIL.shade_color = function(color, percent) {
     var R = (color & 0xff0000) >> 16;
