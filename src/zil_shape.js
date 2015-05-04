@@ -100,6 +100,7 @@ ZilShape.SHAPE_CACHE = {};
 
 ZilShape.reset_cache = function() {
     ZilShape.SHAPE_CACHE = {};
+    Chunk.reset();
 };
 
 ZilShape.prototype.invalidate = function() {

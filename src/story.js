@@ -517,8 +517,15 @@ ZilStory.on_creature_near = function(map_category_name, map_shape_name, creature
 
 ZilStory.OUTDOOR_MAP_NAMES = [ "ante" ];
 
+ZilStory.set_is_indoors = function(map_category_name, map_shape_name) {
+    if(window["ZIL_BUILD"]) {
+        ZIL_UTIL.is_indoors = false;
+    } else if(map_category_name == "maps") {
+        ZIL_UTIL.is_indoors= ZilStory.OUTDOOR_MAP_NAMES.indexOf(map_shape_name) == -1;
+    }
+};
+
 ZilStory.on_map_load = function(map_category_name, map_shape_name) {
-    ZIL.is_indoors = ZilStory.OUTDOOR_MAP_NAMES.indexOf(map_shape_name) == -1;
     var m = ZilStory.MAPS[map_category_name + "." + map_shape_name];
     if(m && m.events && m.events.on_load) {
         m.events.on_load();

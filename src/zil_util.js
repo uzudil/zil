@@ -22,6 +22,7 @@ ZIL_UTIL.ORIGIN = [0, 0, 0];
 ZIL_UTIL.DAMAGE_LIFE = 2300;
 ZIL_UTIL.DAMAGE_SPEED = 20;
 ZIL_UTIL.god_mode = false;
+ZIL_UTIL.is_indoors = false;
 
 // colors from: http://timtrott.co.uk/web-20-color-palette/
 ZIL_UTIL.palette = [

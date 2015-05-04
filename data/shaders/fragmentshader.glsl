@@ -3,27 +3,54 @@
 #endif
 
 uniform vec3 blockColor;
+uniform float isIndoors;
+
 varying vec3 vNormal;
 varying float intensity;
 varying float intensity2;
 varying float dirLightIntensity;
+varying float key1Intensity;
+varying float key2Intensity;
+varying float key3Intensity;
 
 void main()
 {
-    vec3 colorLight1 = vec3(1.0, 0.66, 0.1);
-    float powerLight1 = 0.8;
+    if(isIndoors > 0.0) {
+        vec3 colorLight1 = vec3(1.0, 0.66, 0.1);
+        float powerLight1 = 0.8;
 
-    vec3 colorLight2 = vec3(1.0, 0.95, 0.93);
-    float powerLight2 = 1.0;
+        vec3 colorLight2 = vec3(1.0, 0.95, 0.93);
+        float powerLight2 = 1.0;
 
-    vec3 colorDir = vec3(1.0, 1.0, 1.0);
-    float powerDir = 0.2;
+        vec3 colorDir = vec3(1.0, 1.0, 1.0);
+        float powerDir = 0.2;
 
-    float weightedPower = (powerLight1 + powerLight2 + powerDir) / 3.0;
+        float weightedPower = (powerLight1 + powerLight2 + powerDir) / 3.0;
 
-    vec3 color = colorLight1 * intensity * powerLight1 * weightedPower;
-    color += colorLight2 * intensity2 * powerLight2 * weightedPower;
-    color += colorDir * dirLightIntensity * powerDir * weightedPower;
+        vec3 color = colorLight1 * intensity * powerLight1 * weightedPower;
+        color += colorLight2 * intensity2 * powerLight2 * weightedPower;
+        color += colorDir * dirLightIntensity * powerDir * weightedPower;
 
-    gl_FragColor = vec4(blockColor * color, 1.0);
+        gl_FragColor = vec4(blockColor * color, 1.0);
+    } else {
+        vec3 ambientColor = vec3(0.03, 0.03, 0.03);
+
+        vec3 colorKey1 = vec3(1.0, 1.0, 1.0);
+        float powerKey1 = 0.8;
+
+        vec3 colorKey2 = vec3(1.0, 1.0, 1.0);
+        float powerKey2 = 0.4;
+
+        vec3 colorKey3 = vec3(1.0, 1.0, 1.0);
+        float powerKey3 = 1.0;
+
+        float weightedPower = (powerKey1 + powerKey2 + powerKey3) / 3.0;
+
+        vec3 color = colorKey1 * key1Intensity * powerKey1 * weightedPower;
+        color += colorKey2 * key2Intensity * powerKey2 * weightedPower;
+        color += colorKey3 * key3Intensity * powerKey3 * weightedPower;
+        color = max(color, ambientColor);
+
+        gl_FragColor = vec4(blockColor * color, 1.0);
+    }
 }

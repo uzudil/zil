@@ -48,7 +48,6 @@ var ZIL = {
     command_enter_mode: false,
     missile: null,
     render_started: false,
-    is_indoors: false,
     indoor_light: null,
     ambient: null,
     key1: null,
@@ -1204,6 +1203,8 @@ var ZIL = {
         ZilShape.reset_cache();
         Mobile.clear_chunk_map();
         ZIL.creatures = [];
+
+        ZilStory.set_is_indoors(category_name, shape_name);
 
         $("body").css("cursor", "progress");
         ZIL.hide_ui();
