@@ -3,6 +3,8 @@
     precision highp float;
 #endif
 
+attribute vec3 blockColor;
+
 uniform vec3 lightPos;
 uniform float isIndoors;
 
@@ -13,6 +15,7 @@ varying float dirLightIntensity;
 varying float key1Intensity;
 varying float key2Intensity;
 varying float key3Intensity;
+varying vec3 vBlockColor;
 
 float getLightIntensity(float lightDist, vec3 vNormal, vec3 vLightPos, vec4 worldPos) {
     // light position is in world coordinates
@@ -63,4 +66,6 @@ void main()
         vec3 key3Dir = normalize(vec3(3, 0, 3));
         key3Intensity = max(dot(vNormal, key3Dir), 0.0);
     }
+
+    vBlockColor = blockColor;
 }

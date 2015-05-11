@@ -2,7 +2,6 @@
     precision highp float;
 #endif
 
-uniform vec3 blockColor;
 uniform float isIndoors;
 
 varying vec3 vNormal;
@@ -12,6 +11,7 @@ varying float dirLightIntensity;
 varying float key1Intensity;
 varying float key2Intensity;
 varying float key3Intensity;
+varying vec3 vBlockColor;
 
 void main()
 {
@@ -31,7 +31,7 @@ void main()
         color += colorLight2 * intensity2 * powerLight2 * weightedPower;
         color += colorDir * dirLightIntensity * powerDir * weightedPower;
 
-        gl_FragColor = vec4(blockColor * color, 1.0);
+        gl_FragColor = vec4(vBlockColor * color, 1.0);
     } else {
         vec3 ambientColor = vec3(0.03, 0.03, 0.03);
 
@@ -51,6 +51,6 @@ void main()
         color += colorKey3 * key3Intensity * powerKey3 * weightedPower;
         color = max(color, ambientColor);
 
-        gl_FragColor = vec4(blockColor * color, 1.0);
+        gl_FragColor = vec4(vBlockColor * color, 1.0);
     }
 }

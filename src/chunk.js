@@ -37,16 +37,22 @@ Chunk.reset = function() {
 Chunk.COLORS = {};
 Chunk.TRANSPARENT_COLORS = {};
 Chunk.shaderMaterial = null;
+Chunk._create_custom_attributes = function() {
+    return {
+        blockColor: {
+            type: "v3",
+            value: []
+        }
+    };
+};
+
 Chunk.get_material = function(blockColor, is_transparent) {
     var material;
     if(Chunk.shaderMaterial == null) {
         var shaders = ZIL_UTIL.get_shaders();
         Chunk.shaderMaterial = new THREE.ShaderMaterial({
+            attributes: Chunk._create_custom_attributes(),
             uniforms: {
-                blockColor: {
-                    type: "v3",
-                    value: new THREE.Vector3(0, 0, 0)
-                },
                 lightPos: {
                     type: "v3",
                     value: ZIL_UTIL.lightPos
@@ -65,10 +71,11 @@ Chunk.get_material = function(blockColor, is_transparent) {
     }
 
     // set the uniforms
-    var color = ZIL_UTIL.palette[blockColor];
-    material.uniforms.blockColor.value.set(((color & 0xff0000) >> 16) / 255.0, ((color & 0xff00) >> 8) / 255.0, (color & 0xff) / 255.0);
     material.uniforms.isIndoors.value = ZIL_UTIL.is_indoors ? 1.0 : 0.0;
     material.uniforms.lightPos.value = ZIL_UTIL.lightPos;
+
+    // material.clone doesn't clone the attributes, so do it here (make sure each attribute is empty at this point)
+    material.attributes = Chunk._create_custom_attributes();
 
 	return material;
 };
@@ -79,33 +86,25 @@ Chunk.prototype.render = function(use_boxes, is_transparent) {
     if(this.geo) this.geo.dispose();
     this.geo = new THREE.Geometry();
 
-    var materials = [];
-    var material_index_map = {};
+    // one material for the entire chunk
+    if(this.material) this.material.dispose();
+    this.material = Chunk.get_material(0, is_transparent);
+
 	for(var x = 0; x < ZIL_UTIL.CHUNK_SIZE; x++) {
 		for(var y = 0; y < ZIL_UTIL.CHUNK_SIZE; y++) {
 			for(var z = 0; z < ZIL_UTIL.CHUNK_SIZE; z++) {
 
 				var block = this.get_block(x, y, z);
 				if(block != null) {
-                    this.render_block(x, y, z, block, materials, material_index_map, use_boxes, is_transparent);
+                    this.render_block(x, y, z, block, this.material, use_boxes, is_transparent);
 				}
 			}
 		}
 	}
-    this.materials = new THREE.MeshFaceMaterial(materials);
-    this.shape = new THREE.Mesh(this.geo, this.materials);
+    this.shape = new THREE.Mesh(this.geo, this.material);
 };
 
-Chunk.prototype.render_block = function(x, y, z, value, materials, material_index_map, use_boxes, is_transparent) {
-    var material = Chunk.get_material(value, is_transparent);
-
-    // keep the minimum number of materials
-    var material_index = material_index_map[value];
-    if(material_index == null) {
-        material_index = materials.length;
-        materials.push(material);
-        material_index_map[value] = material_index;
-    }
+Chunk.prototype.render_block = function(x, y, z, value, material, use_boxes, is_transparent) {
 
     // south
     var faces = [];
@@ -161,10 +160,15 @@ Chunk.prototype.render_block = function(x, y, z, value, materials, material_inde
     }
 
     // build a single geometry for fast rendering
+    var color = ZIL_UTIL.palette[value];
+    var vColor = new THREE.Vector3(((color & 0xff0000) >> 16) / 255.0, ((color & 0xff00) >> 8) / 255.0, (color & 0xff) / 255.0);
     if (faces.length > 0) {
         for (var i = 0; i < faces.length; i++) {
             faces[i].updateMatrix();
-            this.geo.merge(faces[i].geometry, faces[i].matrix, material_index);
+            for(var t = 0; t < faces[i].geometry.vertices.length; t++) {
+                material.attributes.blockColor.value.push(vColor);
+            }
+            this.geo.merge(faces[i].geometry, faces[i].matrix, 0);
             //                                this.geo.mergeVertices(); // too slow
         }
     }
