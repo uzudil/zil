@@ -6,10 +6,9 @@ Casual game developer hits writer's block, sells soul to the devil for inspirati
 ![In the sewers of Skrit](/screens/lighting.png?raw=true "In the sewers of Skrit")
 
 The game engine:
-- three.js-based, webgl-rendered, voxel engine
+- three.js-based, webgl-rendered, voxel engine with custom shaders
 - will add decal textures for a few things: explosion marks, blood, magic circles
 - translucent blocks will be used for water, lava, wall-o-force, etc
-- FOV lighting will work on voxels; should be interesting...
 
 The editor:
 - the editor composes an object graph that is expanded into blocks on load
