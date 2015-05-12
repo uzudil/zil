@@ -12,7 +12,11 @@ Chunk.prototype.set_pos = function(x, y, z, zil_shape) {
 };
 
 Chunk.prototype.get_block = function(x, y, z) {
-    return this.zil_shape.find_color_at(x + this.x, y + this.y, z + this.z);
+    return this.zil_shape.find_final_node_at(x + this.x, y + this.y, z + this.z);
+};
+
+Chunk.prototype.get_emitted_light = function(x, y, z) {
+    return this.zil_shape.get_emitted_light(x + this.x, y + this.y, z + this.z);
 };
 
 Chunk.FACE = ZIL_UTIL.make_square_face(1);
@@ -41,6 +45,10 @@ Chunk._create_custom_attributes = function() {
     return {
         blockColor: {
             type: "v3",
+            value: []
+        },
+        blockLightIntensity: {
+            type: "f",
             value: []
         }
     };
@@ -96,7 +104,7 @@ Chunk.prototype.render = function(use_boxes, is_transparent) {
 
 				var block = this.get_block(x, y, z);
 				if(block != null) {
-                    this.render_block(x, y, z, block, this.material, use_boxes, is_transparent);
+                    this.render_block(x, y, z, block, this.get_emitted_light(x, y, z), this.material, use_boxes, is_transparent);
 				}
 			}
 		}
@@ -104,7 +112,7 @@ Chunk.prototype.render = function(use_boxes, is_transparent) {
     this.shape = new THREE.Mesh(this.geo, this.material);
 };
 
-Chunk.prototype.render_block = function(x, y, z, value, material, use_boxes, is_transparent) {
+Chunk.prototype.render_block = function(x, y, z, block, emitted_light, material, use_boxes, is_transparent) {
 
     // south
     var faces = [];
@@ -160,13 +168,14 @@ Chunk.prototype.render_block = function(x, y, z, value, material, use_boxes, is_
     }
 
     // build a single geometry for fast rendering
-    var color = ZIL_UTIL.palette[value];
+    var color = ZIL_UTIL.palette[block.value];
     var vColor = new THREE.Vector3(((color & 0xff0000) >> 16) / 255.0, ((color & 0xff00) >> 8) / 255.0, (color & 0xff) / 255.0);
     if (faces.length > 0) {
         for (var i = 0; i < faces.length; i++) {
             faces[i].updateMatrix();
             for(var t = 0; t < faces[i].geometry.vertices.length; t++) {
                 material.attributes.blockColor.value.push(vColor);
+                material.attributes.blockLightIntensity.value.push(emitted_light);
             }
             this.geo.merge(faces[i].geometry, faces[i].matrix, 0);
             //                                this.geo.mergeVertices(); // too slow

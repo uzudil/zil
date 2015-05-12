@@ -32,6 +32,7 @@ var ZilShape = function(category, name, shape, width, height, depth, rotation, l
 
     this.loaded_shapes = {};
     this.shape_index = [];
+    this.emitted_light = {};
 
     if(progress_update) {
 
@@ -59,7 +60,25 @@ var ZilShape = function(category, name, shape, width, height, depth, rotation, l
             }
 
             // done!
-            this.run_tasks(tasks, 0, progress_update, "Indexing map: " + this.name + "...", ZIL_UTIL.bind(this, on_load));
+            this.run_tasks(tasks, 0, progress_update, "Indexing map: " + this.name + "...", ZIL_UTIL.bind(this, function() {
+                // part 3: emitted lighting
+                var tasks = [];
+                var seen = {};
+                this.shape_keys = Object.keys(this.loaded_shapes);
+                for(var i = 0; i < this.shape_keys.length; i++) {
+                    tasks.push(ZIL_UTIL.bind(this, function(index) {
+                        var key = this.shape_keys[index];
+                        if(!seen[key] && this._is_light_emitting_shape(key)) {
+                            seen[key] = true;
+                            var pos = ZilShape._pos(key);
+                            this._calculate_lighting(pos[0] + 3, pos[1] + 2, pos[2] + 4);
+                        }
+                    }));
+                }
+
+                // done!
+                this.run_tasks(tasks, 0, progress_update, "Lighting map: " + this.name + "...", ZIL_UTIL.bind(this, on_load));
+            }));
         }));
     } else {
         this.load_all_shapes(); // load included shapes
@@ -498,6 +517,32 @@ ZilShape.prototype._index_shape_at_point = function(x, y, index_node) {
     a.push(index_node);
 };
 
+var LIGHT_DIST = 10;
+ZilShape.prototype._is_light_emitting_shape = function(key) {
+    var value = this.loaded_shapes[key];
+    return isNaN(value) && value.name == "candelabra";
+};
+
+ZilShape.prototype._calculate_lighting = function(px, py, pz) {
+    var light = new THREE.Vector3(0, 0, 0);
+    var p = new THREE.Vector3();
+    for(var x = -LIGHT_DIST; x < LIGHT_DIST; x++) {
+        for(var y = -LIGHT_DIST; y < LIGHT_DIST; y++) {
+            for(var z = -LIGHT_DIST; z < LIGHT_DIST; z++) {
+                p.set(x, y, z);
+                var d = p.distanceTo(light);
+                var intensity = Math.min(Math.max(1.0 - ((d * d) / (LIGHT_DIST * LIGHT_DIST)), 0), 1);
+                this.emitted_light[(px + x) + "." + (py + y) + "." + (pz + z)] = intensity;
+            }
+        }
+    }
+};
+
+ZilShape.prototype.get_emitted_light = function(x, y, z) {
+    var e = this.emitted_light[x + "." + y + "." + z];
+    return e ? e : 0.0;
+};
+
 ZilShape.prototype._index_shape = function(key) {
     var value = this.loaded_shapes[key];
     var pos = ZilShape._pos(key);
@@ -579,12 +624,17 @@ ZilShape.prototype._get_shape_value = function(key) {
 };
 
 ZilShape.prototype.find_color_at = function(x, y, z) {
+    var index_node = this.find_final_node_at(x, y, z);
+    return index_node ? index_node.value : null;
+};
+
+ZilShape.prototype.find_final_node_at = function(x, y, z) {
     var index_node = this.find_index_node(x, y, z);
     if(index_node) {
         if(index_node.is_final) {
-            return index_node.value;
+            return index_node;
         } else {
-            return index_node.value.find_color_at(
+            return index_node.value.find_final_node_at(
                     x - index_node.origin[0],
                     y - index_node.origin[1],
                     z - index_node.origin[2]);
