@@ -79,19 +79,21 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "oram-gates",
-      357,
-      187
+      "abandoned_temple_1",
+      580,
+      570
     ],
     "quests": [
-      "gav"
+      "gav",
+      "keepers"
     ],
     "has_password": true,
     "opened_ante_gate": true,
     "skrit_intro": true,
-    "opened_skrit_gate": true,
-    "met_father_theo": true,
-    "encounter_exygor": true
+    "has_map": true,
+    "encounter_exygor": true,
+    "met_father_fran": true,
+    "opened_skrit_gate": true
   },
   "player_stats": {
     "hp": 200,
