@@ -449,9 +449,32 @@ ZilStory.MAPS = {
                 on_mouseclick: function () {
                     ZIL.show_sign("Temple of the <i>Mountain Lord</i>, Library Entrance.<br><br>Fines or late fees on all <i>magical texts</i> are doubled.");
                 }
+            },
+            "80,70,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "gasmine1", 160, 38);
+                }
             }
         }
     },
+    "maps.gasmine1": {
+        events: {
+            on_load: function() {
+            }
+        },
+        locations: {
+            "155,23,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "oram-gates", 91, 77);
+                }
+            }
+        }
+    },
+
     "maps.skrit_sewers": {
         events: {
             on_load: function() {

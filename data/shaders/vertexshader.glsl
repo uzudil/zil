@@ -5,6 +5,7 @@
 
 attribute vec3 blockColor;
 attribute float blockLightIntensity;
+attribute vec3 blockLightColor;
 
 uniform vec3 lightPos;
 uniform float isIndoors;
@@ -18,6 +19,7 @@ varying float key2Intensity;
 varying float key3Intensity;
 varying vec3 vBlockColor;
 varying float fBlockLightIntensity;
+varying vec3 vBlockLightColor;
 
 float getLightIntensity(float lightDist, vec3 vNormal, vec3 vLightPos, vec4 worldPos) {
     // light position is in world coordinates
@@ -71,4 +73,5 @@ void main()
 
     vBlockColor = blockColor;
     fBlockLightIntensity = blockLightIntensity;
+    vBlockLightColor = blockLightColor;
 }

@@ -68,10 +68,13 @@ var ZilShape = function(category, name, shape, width, height, depth, rotation, l
                 for(var i = 0; i < this.shape_keys.length; i++) {
                     tasks.push(ZIL_UTIL.bind(this, function(index) {
                         var key = this.shape_keys[index];
-                        if(!seen[key] && this._is_light_emitting_shape(key)) {
-                            seen[key] = true;
-                            var pos = ZilShape._pos(key);
-                            this._calculate_lighting(pos[0] + 3, pos[1] + 2, pos[2] + 4);
+                        if(!seen[key]) {
+                            var light_info = this._get_emitted_light_color(key);
+                            if(light_info) {
+                                seen[key] = true;
+                                var pos = ZilShape._pos(key);
+                                this._calculate_lighting(pos[0] + 3, pos[1] + 2, pos[2] + 4, light_info);
+                            }
                         }
                     }));
                 }
@@ -517,30 +520,62 @@ ZilShape.prototype._index_shape_at_point = function(x, y, index_node) {
     a.push(index_node);
 };
 
-var LIGHT_DIST = 10;
-ZilShape.prototype._is_light_emitting_shape = function(key) {
+var WHITE_LIGHT = new THREE.Vector3(1.0, 0.75, 0.33);
+var GREEN_LIGHT = new THREE.Vector3(0.15, 1.0, 0.33);
+var BLUE_LIGHT = new THREE.Vector3(0.1, 0.44, 0.8);
+
+// values are: color, distance
+ZilShape.LIGHT_EMITTING_SHAPES = {
+    "candelabra": [WHITE_LIGHT, 14],
+    "gaslamp": [GREEN_LIGHT, 14],
+    "mushroom": [BLUE_LIGHT, 6]
+};
+ZilShape.prototype._get_emitted_light_color = function(key) {
     var value = this.loaded_shapes[key];
-    return isNaN(value) && value.name == "candelabra";
+    if(isNaN(value)) {
+        return ZilShape.LIGHT_EMITTING_SHAPES[value.name];
+    } else {
+        return null;
+    }
 };
 
-ZilShape.prototype._calculate_lighting = function(px, py, pz) {
+ZilShape.prototype._calculate_lighting = function(px, py, pz, light_info) {
+    var color = light_info[0];
+    var dist = light_info[1];
     var light = new THREE.Vector3(0, 0, 0);
     var p = new THREE.Vector3();
-    for(var x = -LIGHT_DIST; x < LIGHT_DIST; x++) {
-        for(var y = -LIGHT_DIST; y < LIGHT_DIST; y++) {
-            for(var z = -LIGHT_DIST; z < LIGHT_DIST; z++) {
+    for(var x = -dist; x < dist; x++) {
+        for(var y = -dist; y < dist; y++) {
+            for(var z = -dist; z < dist; z++) {
                 p.set(x, y, z);
                 var d = p.distanceTo(light);
-                var intensity = Math.min(Math.max(1.0 - ((d * d) / (LIGHT_DIST * LIGHT_DIST)), 0), 1);
-                this.emitted_light[(px + x) + "." + (py + y) + "." + (pz + z)] = intensity;
+                var intensity = Math.min(Math.max(1.0 - ((d * d) / (dist * dist)), 0), 1);
+                var el = this.emitted_light[(px + x) + "." + (py + y) + "." + (pz + z)];
+                if(el) {
+                    el.intensity = Math.max(el.intensity, intensity);
+//                    el.color = color.clone().add(el.color).normalize();
+                    el.color = el.color.clone();
+                    el.color.x = Math.max(el.color.x, color.x);
+                    el.color.y = Math.max(el.color.y, color.y);
+                    el.color.z = Math.max(el.color.z, color.z);
+                } else {
+                    this.emitted_light[(px + x) + "." + (py + y) + "." + (pz + z)] = {
+                        intensity: intensity,
+                        color: color
+                    };
+                }
             }
         }
     }
 };
 
+ZilShape.DEFAULT_EMITTED_LIGHT = {
+    intensity: 0.0,
+    color: new THREE.Vector3(1.0, 1.0, 1.0)
+};
 ZilShape.prototype.get_emitted_light = function(x, y, z) {
     var e = this.emitted_light[x + "." + y + "." + z];
-    return e ? e : 0.0;
+    return e ? e : ZilShape.DEFAULT_EMITTED_LIGHT;
 };
 
 ZilShape.prototype._index_shape = function(key) {

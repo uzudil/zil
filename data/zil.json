@@ -61,15 +61,15 @@
     13421772,
     12040119
   ],
-  "shape_name": "maps.abandoned_temple_3",
+  "shape_name": "maps.oram-gates",
   "shortcuts": [
-    "objects.column",
+    "objects.gaslamp",
     "objects.plant",
     "floor.stone",
     "floors.wood",
-    "doors.gate-open",
+    "doors.gate",
     "walls.city_wall2",
-    "walls.city_wall",
+    "walls.city_wall2",
     "walls.stone-ruin",
     "walls.stone_low",
     "walls.stone_low"
@@ -79,9 +79,9 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "abandoned_temple_1",
-      580,
-      570
+      "oram-gates",
+      91,
+      77
     ],
     "quests": [
       "gav",

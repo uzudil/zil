@@ -50,6 +50,10 @@ Chunk._create_custom_attributes = function() {
         blockLightIntensity: {
             type: "f",
             value: []
+        },
+        blockLightColor: {
+            type: "v3",
+            value: []
         }
     };
 };
@@ -175,7 +179,8 @@ Chunk.prototype.render_block = function(x, y, z, block, emitted_light, material,
             faces[i].updateMatrix();
             for(var t = 0; t < faces[i].geometry.vertices.length; t++) {
                 material.attributes.blockColor.value.push(vColor);
-                material.attributes.blockLightIntensity.value.push(emitted_light);
+                material.attributes.blockLightIntensity.value.push(emitted_light.intensity);
+                material.attributes.blockLightColor.value.push(emitted_light.color);
             }
             this.geo.merge(faces[i].geometry, faces[i].matrix, 0);
             //                                this.geo.mergeVertices(); // too slow
