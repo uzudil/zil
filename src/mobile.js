@@ -231,7 +231,7 @@ Mobile.prototype.set_shape = function(dir) {
 };
 
 Mobile.prototype.move = function(gx, gy, gz) {
-    var zz = this.z - gz + this.cast_z;
+    var zz = this.z - gz + this.cast_z + (this.monster ? this.monster.z_offset : 0);
     if(this.is_ethereal()) zz = 1; // hack!
     this.shape_obj.position.set(this.x - gx, this.y - gy, zz);
     this.shape_obj_copy.position.set(this.x - gx, this.y - gy, zz);

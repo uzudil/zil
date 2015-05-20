@@ -1,4 +1,4 @@
-function Monster(category, shape, name, level, loiter_radius, ethereal, animated_model) {
+function Monster(category, shape, name, level, loiter_radius, ethereal, animated_model, z_offset) {
     this.category = category;
     this.shape = shape;
     this.name = name;
@@ -6,6 +6,7 @@ function Monster(category, shape, name, level, loiter_radius, ethereal, animated
     this.loiter_radius = loiter_radius;
     this.ethereal = ethereal;
     this.animated_model = animated_model;
+    this.z_offset = z_offset || 0;
 
     this.key = null;
 }
@@ -22,6 +23,8 @@ MONSTERS = {
     "goblin": new Monster("creatures", "gnome", "Common Goblin", 2),
     "imp": new Monster("creatures", "imp", "Fire Imp", 3),
     "shade": new Monster("creatures", "shade", "Lesser Shade", 3, null, true),
+    "aberration": new Monster("creatures", "aberration1", "Plagued Mutation", 4, null, false, null, 4),
+    "aberration2": new Monster("creatures", "aberration2", "Plagued Aberration", 5, null, false, null, 3),
     "demon": new Monster("creatures", "demon", "Bael Demon", 9),
     "soldier": new Monster("creatures", "soldier", "Guard", 0, 16, false, AnimatedModel.GUARD)
 };
