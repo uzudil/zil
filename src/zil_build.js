@@ -28,6 +28,10 @@ var ZIL_BUILD = {
     rocks_w: null,
     rocks_h: null,
     rocks_d: null,
+    box: null,
+    box_shape: null,
+    sphere: null,
+    sphere_obj: null,
     FLOOR_TILE_MODE: false,
     DRAW_MODE: false,
     DRAW_MODE_PEN_DOWN: true,
@@ -101,7 +105,7 @@ var ZIL_BUILD = {
 				if(ZIL_BUILD.mouse_dir_lock != "y") ZIL_BUILD.cursor[0] = Math.round(point.x);
 				if(ZIL_BUILD.mouse_dir_lock != "x") ZIL_BUILD.cursor[1] = Math.round(point.y);
 
-                if(ZIL_BUILD.rocks) {
+                if(ZIL_BUILD.rocks || ZIL_BUILD.sphere || ZIL_BUILD.box) {
                     ZIL_BUILD.cursor[2] = 0;
                 } else if(ZIL_BUILD.FLOOR_TILE_MODE) {
                     if(ZIL_BUILD.include_shape && ZIL_BUILD.include_shape.depth == 1) {
@@ -208,6 +212,10 @@ var ZIL_BUILD = {
                     ZIL_BUILD.rocks_w = ++ZIL_BUILD.rocks.width;
                     ZIL_BUILD.rocks.regen();
                     ZIL_BUILD.attach_rocks();
+                } else if(ZIL_BUILD.box) {
+                    ZIL_BUILD.rocks_w = ++ZIL_BUILD.box.width;
+                    ZIL_BUILD.box.regen();
+                    ZIL_BUILD.attach_box();
                 } else {
                     if (ZIL_BUILD.global_pos[0] < ZIL_UTIL.WIDTH - ZIL_UTIL.VIEW_WIDTH - ZIL_UTIL.CHUNK_SIZE) {
                         ZIL_BUILD.global_pos[0] += ZIL_UTIL.CHUNK_SIZE;
@@ -227,6 +235,12 @@ var ZIL_BUILD = {
                         ZIL_BUILD.rocks_w = --ZIL_BUILD.rocks.width;
                         ZIL_BUILD.rocks.regen();
                         ZIL_BUILD.attach_rocks();
+                    }
+                } else if(ZIL_BUILD.box) {
+                    if(ZIL_BUILD.box.width > 1) {
+                        ZIL_BUILD.rocks_w = --ZIL_BUILD.box.width;
+                        ZIL_BUILD.box.regen();
+                        ZIL_BUILD.attach_box();
                     }
                 } else {
                     if (ZIL_BUILD.global_pos[0] > 0) {
@@ -248,6 +262,12 @@ var ZIL_BUILD = {
                         ZIL_BUILD.rocks.regen();
                         ZIL_BUILD.attach_rocks();
                     }
+                } else if(ZIL_BUILD.box) {
+                    if(ZIL_BUILD.box.height > 1) {
+                        ZIL_BUILD.rocks_h = --ZIL_BUILD.box.height;
+                        ZIL_BUILD.box.regen();
+                        ZIL_BUILD.attach_box();
+                    }
                 } else {
                     if(ZIL_BUILD.global_pos[1] > 0) {
                         ZIL_BUILD.global_pos[1] -= ZIL_UTIL.CHUNK_SIZE;
@@ -266,6 +286,10 @@ var ZIL_BUILD = {
                     ZIL_BUILD.rocks_h = ++ZIL_BUILD.rocks.height;
                     ZIL_BUILD.rocks.regen();
                     ZIL_BUILD.attach_rocks();
+                } else if(ZIL_BUILD.box) {
+                    ZIL_BUILD.rocks_h = ++ZIL_BUILD.box.height;
+                    ZIL_BUILD.box.regen();
+                    ZIL_BUILD.attach_box();
                 } else {
                     if(ZIL_BUILD.global_pos[1] < ZIL_UTIL.HEIGHT - ZIL_UTIL.VIEW_HEIGHT) {
                         ZIL_BUILD.global_pos[1] += ZIL_UTIL.CHUNK_SIZE;
@@ -274,10 +298,22 @@ var ZIL_BUILD = {
 				}
 			} else if(event.which == 88) { // <,
                 if(ZIL_BUILD.rocks) {
-                    if(ZIL_BUILD.rocks.depth > 1) {
+                    if (ZIL_BUILD.rocks.depth > 1) {
                         ZIL_BUILD.rocks_d = --ZIL_BUILD.rocks.depth;
                         ZIL_BUILD.rocks.regen();
                         ZIL_BUILD.attach_rocks();
+                    }
+                } else if(ZIL_BUILD.sphere) {
+                    if(ZIL_BUILD.sphere.depth > 1) {
+                        ZIL_BUILD.rocks_d = --ZIL_BUILD.sphere.depth;
+                        ZIL_BUILD.sphere.regen();
+                        ZIL_BUILD.attach_sphere();
+                    }
+                } else if(ZIL_BUILD.box) {
+                    if(ZIL_BUILD.box.depth > 1) {
+                        ZIL_BUILD.rocks_d = --ZIL_BUILD.box.depth;
+                        ZIL_BUILD.box.regen();
+                        ZIL_BUILD.attach_box();
                     }
                 } else if(ZIL_BUILD.cursor[2] > 0) {
 				    ZIL_BUILD.move_timer = Date.now();
@@ -288,6 +324,18 @@ var ZIL_BUILD = {
                     ZIL_BUILD.rocks_d = ++ZIL_BUILD.rocks.depth;
                     ZIL_BUILD.rocks.regen();
                     ZIL_BUILD.attach_rocks();
+                } else if(ZIL_BUILD.sphere) {
+                    if(ZIL_BUILD.sphere.depth < ZIL_UTIL.DEPTH) {
+                        ZIL_BUILD.rocks_d = ++ZIL_BUILD.sphere.depth;
+                        ZIL_BUILD.sphere.regen();
+                        ZIL_BUILD.attach_sphere();
+                    }
+                } else if(ZIL_BUILD.box) {
+                    if(ZIL_BUILD.box.depth < ZIL_UTIL.DEPTH) {
+                        ZIL_BUILD.rocks_d = ++ZIL_BUILD.box.depth;
+                        ZIL_BUILD.box.regen();
+                        ZIL_BUILD.attach_box();
+                    }
                 } else if(ZIL_BUILD.cursor[2] < ZIL_UTIL.VIEW_DEPTH - 1) {
                     ZIL_BUILD.move_timer = Date.now();
                     ZIL_BUILD.move = [0, 0, 1];
@@ -309,6 +357,12 @@ var ZIL_BUILD = {
 		} else if(event.which == 82) {
             $("#rocks_message").fadeIn();
             ZIL_BUILD.draw_rocks();
+		} else if(event.which == 83) {
+            $("#sphere_message").fadeIn();
+            ZIL_BUILD.draw_sphere();
+		} else if(event.which == 66) {
+            $("#box_message").fadeIn();
+            ZIL_BUILD.draw_box();
 		} else if(event.which == 90 && event.ctrlKey) {
 			ZIL_BUILD.undo();
 		} else if(event.which == 70) {
@@ -316,6 +370,10 @@ var ZIL_BUILD = {
 		} else if(event.which == 27) {
             if(ZIL_BUILD.rocks) {
                 ZIL_BUILD.end_rocks_mode();
+            } else if(ZIL_BUILD.sphere) {
+                ZIL_BUILD.end_sphere_mode();
+            } else if(ZIL_BUILD.box) {
+                ZIL_BUILD.end_box_mode();
             } else if(ZIL_BUILD.include_shape) {
 				// detach from cursor
 				ZIL_BUILD.obj.remove(ZIL_BUILD.include_shape_obj);
@@ -357,7 +415,7 @@ var ZIL_BUILD = {
         } else if(event.which == 71) {
             $("#floor_message").fadeIn();
             ZIL_BUILD.FLOOR_TILE_MODE = true;
-        } else if(event.which == 72) {
+        } else if(event.which == 72 && confirm("Clear all rocks?")) {
             ZIL_BUILD.clear_rocks();
         } else if(event.which == 73) {
             ZIL_BUILD.DRAW_MODE = ZIL_BUILD.DRAW_MODE_PEN_DOWN = true;
@@ -398,6 +456,58 @@ var ZIL_BUILD = {
 
         ZIL_BUILD.rocks_obj = ZIL_BUILD.rocks.shape_obj.render_shape();
         ZIL_BUILD.obj.add(ZIL_BUILD.rocks_obj);
+    },
+
+    end_sphere_mode: function() {
+        $("#sphere_message").fadeOut();
+        ZIL_BUILD.obj.remove(ZIL_BUILD.sphere_obj);
+        ZIL_BUILD.rocks_d = ZIL_BUILD.sphere.depth;
+        ZIL_BUILD.sphere_obj = null;
+        ZIL_BUILD.sphere = null;
+    },
+
+    draw_sphere: function() {
+        var color1 = $("#color option:selected").index();
+        if(color1 == null) color1 = ZIL_BUILD.add_color(0x888888);
+        var c = ZIL_UTIL.palette[color1];
+        var c2 = ZIL_UTIL.shade_color(c, 0.9);
+        var color2 = ZIL_BUILD.add_color(c2);
+        ZIL_BUILD.sphere = new Sphere(color1, color2, ZIL_BUILD.rocks_d);
+        ZIL_BUILD.attach_sphere();
+    },
+
+    attach_sphere: function() {
+        if(ZIL_BUILD.sphere_obj) ZIL_BUILD.obj.remove(ZIL_BUILD.sphere_obj);
+
+        ZIL_BUILD.sphere_obj = ZIL_BUILD.sphere.shape_obj.render_shape();
+        ZIL_BUILD.obj.add(ZIL_BUILD.sphere_obj);
+    },
+
+    end_box_mode: function() {
+        $("#box_message").fadeOut();
+        ZIL_BUILD.obj.remove(ZIL_BUILD.box_obj);
+        ZIL_BUILD.rocks_w = ZIL_BUILD.box.width;
+        ZIL_BUILD.rocks_h = ZIL_BUILD.box.height;
+        ZIL_BUILD.rocks_d = ZIL_BUILD.box.depth;
+        ZIL_BUILD.box_obj = null;
+        ZIL_BUILD.box = null;
+    },
+
+    draw_box: function() {
+        var color1 = $("#color option:selected").index();
+        if(color1 == null) color1 = ZIL_BUILD.add_color(0x888888);
+        var c = ZIL_UTIL.palette[color1];
+        var c2 = ZIL_UTIL.shade_color(c, 0.9);
+        var color2 = ZIL_BUILD.add_color(c2);
+        ZIL_BUILD.box = new Box(color1, color2, ZIL_BUILD.rocks_w, ZIL_BUILD.rocks_h, ZIL_BUILD.rocks_d);
+        ZIL_BUILD.attach_box();
+    },
+
+    attach_box: function() {
+        if(ZIL_BUILD.box_obj) ZIL_BUILD.obj.remove(ZIL_BUILD.box_obj);
+
+        ZIL_BUILD.box_obj = ZIL_BUILD.box.shape_obj.render_shape();
+        ZIL_BUILD.obj.add(ZIL_BUILD.box_obj);
     },
 
     add_color: function(color_hex) {
@@ -529,6 +639,10 @@ var ZIL_BUILD = {
 		var z = ZIL_BUILD.global_pos[2] + ZIL_BUILD.cursor[2];
         if(ZIL_BUILD.rocks) {
             ZIL_BUILD.shape.include_shape(x, y, z, ZIL_BUILD.rocks.shape_obj);
+        } else if(ZIL_BUILD.sphere) {
+            ZIL_BUILD.shape.include_shape(x, y, z, ZIL_BUILD.sphere.shape_obj);
+        } else if(ZIL_BUILD.box) {
+            ZIL_BUILD.shape.include_shape(x, y, z, ZIL_BUILD.box.shape_obj);
         } else if(ZIL_BUILD.include_shape) {
 			ZIL_BUILD.shape.set_shape(x, y, z, ZIL_BUILD.include_shape, {
                 monster: ZIL_BUILD.include_monster ? ZIL_BUILD.include_monster.key : null

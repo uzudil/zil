@@ -214,6 +214,27 @@ ZilShape.prototype.remove_unseen = function() {
     }
 };
 
+ZilShape.prototype.make_hollow = function() {
+    // remove shapes not visible to the user: like remove_unseen but allows for shape rotation
+    var remove = [];
+    for(var k in this.shape) {
+        var pos = ZilShape._pos(k);
+        if(typeof this.shape[k] == "number") {
+            if (this.has_static_shape(pos[0] + 1, pos[1], pos[2]) &&
+                this.has_static_shape(pos[0], pos[1] + 1, pos[2]) &&
+                this.has_static_shape(pos[0], pos[1] - 1, pos[2]) &&
+                this.has_static_shape(pos[0] - 1, pos[1], pos[2]) &&
+                this.has_static_shape(pos[0], pos[1], pos[2] + 1)) {
+                remove.push(pos);
+            }
+        }
+    }
+    for(var i = 0; i < remove.length; i++) {
+        var pos = remove[i];
+        this.del_position(pos[0], pos[1], pos[2]);
+    }
+};
+
 ZilShape.prototype.has_static_shape = function(x, y, z) {
     var index_node = this.find_index_node(x, y, z);
     if(index_node) {
@@ -693,7 +714,7 @@ ZilShape.prototype.find_index_node = function(x, y, z) {
 
 ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk) {
     chunk.set_pos(cx * ZIL_UTIL.CHUNK_SIZE, cy * ZIL_UTIL.CHUNK_SIZE, cz * ZIL_UTIL.CHUNK_SIZE, this);
-	chunk.render(this.use_boxes, this.is_transparent); // force refresh
+	chunk.render(this.use_boxes || window["ZIL_BUILD"] != null, this.is_transparent); // force refresh
 
     // debug info
     chunk.shape.userData.name = this.category + "." + this.name;
