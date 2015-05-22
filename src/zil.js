@@ -587,15 +587,17 @@ var ZIL = {
             // take a step
             var can_move = false;
             var combat_move = false;
-            if(ZIL.in_combat) {
-                if(creature.mobile.is_dying() || creature.mobile.is_casting_spell()) {
-                    can_move = true;
-                } else if(creature == ZIL.combat_creature && creature.mobile.ap > 0 && (creature != ZIL.player || ZIL.combat_action_click_count > 1)) {
+            if(!ZIL.GAME_PAUSED) {
+                if (ZIL.in_combat) {
+                    if (creature.mobile.is_dying() || creature.mobile.is_casting_spell()) {
+                        can_move = true;
+                    } else if (creature == ZIL.combat_creature && creature.mobile.ap > 0 && (creature != ZIL.player || ZIL.combat_action_click_count > 1)) {
+                        can_move = true;
+                    }
+                    combat_move = true;
+                } else if (creature == ZIL.player || ZIL.player.mobile.is_moving() || creature.mobile.is_casting_spell()) {
                     can_move = true;
                 }
-                combat_move = true;
-            } else if(creature == ZIL.player || ZIL.player.mobile.is_moving() || creature.mobile.is_casting_spell()) {
-                can_move = true;
             }
 
             if(can_move) {
@@ -811,7 +813,7 @@ var ZIL = {
 //                ZIL.combat_creature_index = 0;
                 ZIL.init_combat_turn();
             }
-            if(ZIL.combat_creatures[ZIL.combat_creature_index].mobile.remove_me) {
+            if(ZIL.combat_creature_index < ZIL.combat_creatures.length && ZIL.combat_creatures[ZIL.combat_creature_index].mobile.remove_me) {
                 // remove dead creature
                 console.log("--- remove " + ZIL.combat_creatures[ZIL.combat_creature_index].id);
                 ZIL.remove_creatures([ZIL.combat_creatures[ZIL.combat_creature_index].id]);

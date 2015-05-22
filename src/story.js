@@ -454,7 +454,7 @@ ZilStory.MAPS = {
                 on_mouseover: function () {
                 },
                 on_mouseclick: function () {
-                    ZIL.load_shape("maps", "gasmine1", 160, 38);
+                    ZIL.load_shape("maps", "gasmine1", 46, 48);
                 }
             }
         }
@@ -462,6 +462,37 @@ ZilStory.MAPS = {
     "maps.gasmine1": {
         events: {
             on_load: function() {
+                if (!ZIL_UTIL.game_state["encounter_eldgrawm"]) {
+                    ZIL.for_creatures_in_area(508, 140, 624, 228, function(creature) {
+                        if(creature != ZIL.player) {
+                            creature.mobile.make_neutral();
+                        }
+                    });
+                }
+                ZIL.add_creature_listener(function(map_cat, map_name, creature) {
+                    if(creature.mobile.monster == MONSTERS.aberration2) {
+                        ZIL.say(ZIL.player, "The disgusting floating head slumps over and with a terrible gurgling noise, disgorges copious amounts of slime.<br><br>" +
+                            "I better avoid touching the foul liquid - it's probably full of the germs responsible for the <b>plague</b>!");
+                    }
+                });
+            },
+            on_creature_near: function(creature) {
+                if(creature.mobile.monster == MONSTERS.aberration2 && !ZIL_UTIL.game_state["encounter_eldgrawm"]) {
+                    ZIL.player.mobile.cancel_pending_move();
+                    ZIL.center_screen_at(creature.mobile.x, creature.mobile.y);
+                    ZIL.say(creature, "...Graun-Brizzymh, Frowhe...<b>No business here</b> human... Leave us... Graun-Brizzhm... <b>Gaurhh!</b>", function () {
+                            ZIL_UTIL.game_state["encounter_eldgrawm"] = true;
+                            ZIL_UTIL.save_config();
+                            ZIL.for_creatures_in_area(508, 140, 624, 228, function(creature) {
+                                if(creature != ZIL.player) {
+                                    creature.mobile.make_evil();
+                                }
+                            });
+                            Mobile.hide_convos();
+                            return true;
+                        }
+                    );
+                }
             }
         },
         locations: {
