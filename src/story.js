@@ -1,6 +1,8 @@
 function ZilStory() {
 }
 
+ZilStory.USE_DEFAULT_HANDLER = "___use_default___";
+
 ZilStory.QUESTS = {
     "gav": {
         name: "Find the seer Gav",
@@ -502,10 +504,68 @@ ZilStory.MAPS = {
                 on_mouseclick: function () {
                     ZIL.load_shape("maps", "oram-gates", 91, 77);
                 }
+            },
+            "600,157,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "gasmine2", 143, 170);
+                }
             }
         }
     },
-
+    "maps.gasmine2": {
+        events: {
+            on_load: function() {
+            }
+        },
+        locations: {
+            "136,164,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.load_shape("maps", "gasmine1", 601, 173);
+                }
+            },
+            "301,166,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    if(ZIL_UTIL.game_state["found_breathing_mask"]) {
+                        if (!ZIL_UTIL.game_state["found_breathing_mask_2"]) {
+                            ZIL_UTIL.game_state["found_breathing_mask_2"] = true;
+                            ZIL_UTIL.save_config();
+                            ZIL.say(ZIL.player, "With the breathing mask securely attached, " +
+                                "I will proceed into the <b>Endiminium</b> filled chamber.");
+                        }
+                        return ZilStory.USE_DEFAULT_HANDLER; // just open the door
+                    } else {
+                        ZIL.say(ZIL.player, "Hmm, I smell the <b>Endiminium</b> gas from behind that door.<br><br>" +
+                            "That must be where the extra samples are kept.<br><br>" +
+                            "I better find a breathing apparatus beforing going in there.");
+                        return true;
+                    }
+                }
+            },
+            "22,321,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    if(ZIL_UTIL.game_state["found_breathing_mask"]) {
+                        ZIL.say(ZIL.player, "This is where I found the breathing mask I will use when <b>Endiminium</b> is nearby.");
+                    } else {
+                        ZIL.say(ZIL.player, "What's this? Tucked behind some dusty manuals on gas mining, is a used <b>breathing mask!</b><br><br>" +
+                            "It seems to be functional enough for entering areas with <b>Endiminium</b> contamination.", function() {
+                            Mobile.hide_convos();
+                            ZIL_UTIL.game_state["found_breathing_mask"] = true;
+                            ZIL_UTIL.save_config();
+                            return true;
+                        });
+                    }
+                }
+            }
+        }
+    },
     "maps.skrit_sewers": {
         events: {
             on_load: function() {
@@ -599,7 +659,8 @@ ZilStory._mouse_location = function(map_category, map_name, shape_name, pos, fx)
 //    console.log(map_category + "." + map_name + " shape=" + shape_name, pos_key);
     var m = ZilStory.MAPS[map_category + "." + map_name];
     if(m && m.locations && m.locations[pos_key]) {
-        m.locations[pos_key][fx]();
+        var r = m.locations[pos_key][fx]();
+        if(r == ZilStory.USE_DEFAULT_HANDLER) return false;
         return true;
     }
     return false;

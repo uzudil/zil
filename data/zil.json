@@ -65,27 +65,27 @@
     3104656,
     3687520
   ],
-  "shape_name": "maps.gasmine1",
+  "shape_name": "maps.gasmine2",
   "shortcuts": [
     "objects.mining",
     "objects.mining2",
     "objects.mining3",
     "floor.stone",
     "objects.column-wood",
-    "objects.chair",
-    "objects.urn",
-    "walls.stone-ruin",
     "walls.stone_low",
-    "objects.stairs_down"
+    "walls.stone2",
+    "doors.iron",
+    "walls.stone-ruin",
+    "objects.gaslamp"
   ],
   "game_events": {},
   "game_state": {
     "seen_intro": true,
     "player_start": [
       "maps",
-      "gasmine1",
-      46,
-      48
+      "gasmine2",
+      143,
+      170
     ],
     "quests": [
       "gav",
@@ -98,7 +98,9 @@
     "encounter_exygor": true,
     "met_father_fran": true,
     "opened_skrit_gate": true,
-    "encounter_eldgrawm": true
+    "encounter_eldgrawm": true,
+    "found_breathing_mask": true,
+    "found_breathing_mask_2": true
   },
   "player_stats": {
     "hp": 200,

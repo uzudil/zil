@@ -549,7 +549,8 @@ var BLUE_LIGHT = new THREE.Vector3(0.1, 0.44, 0.8);
 ZilShape.LIGHT_EMITTING_SHAPES = {
     "candelabra": [WHITE_LIGHT, 14],
     "gaslamp": [GREEN_LIGHT, 14],
-    "mushroom": [BLUE_LIGHT, 6]
+    "mushroom": [BLUE_LIGHT, 6],
+    "barrel": [GREEN_LIGHT, 8]
 };
 ZilShape.prototype._get_emitted_light_color = function(key) {
     var value = this.loaded_shapes[key];
