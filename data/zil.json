@@ -59,29 +59,33 @@
     12369084,
     12340480,
     13421772,
-    12040119
+    12040119,
+    6057224,
+    10364455,
+    3104656,
+    3687520
   ],
-  "shape_name": "maps.oram-gates",
+  "shape_name": "maps.gasmine1",
   "shortcuts": [
-    "objects.gaslamp",
-    "objects.plant",
+    "objects.mining",
+    "objects.mining2",
+    "objects.mining3",
     "floor.stone",
-    "floors.wood",
-    "doors.gate",
-    "walls.city_wall2",
-    "walls.city_wall2",
+    "objects.column-wood",
+    "objects.chair",
+    "objects.urn",
     "walls.stone-ruin",
     "walls.stone_low",
-    "walls.stone_low"
+    "objects.stairs_down"
   ],
   "game_events": {},
   "game_state": {
     "seen_intro": true,
     "player_start": [
       "maps",
-      "oram-gates",
-      91,
-      77
+      "gasmine1",
+      46,
+      48
     ],
     "quests": [
       "gav",
@@ -93,7 +97,8 @@
     "has_map": true,
     "encounter_exygor": true,
     "met_father_fran": true,
-    "opened_skrit_gate": true
+    "opened_skrit_gate": true,
+    "encounter_eldgrawm": true
   },
   "player_stats": {
     "hp": 200,
