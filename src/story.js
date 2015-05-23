@@ -496,7 +496,7 @@ ZilStory.MAPS = {
             }
         },
         locations: {
-            "155,23,1": {
+            "43,38,1": {
                 on_mouseover: function () {
                 },
                 on_mouseclick: function () {
