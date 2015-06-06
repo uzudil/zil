@@ -42,7 +42,8 @@ var ZilShape = function(category, name, shape, width, height, depth, rotation, l
         for(var i = 0; i < this.shape_keys.length; i++) {
             tasks.push(ZIL_UTIL.bind(this, function(index) {
                 var key = this.shape_keys[index];
-                this.loaded_shapes[key] = this._get_shape_value(key);
+                var v = this._get_shape_value(key);
+                if(v != null) this.loaded_shapes[key] = v;
             }));
         }
 
