@@ -70,6 +70,10 @@ function Mobile(x, y, z, category, shape, parent, is_transparent, animated_model
     this.last_z = z;
 
     this.size = Math.max(this.shape.width, this.shape.height);
+    // how wide on astar map?
+    var c = this.size / ZilShape.PATH_RES;
+    // a small hack: make sure a player can fit thru a door
+    this.clearance = this.monster ? Math.ceil(c)|0 : c|0;
     this._set_chunk_pos(true);
 }
 
@@ -225,7 +229,6 @@ Mobile.prototype.set_selected = function(selected) {
 
 Mobile.prototype.set_shape = function(dir) {
     this.dir = dir;
-
     this.rotate_obj.rotation.set(0, 0, PI/2 * dir);
     this.shape_obj_copy.rotation.set(0, 0, PI/2 * dir);
 };
@@ -233,8 +236,8 @@ Mobile.prototype.set_shape = function(dir) {
 Mobile.prototype.move = function(gx, gy, gz) {
     var zz = this.z - gz + this.cast_z + (this.monster ? this.monster.z_offset : 0);
     if(this.is_ethereal()) zz = 1; // hack!
-    this.shape_obj.position.set(this.x - gx, this.y - gy, zz);
-    this.shape_obj_copy.position.set(this.x - gx, this.y - gy, zz);
+    this.shape_obj.position.set(this.x - gx + this.shape.width/2, this.y - gy + this.shape.height/2, zz);
+    this.shape_obj_copy.position.set(this.x - gx + this.shape.width/2, this.y - gy + this.shape.height/2, zz);
     if(ZIL.player && this == ZIL.player.mobile) {
         ZIL_UTIL.lightPos.set(this.x - gx + this.shape.width / 2, this.y - gy + this.shape.height / 2, zz + this.shape.depth / 2);
     }
@@ -299,15 +302,38 @@ Mobile.prototype.creature_loiter_plan = function(map_shape) {
                     dx--;
                     break;
             }
+
+            // can it reach the player? can it fit?
+            // the first check uses the nodes; this is fast since nodes data is pre-computed
+            var fit_check = true;
+            var nx = (dx / ZilShape.PATH_RES)|0;
+            var ny = (dy / ZilShape.PATH_RES)|0;
+            var node = map_shape.nodes && map_shape.nodes[nx] ? map_shape.nodes[nx][ny] : null;
+            if(node && !node.is_empty) {
+                // inside the player's walkable nodes (fast check)
+                fit_check = node.clearance >= this.clearance;
+            } else {
+                // outside the player's walkable nodes (slow check)
+                // fallback logic: if creature outside of visible nodes, check bounds against map
+                var max_z = -1;
+                for(var xx = 0; xx < this.size; xx++) {
+                    for(var yy = 0; yy < this.size; yy++) {
+                        var zz = map_shape.get_highest_empty_space_at_point(dx + xx, dy + yy);
+                        if(zz > max_z) {
+                            max_z = zz;
+                        }
+                    }
+                }
+                fit_check = Math.abs(max_z - dz) <= 1;
+            }
+            if(!fit_check) break;
+
             var pz = dz;
             dz = map_shape.get_highest_empty_space_at_point(dx, dy);
             if (dz == 0 || Math.abs(dz - pz) > 1) {
                 break;
             }
-            var node = map_shape.find_color_at(dx, dy, dz - 1);
-            if(node == null) {
-                break;
-            }
+
             if(this.monster.loiter_radius && ZIL_UTIL.get_distance(this.origin_x, this.origin_y, dx, dy) >= this.monster.loiter_radius) {
                 break;
             }
@@ -549,8 +575,10 @@ Mobile.prototype.start_attack = function() {
 };
 
 Mobile.prototype.cancel_face_target = function(delta_time) {
-    this.rotate_obj.rotation.z = 0;
-    this.shape_obj_copy.rotation.z = 0;
+//    this.rotate_obj.rotation.z = 0;
+//    this.shape_obj_copy.rotation.z = 0;
+    this.rotate_obj.rotation.z = PI/2 * this.dir;
+    this.shape_obj_copy.rotation.z = PI/2 * this.dir;
 };
 
 Mobile.prototype.face_target = function(delta_time) {

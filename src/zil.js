@@ -337,6 +337,7 @@ var ZIL = {
 
             // rebuild the nodes
             ZIL.shape.build_nodes(ZIL.player.mobile.x, ZIL.player.mobile.y, ZIL.player.mobile.z);
+            if(ZIL.node_debug) ZIL.init_node_debug();
 
             // repaint
             ZIL.set_global_pos(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
@@ -388,6 +389,8 @@ var ZIL = {
             w = ZIL.player.mobile.shape.width + 4;
             h = ZIL.player.mobile.shape.height + 4;
         }
+        var offs_x = w/2;
+        var offs_y = h/2;
         // make is square
         w = h = Math.max(w, h);
 
@@ -396,7 +399,7 @@ var ZIL = {
 
         var geometry = new THREE.PlaneBufferGeometry(w, h);
         ZIL.ground_marker = new THREE.Mesh(geometry, ZIL.target_texture);
-        ZIL.ground_marker.position.set(xp, yp,
+        ZIL.ground_marker.position.set(xp + offs_x, yp + offs_y,
                 ZIL.shape.get_highest_empty_space(xp + ZIL.global_pos[0], yp + ZIL.global_pos[1]) + 0.1);
         ZIL.rendered_shape.add(ZIL.ground_marker);
     },
@@ -472,13 +475,21 @@ var ZIL = {
         if(event.which == 32) {
             ZIL.DEBUG_MODE = !ZIL.DEBUG_MODE;
             if(ZIL.DEBUG_MODE) {
-                ZIL.init_node_debug();
-                ZIL.inner.add( ZIL.node_debug );
-//                ZIL.inner.add( ZIL.coord );
-                ZIL.inner.add( ZIL.obj );
+                if(ZIL.shape && ZIL.player) {
+                    ZIL.shape.build_nodes(ZIL.player.mobile.x, ZIL.player.mobile.y, ZIL.player.mobile.z);
+                    ZIL.init_node_debug();
+
+                    ZIL.inner.add( ZIL.node_debug );
+                    ZIL.inner.add( ZIL.obj );
+
+                    // repaint
+                    ZIL.set_global_pos(ZIL.global_pos[0], ZIL.global_pos[1], ZIL.global_pos[2]);
+                    ZIL.screen_pos_map = {};
+                    ZIL.clear_ground_target();
+                    ZIL.redraw_shape();
+                }
             } else {
                 ZIL.inner.remove( ZIL.node_debug );
-//                ZIL.inner.remove( ZIL.coord );
                 ZIL.inner.remove( ZIL.obj );
             }
         }
@@ -595,7 +606,8 @@ var ZIL = {
                         can_move = true;
                     }
                     combat_move = true;
-                } else if (creature == ZIL.player || ZIL.player.mobile.is_moving() || creature.mobile.is_casting_spell()) {
+                } else {
+//                } else if (creature == ZIL.player || ZIL.player.mobile.is_moving() || creature.mobile.is_casting_spell()) {
                     can_move = true;
                 }
             }
@@ -1174,21 +1186,40 @@ var ZIL = {
                 if(!node.is_empty) {
                     var sq = ZIL_UTIL.make_square_face(ZilShape.PATH_RES);
                     var child = new THREE.Mesh(sq, null);
-                    child.position.set(node.x + ZilShape.PATH_RES/2, node.y + ZilShape.PATH_RES/2, node.z);
+                    child.position.set(node.x + ZilShape.PATH_RES / 2, node.y + ZilShape.PATH_RES / 2, node.z);
                     child.updateMatrix();
-                    geo.merge(child.geometry, child.matrix, x % 2 == y % 2 ? 0 : 1);
+//                    geo.merge(child.geometry, child.matrix, x % 2 == y % 2 ? 0 : 1);
+                    geo.merge(child.geometry, child.matrix, Math.min(node.clearance, 4));
                 }
             }
         }
         var materials = new THREE.MeshFaceMaterial([
-            new THREE.MeshLambertMaterial( {color: 0xff0000, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } ),
-            new THREE.MeshLambertMaterial( {color: 0x0000ff, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } )
+            // nodes
+            new THREE.MeshBasicMaterial( {color: 0x100000, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } ),
+            new THREE.MeshBasicMaterial( {color: 0x400000, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } ),
+            new THREE.MeshBasicMaterial( {color: 0x800000, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } ),
+            new THREE.MeshBasicMaterial( {color: 0xb00000, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } ),
+            new THREE.MeshBasicMaterial( {color: 0xf00000, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } ),
+            // errors
+            new THREE.MeshBasicMaterial( {color: 0xff00ff, side: THREE.DoubleSide, wireframe: false, transparent: true, opacity: 0.35 } ),
         ]);
         ZIL.node_debug = new THREE.Mesh(geo, materials);
 
         if(old_parent) {
             old_parent.add(ZIL.node_debug);
         }
+
+        if(ZIL.global_pos) ZIL.node_debug.position.set(-ZIL.global_pos.x, -ZIL.global_pos.y, -ZIL.global_pos.z + 1);
+
+        materials.needsUpdate = true;
+        ZIL.node_debug.verticesNeedUpdate = true;
+        ZIL.node_debug.elementsNeedUpdate = true;
+        ZIL.node_debug.morphTargetsNeedUpdate = true;
+        ZIL.node_debug.uvsNeedUpdate = true;
+        ZIL.node_debug.normalsNeedUpdate = true;
+        ZIL.node_debug.colorsNeedUpdate = true;
+        ZIL.node_debug.tangentsNeedUpdate = true;
+
     },
 
 	load_shape: function(category_name, shape_name, start_x, start_y, on_load) {

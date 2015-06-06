@@ -484,6 +484,7 @@ function IndexNode(x, y, z, value) {
     this.origin = [x, y, z];
     this.dimensions = this.is_final ? [1, 1, 1] : [value.width, value.height, value.depth];
     this.value = value;
+    this.clearance = 0;
 }
 
 IndexNode.prototype.same_as = function(other_node) {
@@ -780,6 +781,7 @@ function PathNode(x, y, z, is_empty, allow_ethereal) {
     this.z = z;
     this.is_empty = is_empty;
     this.allow_ethereal = allow_ethereal;
+    this.clearance = 1;
 }
 
 PathNode.prototype.getCost = function(other_node, creature) {
@@ -814,7 +816,42 @@ ZilShape.prototype.build_nodes = function(x, y, z) {
         }
     }
     this._find_nodes_iterative( ((x / ZilShape.PATH_RES)|0), ((y / ZilShape.PATH_RES)|0), {} );
+    this._find_true_clearance_values();
     console.log("Built " + (this.nodes.length * this.nodes[0].length) + " nodes in " + (Date.now() - start_time) + " millis.");
+};
+
+// from: http://aigamedev.com/open/tutorial/clearance-based-pathfinding/
+ZilShape.prototype._find_true_clearance_values = function() {
+    var start_time = Date.now();
+    for(var x = 0; x < this.nodes.length; x++) {
+        for (var y = 0; y < this.nodes[0].length; y++) {
+            var node = this.nodes[x][y];
+            if(node.is_empty) {
+                node.clearance = 0;
+            } else {
+                for(var i = 1; i < 16; i++) {
+                    var wall_found = false;
+                    for(var xx = 0; xx <= i; xx++) {
+                        var n = this.nodes[x + xx][y + i];
+                        if(!n || n.is_empty) {
+                            wall_found = true;
+                            break;
+                        }
+                    }
+                    for(var yy = 0; !wall_found && yy <= i; yy++) {
+                        var n = this.nodes[x + i][y + yy];
+                        if(!n || n.is_empty) {
+                            wall_found = true;
+                            break;
+                        }
+                    }
+                    if(wall_found) break;
+                    node.clearance = i + 1;
+                }
+            }
+        }
+    }
+    console.log("Found clearance values for " + (this.nodes.length * this.nodes[0].length) + " nodes in " + (Date.now() - start_time) + " millis.");
 };
 
 // this should be recursive but the browser has issues with that

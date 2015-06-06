@@ -154,7 +154,7 @@ var astar = {
 };
 
 ZilShape.prototype.isWall = function(node, creature, ignore_creatures) {
-    if(node.is_empty && !(creature.mobile.is_ethereal() && node.allow_ethereal)) return true;
+    if((node.is_empty || node.clearance < creature.mobile.clearance) && !(creature.mobile.is_ethereal() && node.allow_ethereal)) return true;
 
     if(!ignore_creatures) {
         for (var dx = 0; dx < ZilShape.PATH_RES; dx++) {
