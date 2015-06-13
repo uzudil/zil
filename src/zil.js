@@ -725,7 +725,7 @@ var ZIL = {
     MAX_DISTANCE: ZIL_UTIL.VIEW_WIDTH / 2 + ZIL_UTIL.CHUNK_SIZE,
 
     for_visible_creatures: function(creature_fx) {
-        ZIL.for_creatures_in_area(ZIL.global_pos[0], ZIL.global_pos[1],
+        return ZIL.for_creatures_in_area(ZIL.global_pos[0], ZIL.global_pos[1],
             ZIL.global_pos[0] + ZIL_UTIL.VIEW_WIDTH,
             ZIL.global_pos[1] + ZIL_UTIL.VIEW_WIDTH,
             creature_fx);
@@ -740,11 +740,12 @@ var ZIL = {
                 if(creatures.length > 0) {
                     for (var idx = 0; idx < creatures.length; idx++) {
                         var c = creatures[idx];
-                        creature_fx(c);
+                        if(creature_fx(c)) return true;
                     }
                 }
             }
         }
+        return false;
     },
 
     combat_step: function(delta_time) {

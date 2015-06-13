@@ -75,6 +75,9 @@ function Mobile(x, y, z, category, shape, parent, is_transparent, animated_model
     // a small hack: make sure a player can fit thru a door
     this.clearance = this.monster ? Math.ceil(c)|0 : c|0;
     this._set_chunk_pos(true);
+
+    this.bounding_box = new BoundingBox(this.size, this.size, this.shape.depth);
+    this.bounding_box.position.set(x, y, z);
 }
 
 Mobile.prototype.render = function(delta_time) {
@@ -137,6 +140,7 @@ Mobile.prototype.set_status = function(status, turns_count) {
 };
 
 Mobile.prototype.contains_point = function(x, y, z, buffer) {
+    // todo: use this.bounding_box
     if(buffer == null) buffer = 0;
     return ZIL_UTIL.contains_box([x, y, z],
         [this.x-buffer, this.y-buffer, this.z-buffer],
@@ -182,25 +186,27 @@ Mobile.get_for_chunk = function(chunk_x, chunk_y) {
     return Mobile.CHUNK_MAP["" + chunk_x + "," + chunk_y] || Mobile.EMPTY_LIST;
 };
 
-Mobile.prototype.creature_blocked_at = function(x, y, z) {
-    if (this.contains_point(x, y, z)) return null; // self won't block
-
-    var cx = (x/ZIL_UTIL.CHUNK_SIZE)|0;
-    var cy = (y/ZIL_UTIL.CHUNK_SIZE)|0;
-    var c = Mobile.get_for_chunk(cx, cy);
-    for(var i = 0; i < c.length; i++) {
-        // not blocked by self or target
-        if(c[i].mobile.contains_point(x, y, z) && c[i] != this.parent && c[i] != this.target) return c[i];
-    }
-    return null;
-};
-
 Mobile.prototype.creature_blocked = function(nx, ny, nz) {
-    // should also check points at z = nz + 1 + this.shape.depth - 1
-    return this.creature_blocked_at(nx, ny, nz + 1) ||
-        this.creature_blocked_at(nx + this.size - 1, ny, nz + 1) ||
-        this.creature_blocked_at(nx + this.size - 1, ny + this.size - 1, nz + 1) ||
-        this.creature_blocked_at(nx, ny + this.size - 1, nz + 1);
+    this.bounding_box.push_position();
+    this.bounding_box.position.set(nx, ny, nz);
+
+    var blocked = false;
+    ZIL.for_visible_creatures(ZIL_UTIL.bind(this, function(creature) {
+        if(creature == this.parent || creature == this.target) return false;
+
+        // leave some space between monsters
+        var buffer = 0;
+        if(this.parent != ZIL.player && creature.mobile.alignment == this.alignment) buffer = 4;
+        if(creature.mobile.bounding_box.intersects(this.bounding_box, buffer)) {
+            blocked = true;
+            return true; // loop no more
+        }
+
+         return false
+    }));
+
+    this.bounding_box.pop_position();
+    return blocked;
 };
 
 Mobile.prototype.move_to = function(nx, ny, nz, gx, gy, gz) {
@@ -208,6 +214,7 @@ Mobile.prototype.move_to = function(nx, ny, nz, gx, gy, gz) {
     this.y = ny;
     this.z = nz;
     this._set_chunk_pos();
+    this.bounding_box.position.set(nx, ny, nz);
 
     // todo: add smooth rotation here...
     if(this.x > this.last_x) this.set_shape(ZIL_UTIL.W);
@@ -452,7 +459,7 @@ Mobile.prototype.move_step = function(map_shape, gx, gy, gz, delta_time) {
             if (this.move_path) {
                 var node = this.move_path[this.move_path_index];
 
-                // blocked by another creature? Just wait (this won't happen during combat)
+                // blocked by another creature?
                 var c = this.creature_blocked(node[0], node[1], node[2]);
                 if (c) {
 //                    console.log("waiting in move: " + this.get_name() + " vs " + c.mobile.get_name() +

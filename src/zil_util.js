@@ -403,3 +403,38 @@ ZIL_UTIL.show_fps = function(fps) {
     var win = gui.Window.get();
     win.title = "ZIL - " + fps;
 };
+
+function BoundingBox(width, height, depth) {
+    this.position = new THREE.Vector3(0, 0, 0);
+    this.tmp_position = new THREE.Vector3(0, 0, 0);
+    this.size = new THREE.Vector3(width, height, depth);
+}
+
+BoundingBox.prototype.push_position = function(other_box) {
+    this.tmp_position.copy(this.position);
+};
+
+BoundingBox.prototype.pop_position = function(other_box) {
+    this.position.copy(this.tmp_position);
+};
+
+BoundingBox.prototype.intersects = function(other_box, buffer) {
+    if(buffer == null) buffer = 0;
+
+    var p = other_box.position.x;
+    var x1 = (p >= this.position.x - buffer && p < this.position.x + this.size.x + buffer);
+    p = other_box.position.x + other_box.size.x - 1;
+    var x2 = (p >= this.position.x - buffer && p < this.position.x + this.size.x + buffer);
+
+    p = other_box.position.y;
+    var y1 = (p >= this.position.y - buffer && p < this.position.y + this.size.y + buffer);
+    p = other_box.position.y + other_box.size.y - 1;
+    var y2 = (p >= this.position.y - buffer && p < this.position.y + this.size.y + buffer);
+
+    p = other_box.position.z;
+    var z1 = (p >= this.position.z - buffer && p < this.position.z + this.size.z + buffer);
+    p = other_box.position.z + other_box.size.z - 1;
+    var z2 = (p >= this.position.z - buffer && p < this.position.z + this.size.z + buffer);
+
+    return (x1 || x2) && (y1 || y2) && (z1 || z2);
+};
