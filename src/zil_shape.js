@@ -2,7 +2,7 @@ var ZilShape = function(category, name, shape, width, height, depth, rotation, l
 	this.category = category;
 	this.name = name;
     this.use_boxes = use_boxes;
-    this.is_transparent = false;
+    this.is_transparent = name == "forcewall";
     var _shape = {};
     for(var key in shape) {
         var value = shape[key];
@@ -480,11 +480,12 @@ ZilShape.prototype.render_shape = function(parent_shape, position_offset, skip_b
 
 ZilShape.INDEX_RES = 4;
 
-function IndexNode(x, y, z, value) {
+function IndexNode(x, y, z, value, is_transparent) {
     this.is_final = !isNaN(value);
     this.origin = [x, y, z];
     this.dimensions = this.is_final ? [1, 1, 1] : [value.width, value.height, value.depth];
     this.value = value;
+    this.is_transparent = is_transparent;
     this.clearance = 0;
 }
 
@@ -597,6 +598,7 @@ ZilShape.DEFAULT_EMITTED_LIGHT = {
     intensity: 0.0,
     color: new THREE.Vector3(1.0, 1.0, 1.0)
 };
+
 ZilShape.prototype.get_emitted_light = function(x, y, z) {
     var e = this.emitted_light[x + "." + y + "." + z];
     return e ? e : ZilShape.DEFAULT_EMITTED_LIGHT;
@@ -614,7 +616,7 @@ ZilShape.prototype._index_shape = function(key) {
 };
 
 ZilShape.prototype._shape_index_points = function(x, y, z, value, fx) {
-    var node = new IndexNode(x, y, z, value);
+    var node = new IndexNode(x, y, z, value, this.is_transparent);
 
     var px = -1;
     for(var cx = 0; cx < node.dimensions[0]; cx++) {
@@ -717,7 +719,7 @@ ZilShape.prototype.find_index_node = function(x, y, z) {
 
 ZilShape.prototype.render_chunk = function(cx, cy, cz, chunk) {
     chunk.set_pos(cx * ZIL_UTIL.CHUNK_SIZE, cy * ZIL_UTIL.CHUNK_SIZE, cz * ZIL_UTIL.CHUNK_SIZE, this);
-	chunk.render(this.use_boxes || window["ZIL_BUILD"] != null, this.is_transparent); // force refresh
+	chunk.render(this.use_boxes || window["ZIL_BUILD"] != null); // force refresh
 
     // debug info
     chunk.shape.userData.name = this.category + "." + this.name;

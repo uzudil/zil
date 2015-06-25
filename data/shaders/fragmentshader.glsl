@@ -13,6 +13,7 @@ varying float key2Intensity;
 varying float key3Intensity;
 varying vec3 vBlockColor;
 varying float fBlockLightIntensity;
+varying float fVertexOpacity;
 varying vec3 vBlockLightColor;
 
 void main()
@@ -36,7 +37,7 @@ void main()
         color += colorDir * dirLightIntensity * powerDir * weightedPower;
         color += vBlockLightColor * fBlockLightIntensity * powerEmitted * weightedPower;
 
-        gl_FragColor = vec4(vBlockColor * color, 1.0);
+        gl_FragColor = vec4(vBlockColor * color, fVertexOpacity);
     } else {
         vec3 ambientColor = vec3(0.03, 0.03, 0.03);
 
@@ -56,6 +57,6 @@ void main()
         color += colorKey3 * key3Intensity * powerKey3 * weightedPower;
         color = max(color, ambientColor);
 
-        gl_FragColor = vec4(vBlockColor * color, 1.0);
+        gl_FragColor = vec4(vBlockColor * color, fVertexOpacity);
     }
 }

@@ -5,6 +5,7 @@
 
 attribute vec3 blockColor;
 attribute float blockLightIntensity;
+attribute float vertexOpacity;
 attribute vec3 blockLightColor;
 
 uniform vec3 lightPos;
@@ -19,6 +20,7 @@ varying float key2Intensity;
 varying float key3Intensity;
 varying vec3 vBlockColor;
 varying float fBlockLightIntensity;
+varying float fVertexOpacity;
 varying vec3 vBlockLightColor;
 
 float getLightIntensity(float lightDist, vec3 vNormal, vec3 vLightPos, vec4 worldPos) {
@@ -74,4 +76,5 @@ void main()
     vBlockColor = blockColor;
     fBlockLightIntensity = blockLightIntensity;
     vBlockLightColor = blockLightColor;
+    fVertexOpacity = vertexOpacity;
 }

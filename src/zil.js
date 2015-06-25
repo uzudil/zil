@@ -311,7 +311,9 @@ var ZIL = {
     },
 
     shape_hover: function(shape_name, pos) {
-        return shape_name.indexOf("doors.") == 0 || shape_name.indexOf("objects.mlord_banner") == 0;
+        return shape_name.indexOf("doors.") == 0 ||
+            shape_name.indexOf("objects.mlord_banner") == 0 ||
+            shape_name.indexOf("objects.forcewall") == 0;
     },
 
     shape_clicked: function(shape_name, pos) {
@@ -319,6 +321,9 @@ var ZIL = {
         console.log("+++ " + shape_name);
         if(shape_name.indexOf("objects.mlord_banner") == 0) {
             ZIL.show_sign("You see the banner of the <i>Mountain Lord</i> - the deity worshipped on the upper levels of the mountain.");
+            return true;
+        } else if(shape_name.indexOf("objects.forcewall") == 0) {
+            ZIL.show_sign("A shimmering <i>wall of energy</i> is blocking the way here.");
             return true;
         } else if(shape_name.indexOf("doors.") == 0) {
             var shape = ZIL.shape.get_shape(pos[0], pos[1], pos[2]);
@@ -1033,7 +1038,7 @@ var ZIL = {
         var render_mobile = new THREE.RenderPass( ZIL.scene2, ZIL.camera );
 
         var rt_parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: true };
-        var target = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, rt_parameters )
+        var target = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, rt_parameters );
 
         var overlay_composer = new THREE.EffectComposer( ZIL.renderer, target );
         overlay_composer.addPass( render_mobile );

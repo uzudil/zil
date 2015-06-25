@@ -67,7 +67,7 @@
   ],
   "shape_name": "maps.gasmine2",
   "shortcuts": [
-    "objects.mining",
+    "objects.forcewall",
     "objects.mining2",
     "objects.mining3",
     "floor.stone",
@@ -83,9 +83,9 @@
     "seen_intro": true,
     "player_start": [
       "maps",
-      "abandoned_temple_3",
-      38,
-      40
+      "gasmine2",
+      143,
+      170
     ],
     "quests": [
       "gav"
@@ -94,7 +94,9 @@
     "opened_ante_gate": true,
     "skrit_intro": true,
     "has_map": true,
-    "opened_skrit_gate": true
+    "opened_skrit_gate": true,
+    "found_breathing_mask": true,
+    "found_breathing_mask_2": true
   },
   "player_stats": {
     "hp": 200,

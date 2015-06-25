@@ -54,6 +54,10 @@ Chunk._create_custom_attributes = function() {
         blockLightColor: {
             type: "v3",
             value: []
+        },
+        vertexOpacity: {
+            type: "f",
+            value: []
         }
     };
 };
@@ -89,10 +93,12 @@ Chunk.get_material = function(blockColor, is_transparent) {
     // material.clone doesn't clone the attributes, so do it here (make sure each attribute is empty at this point)
     material.attributes = Chunk._create_custom_attributes();
 
+    material.transparent = true;
+
 	return material;
 };
 
-Chunk.prototype.render = function(use_boxes, is_transparent) {
+Chunk.prototype.render = function(use_boxes) {
 //	console.log("* Rendering chunk " + this.name);
 
     if(this.geo) this.geo.dispose();
@@ -100,7 +106,7 @@ Chunk.prototype.render = function(use_boxes, is_transparent) {
 
     // one material for the entire chunk
     if(this.material) this.material.dispose();
-    this.material = Chunk.get_material(0, is_transparent);
+    this.material = Chunk.get_material(0);
 
 	for(var x = 0; x < ZIL_UTIL.CHUNK_SIZE; x++) {
 		for(var y = 0; y < ZIL_UTIL.CHUNK_SIZE; y++) {
@@ -108,7 +114,7 @@ Chunk.prototype.render = function(use_boxes, is_transparent) {
 
 				var block = this.get_block(x, y, z);
 				if(block != null) {
-                    this.render_block(x, y, z, block, this.get_emitted_light(x, y, z), this.material, use_boxes, is_transparent);
+                    this.render_block(x, y, z, block, this.get_emitted_light(x, y, z), this.material, use_boxes);
 				}
 			}
 		}
@@ -116,7 +122,7 @@ Chunk.prototype.render = function(use_boxes, is_transparent) {
     this.shape = new THREE.Mesh(this.geo, this.material);
 };
 
-Chunk.prototype.render_block = function(x, y, z, block, emitted_light, material, use_boxes, is_transparent) {
+Chunk.prototype.render_block = function(x, y, z, block, emitted_light, material, use_boxes) {
 
     // south
     var faces = [];
@@ -181,6 +187,7 @@ Chunk.prototype.render_block = function(x, y, z, block, emitted_light, material,
                 material.attributes.blockColor.value.push(vColor);
                 material.attributes.blockLightIntensity.value.push(emitted_light.intensity);
                 material.attributes.blockLightColor.value.push(emitted_light.color);
+                material.attributes.vertexOpacity.value.push(block.is_transparent ? 0.5 : 1.0);
             }
             this.geo.merge(faces[i].geometry, faces[i].matrix, 0);
             //                                this.geo.mergeVertices(); // too slow
