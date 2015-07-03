@@ -23,6 +23,14 @@ ZilStory.QUESTS = {
         level: 2,
         on_complete: function() {
         }
+    },
+    "endiminium": {
+        name: "Bring a sample of Endiminium to Trader Daz",
+        level: 3,
+        on_complete: function() {
+            ZIL.player.mobile.add_spell(Spell.BREAK_BARRIER);
+            ZIL.player.save_stats();
+        }
     }
 };
 
@@ -563,6 +571,46 @@ ZilStory.MAPS = {
                         });
                     }
                 }
+            },
+            "88,113,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Foreman Zorn's quarters this way.");
+                }
+            },
+            "26,257,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("Foreman Zorn's quarters: a half-day's wages will be charged for all lost equipment (including canaries)");
+                }
+            },
+            "290,147,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    ZIL.show_sign("<b>Endiminium Gas Warning:</b> Safety equipment must be worn beyond this point.<br><br>" +
+                        "Contact with the gas must be reported immediately to the foreman.");
+                }
+            },
+            "279,293,1": {
+                on_mouseover: function () {
+                },
+                on_mouseclick: function () {
+                    if(ZIL_UTIL.game_state["has_endiminium"]) {
+                        ZIL.say(ZIL.player, "I don't need any more <b>Endiminium</b> samples.");
+                    } else {
+                        ZIL.say(ZIL.player, "Huge barrels of liquid <b>Endiminium</b> gas. " +
+                            "I will just fill up a small bottle with the stuff and take it back to <b>Trader Daz</b>.<br><br>" +
+                            "Hopefully he will keep his end of the bargain and teach me the song that removes the <b>barriers</b> beyond this room.", function() {
+                            Mobile.hide_convos();
+                            ZIL_UTIL.game_state["has_endiminium"] = true;
+                            ZIL_UTIL.save_config();
+                            return true;
+                        });
+                    }
+                }
             }
         }
     },
@@ -827,12 +875,29 @@ ZilStory.CONVO = {
             "": "What are you looking at ye filthy sod?<br><br>What <a>business</a> have ye in <a>Oram</a>?"
         },
         "99,88,1": {
-            "_name_": "Healer Daz",
-            "": "Wanting to travel up the mountain, friend? Maybe we can come to a mutually beneficial <a>arrangement</a>...",
+            "_name_": "Trader Daz",
+            "": function() {
+                if(ZIL_UTIL.game_state["has_endiminium"]) {
+                    if(ZIL.completed_quest("endiminium")) {
+                        return "Thanks again for procuring a sample of <b>Endiminium</b> gas for me.<br><br>" +
+                            "Now go forth and use the song of <b>Barrier Removal</b> to enter the city of Oram from the mines.";
+                    } else {
+                        ZIL.quest_completed("endiminium");
+                        return "Ah yes, good work, that's exactly what I need...<br><br>" +
+                            "I'll take the Endiminium sample and in return, here is the song of <b>Barrier Removal</b>.<br><br>" +
+                            "May it serve you well in your travels to Oram and beyond.";
+                    }
+                } else {
+                    return "Wanting to travel up the mountain, friend? Maybe we can come to a mutually beneficial <a>arrangement</a>...";
+                }
+            },
             "arrangement": "The nearby gas <a>mine</a> contains an air-vent that connects to the Oram city sewers. You <a>could</a> use it to travel into the diseased city.",
             "mine": "Before the <a>outbreak</a>, a local mining company mined Endiminium gas here. This chemical has lots of uses from curing meat to being a vital component in certain enchantments... The <a w='could'>latter</a> is what interests me.",
             "could": "Like I said, travel to the city is possible. The way in is currently blocked by a magical barrier and I know the arcane song to remove it.<br><br>All I require in return is for you to bring me a canister of Endiminium <a w='mine'>gas</a> from the mine.<br><br>A fair trade, now <a>what</a> do you say?",
-            "what": "Good, good, I knew you could be reasonable.<br><br>Oh, I forgot to mention: the disease that plagues the city also appears in the mine, so you may encounter some... abberrations...<br><br>I'm confident you will have no trouble. Remember, bring me a single <a w='could'>canister</a> of the gas, and I will teach you the song of unblocking.<br><br>Good luck!"
+            "what": function() {
+                if(!ZIL.has_quest("endiminium")) ZIL.add_quest("endiminium");
+                return "Good, good, I knew you could be reasonable.<br><br>Oh, I forgot to mention: the disease that plagues the city also appears in the mine, so you may encounter some... abberrations...<br><br>I'm confident you will have no trouble. Remember, bring me a single <a w='could'>canister</a> of the gas, and I will teach you the song of unblocking.<br><br>Good luck!"
+            }
         }
     }
 };

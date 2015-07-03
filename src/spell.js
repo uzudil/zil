@@ -190,7 +190,7 @@ Spell.LIGHTNING_FIELD = new Spell("Mor-Zarr", [
     });
 });
 
-Spell.REMOVE_FORCE = new Spell("Ank-Gur", [
+Spell.BREAK_BARRIER = new Spell("Ank-Gur", [
     ["Db5", 4], ["Db5", 4], ["Db5", 4]
 ], 4, "special", false, function(caster, target) {
 });
