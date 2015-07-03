@@ -307,6 +307,18 @@ AnimatedModel.GUARD = function() {
         });
 };
 
+AnimatedModel.UNDEAD = function() {
+    return AnimatedModel.create_model("guard",
+        AnimatedModel.HUMAN_MODEL, {
+            head: 11,
+            left_leg: 4,
+            right_leg: 4,
+            left_arm: 3,
+            right_arm: 3,
+            torso: 3
+        });
+};
+
 
 
 
@@ -362,7 +374,7 @@ var Zil_Animator = {
             return true;
         });
 
-        Zil_Animator.model = AnimatedModel.HUMAN().initialize();
+        Zil_Animator.model = AnimatedModel.UNDEAD().initialize();
         Zil_Animator.scene.add( Zil_Animator.model.shape_obj );
         Zil_Animator.model.shape_obj.position.x += Zil_Animator.model.width / 2;
         Zil_Animator.model.shape_obj.position.y += Zil_Animator.model.height / 2;

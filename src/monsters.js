@@ -26,7 +26,8 @@ MONSTERS = {
     "aberration": new Monster("creatures", "aberration1", "Plagued Mutation", 4, null, false, null, 4),
     "aberration2": new Monster("creatures", "aberration2", "Plagued Aberration", 5, null, false, null, 3),
     "demon": new Monster("creatures", "demon", "Bael Demon", 9),
-    "soldier": new Monster("creatures", "soldier", "Guard", 0, 16, false, AnimatedModel.GUARD)
+    "soldier": new Monster("creatures", "soldier", "Guard", 0, 16, false, AnimatedModel.GUARD),
+    "zombie": new Monster("creatures", "soldier", "Plagued Undead", 0, 16, false, AnimatedModel.UNDEAD)
 };
 
 for(var key in MONSTERS) {
