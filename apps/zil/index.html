@@ -92,14 +92,12 @@
         <script id='tmpl-songbook_page' type='text/template'>
             <div class="songbook_page clearfix" id="page_<%= page %>">
                 <% for(var i = 0; i < spells.length; i++) { %>
-                    <% if(ZIL.player.mobile.has_spell(spells[i])) { %>
-                        <div class="songbook_spell" id="<%= spells[i].name %>">
+                    <div class="songbook_spell" id="<%= spells[i].name %>">
+                        <div class="spell_contents">
                             <img src="<%= spells[i].img_src %>" width="50">
                             <%= spells[i].name %>
                         </div>
-                    <% } else { %>
-                        <div class="songbook_spell disabled_spell" id="<%= spells[i].name %>"></div>
-                    <% } %>
+                    </div>
                 <% } %>
             </div>
         </script>

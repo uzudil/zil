@@ -95,16 +95,22 @@
     "skrit_intro": true,
     "has_map": true,
     "opened_skrit_gate": true,
+    "encounter_eldgrawm": true,
     "found_breathing_mask": true,
-    "found_breathing_mask_2": true
+    "found_breathing_mask_2": true,
+    "has_endiminium": true,
+    "completed_quests": [
+      "endiminium"
+    ]
   },
   "player_stats": {
     "hp": 200,
-    "exp": 4500,
-    "level": 5,
+    "exp": null,
+    "level": null,
     "spells": [
       "Zon-Bur",
-      "Mor-Dil"
+      "Mor-Dil",
+      "Ank-Gur"
     ]
   }
 }

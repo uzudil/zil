@@ -44,7 +44,7 @@ Player.prototype.set_stats = function(stats) {
     this.mobile.level = stats["level"] || this.mobile.level;
     var spell_names = stats["spells"] || [];
     for(var i = 0; i < spell_names.length; i++) {
-        this.mobile.add_spell(Spell.SPELLS_BY_NAME[spell_names[i]]);
+        this.mobile.add_spell(Spell.SPELLS_BY_NAME[spell_names[i]], true);
     }
 };
 

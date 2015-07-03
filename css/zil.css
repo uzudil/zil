@@ -384,6 +384,10 @@ a.button.black.active {
     cursor: pointer;
 }
 
+.songbook_spell.disabled_spell .spell_contents {
+    display: none;
+}
+
 .songbook_spell:hover {
     color: #ff8;
     background: #555;

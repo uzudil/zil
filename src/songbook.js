@@ -24,7 +24,6 @@ Songbook.init_ui = function() {
     });
     $("#next_page").unbind("click").click(Songbook.next_page);
     $("#prev_page").unbind("click").click(Songbook.prev_page);
-    $(".songbook_spell:not(.disabled_spell)").unbind("click").click(Songbook.cast_spell);
 };
 
 Songbook.next_page = function() {
@@ -40,6 +39,13 @@ Songbook.prev_page = function() {
 };
 
 Songbook.show_page = function(page) {
+    // re-toggle spells in case the player gained a new one
+    for(var name in Spell.SPELLS_BY_NAME) {
+        var spell = Spell.SPELLS_BY_NAME[name];
+        $("#" + name).toggleClass("disabled_spell", !ZIL.player.mobile.has_spell(spell));
+    }
+    $(".songbook_spell:not(.disabled_spell)").unbind("click").click(Songbook.cast_spell);
+
     $(".songbook_page").hide();
     $("#page_" + page).show();
     $("#songbook_page_label").text("Songs for page " + (page + 1)).attr("data-page", page);

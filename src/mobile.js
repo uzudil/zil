@@ -872,9 +872,9 @@ Mobile.prototype.has_spell = function(spell) {
     return this.spells.indexOf(spell) > -1;
 };
 
-Mobile.prototype.add_spell = function(spell) {
+Mobile.prototype.add_spell = function(spell, silent) {
     this.spells.push(spell);
-    ZIL.log(this.get_name() + " finds a scroll. It tingles with power.");
+    if(!silent) ZIL.log(this.get_name() + " memorizes a new song of power.");
 };
 
 Mobile.prototype.cast_spell_by_name = function(name) {
