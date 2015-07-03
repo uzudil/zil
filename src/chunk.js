@@ -76,6 +76,10 @@ Chunk.get_material = function(blockColor, is_transparent) {
                 isIndoors: {
                     type: "f",
                     value: 0.0
+                },
+                timeVec: {
+                    type: "v3",
+                    value: ZIL_UTIL.time
                 }
             },
             vertexShader:   shaders[0],
@@ -89,6 +93,7 @@ Chunk.get_material = function(blockColor, is_transparent) {
     // set the uniforms
     material.uniforms.isIndoors.value = ZIL_UTIL.is_indoors ? 1.0 : 0.0;
     material.uniforms.lightPos.value = ZIL_UTIL.lightPos;
+    material.uniforms.timeVec.value = ZIL_UTIL.time;
 
     // material.clone doesn't clone the attributes, so do it here (make sure each attribute is empty at this point)
     material.attributes = Chunk._create_custom_attributes();

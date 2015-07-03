@@ -10,6 +10,7 @@ attribute vec3 blockLightColor;
 
 uniform vec3 lightPos;
 uniform float isIndoors;
+uniform vec3 timeVec;
 
 varying vec3 vNormal;
 varying float intensity;
@@ -43,7 +44,15 @@ float getLightIntensity(float lightDist, vec3 vNormal, vec3 vLightPos, vec4 worl
 void main()
 {
     // convert vertex position to world coordinates
-    vec4 worldPos = modelMatrix * vec4(position,1.0);
+    vec4 tmpPos = vec4(position, 1.0);
+    vec2 co = vec2(position.x, position.y);
+    if(vertexOpacity < 1.0 && tmpPos.z > 2.0) {
+        // add some wobble
+        tmpPos.x += sin(tmpPos.z * timeVec.x) * 0.5;
+        tmpPos.y += cos(tmpPos.z * timeVec.x) * 0.5;
+        tmpPos.z += sin(timeVec.x * 2.5);
+    }
+    vec4 worldPos = modelMatrix * tmpPos;
 
     // send normal to fragment shader
     vNormal = normalMatrix * normal;
@@ -77,4 +86,8 @@ void main()
     fBlockLightIntensity = blockLightIntensity;
     vBlockLightColor = blockLightColor;
     fVertexOpacity = vertexOpacity;
+    if(vertexOpacity < 1.0) {
+        // add some wobble
+        fVertexOpacity += sin(timeVec.x * 1.25) * 0.25;
+    }
 }

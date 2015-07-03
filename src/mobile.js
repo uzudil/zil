@@ -39,8 +39,7 @@ function Mobile(x, y, z, category, shape, parent, is_transparent, animated_model
     this.cast_particles = null;
     this.status = {};
 
-    this.shape = ZilShape.load_shape(category, shape, 0, null, true);
-    this.shape.is_transparent = is_transparent;
+    this.shape = ZilShape.load_shape(category, shape, 0, null, true, is_transparent);
 
     this.animated_model = animated_model ? animated_model().initialize() : null;
     if(this.animated_model) {

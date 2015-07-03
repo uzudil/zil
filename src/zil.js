@@ -1403,6 +1403,7 @@ var ZIL = {
 		var now = Date.now();
         var delta_time = now - ZIL.last_time;
         ZIL.last_time = now;
+        ZIL_UTIL.time.x += ZIL_UTIL.clock.getDelta();
 
 		ZIL.game_step(delta_time);
 

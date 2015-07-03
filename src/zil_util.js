@@ -4,6 +4,8 @@ var ZIL_UTIL = {
 };
 
 ZIL_UTIL.lightPos = new THREE.Vector3(0, 0, 0);
+ZIL_UTIL.time = new THREE.Vector3(0, 0, 0);
+ZIL_UTIL.clock = new THREE.Clock();
 
 ZIL_UTIL.N = 0; // y smaller
 ZIL_UTIL.E = 1; // x smaller

@@ -1,8 +1,8 @@
-var ZilShape = function(category, name, shape, width, height, depth, rotation, loading_delegate, use_boxes, progress_update, on_load) {
+var ZilShape = function(category, name, shape, width, height, depth, rotation, loading_delegate, use_boxes, progress_update, on_load, is_transparent) {
 	this.category = category;
 	this.name = name;
     this.use_boxes = use_boxes;
-    this.is_transparent = name == "forcewall";
+    this.is_transparent = is_transparent || (name == "forcewall");
     var _shape = {};
     for(var key in shape) {
         var value = shape[key];
@@ -161,7 +161,7 @@ ZilShape.prototype.mark_chunk_updated = function(key) {
 	this.chunks_updated[chunk_key] = true;
 };
 
-ZilShape.load_shape = function(category_name, shape_name, rotation, loading_delegate, use_boxes) {
+ZilShape.load_shape = function(category_name, shape_name, rotation, loading_delegate, use_boxes, is_transparent) {
 	var name = category_name + "." + shape_name;
     if(rotation == null) rotation = 0;
     var cache_name = name + "." + rotation;
@@ -170,7 +170,7 @@ ZilShape.load_shape = function(category_name, shape_name, rotation, loading_dele
 //		console.log("* Loading shape: " + cache_name);
 		var js = ZIL_UTIL.get_shape(category_name, shape_name);
 		var shape = js ? js : { width: ZIL_UTIL.WIDTH, height: ZIL_UTIL.HEIGHT, depth: ZIL_UTIL.DEPTH, shape: {} };
-		shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth, rotation, loading_delegate, use_boxes);
+		shape_obj = new ZilShape(category_name, shape_name, shape.shape, shape.width, shape.height, shape.depth, rotation, loading_delegate, use_boxes, null, null, is_transparent);
 		ZilShape.SHAPE_CACHE[cache_name] = shape_obj;
 	}
     shape_obj.invalidate();
